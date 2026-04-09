@@ -30,7 +30,7 @@
 
 ## 反馈问题
 
-如在使用幻梦的过程中有任何建议，欢迎点击上方的链接添加我们的QQ群或QQ频道向我们反馈，也可在 [issues](https://github.com/HuanmengX/Huanmeng-Docs/issues) 中提出。
+如在使用幻梦的过程中有任何建议，欢迎点击上方的链接添加我们的QQ群或QQ频道向我们反馈，也可在 [issues](https://github.com/BingKKni/Huanmeng-Docs/issues) 中提出。
 
 Huanmeng-Docs 采用 [CC BY-SA 4.0](./LICENSE) 许可，您可以自由地分享和修改，但必须保留原作者信息和本许可说明。
 
