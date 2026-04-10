@@ -1682,7 +1682,7 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']),
   display: block;
   padding: 16px;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
+  border-radius: 8px;
   text-decoration: none !important;
   color: inherit;
 }
