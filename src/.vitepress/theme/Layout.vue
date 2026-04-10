@@ -4,6 +4,137 @@ import { computed, onBeforeUnmount, onMounted, nextTick, ref, watch } from 'vue'
 
 const { site, frontmatter, page } = useData()
 
+// --- Search Logic ---
+const rawDocs = import.meta.glob('../../docs/**/*.md', { query: '?raw', import: 'default', eager: true })
+const searchActive = ref(false)
+const searchQuery = ref('')
+const searchInputRef = ref(null)
+
+function stripMarkdown(str) {
+  return str
+    .replace(/^---[\s\S]*?^---/m, '') // strip frontmatter
+    .replace(/```[\s\S]*?```/g, '') // strip code blocks
+    .replace(/`([^`]+)`/g, '$1') // inline code
+    .replace(/<[^>]*>/g, '') // html
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '') // remove images completely to avoid matching custom size attributes like #350px
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // links
+    .replace(/^#{1,6}\s+/gm, '') // ATX headers
+    .replace(/^==\s+/gm, '') // strip tab markers
+    .replace(/(?:\*\*|__)(.*?)(?:\*\*|__)/g, '$1') // bold
+    .replace(/(?:\*|_)(.*?)(?:\*|_)/g, '$1') // italic
+    .replace(/^\s*>\s+/gm, '') // blockquotes
+    .replace(/^\s*[-*+]\s+/gm, '') // lists
+    .replace(/^\s*\d+\.\s+/gm, '') // ordered lists
+    .replace(/^:::\s*\w*.*$/gm, '') // custom blocks
+    .replace(/:::/g, '')
+    .replace(/\n+/g, ' ') // condense newlines
+    .trim()
+}
+
+const allDocsContent = computed(() => {
+  const arr = []
+  for (const path in rawDocs) {
+    const rawContent = rawDocs[path] || ''
+    
+    let link = path.replace('../../', '/')
+    link = link.replace(/\.md$/, '.html')
+    if (link.endsWith('/index.html')) {
+      link = link.replace('/index.html', '/')
+    }
+    
+    let title = ''
+    try {
+      // Try to find if link exists in sidebar links for proper titles
+      for (const item of [...navLinks, ...desktopSidebarLinks]) {
+         const itemHrefBase = item.href.replace(/\/$/, '')
+         const linkBase = link.replace(/\/$/, '')
+         if (itemHrefBase === linkBase) {
+            title = item.label
+            break
+         }
+      }
+    } catch { /* ignore if not defined yet */ }
+    
+    if (!title) {
+       const titleMatch = rawContent.match(/^#\s+(.*)/m)
+       if (titleMatch) {
+          title = titleMatch[1].trim()
+       } else {
+          const h2Match = rawContent.match(/^##\s+(.*)/m)
+          if (h2Match) {
+             title = h2Match[1].trim()
+          } else {
+             const parts = path.split('/')
+             const filename = parts[parts.length - 1].replace(/\.md$/, '')
+             title = filename === 'index' ? parts[parts.length - 2] || '首页' : filename
+          }
+       }
+    }
+    
+    const content = stripMarkdown(rawContent)
+    arr.push({ title, link, content })
+  }
+  return arr
+})
+
+const searchResults = computed(() => {
+  if (!searchQuery.value.trim()) return []
+  const query = searchQuery.value.toLowerCase()
+  const results = []
+  
+  for (const doc of allDocsContent.value) {
+    const rawContent = doc.content
+    const lowerContent = rawContent.toLowerCase()
+    let index = lowerContent.indexOf(query)
+    if (index !== -1) {
+      const snippetStart = Math.max(0, index - 30)
+      const snippetEnd = Math.min(rawContent.length, index + query.length + 40)
+      
+      let snippetBefore = rawContent.substring(snippetStart, index)
+      if (snippetStart > 0) snippetBefore = '...' + snippetBefore
+      
+      let snippetMatch = rawContent.substring(index, index + query.length)
+      
+      let snippetAfter = rawContent.substring(index + query.length, snippetEnd)
+      if (snippetEnd < rawContent.length) snippetAfter = snippetAfter + '...'
+      
+      results.push({
+        title: doc.title,
+        link: doc.link,
+        snippetBefore,
+        match: snippetMatch,
+        snippetAfter
+      })
+    }
+  }
+  return results
+})
+
+function handleResultClick() {
+  searchQuery.value = ''
+  searchActive.value = false
+}
+
+function handleSearchIconClick() {
+  if (!searchActive.value) {
+    searchActive.value = true
+    nextTick(() => {
+      searchInputRef.value?.focus()
+    })
+  } else {
+    searchActive.value = false
+    searchQuery.value = ''
+  }
+}
+function handleSearchBlur() {
+  setTimeout(() => {
+    if (!searchQuery.value && searchActive.value && document.activeElement !== searchInputRef.value) {
+      searchActive.value = false
+    }
+  }, 150)
+}
+
+
 const navLinks = [
   { href: '/', label: '首页', isActive: relativePath => relativePath === 'index.md' },
   {
@@ -1416,8 +1547,22 @@ watch(infoDialogVisible, async visible => {
       aria-label="文档快捷入口"
     >
       <nav class="desktop-doc-sidebar__panel">
-        <!-- 顶部标题与分割线 -->
-        <span class="desktop-doc-sidebar__heading">页面切换</span>
+        <!-- 顶部标题与分割站与搜索 -->
+        <div class="sidebar-search-header" :class="{ 'search-active': searchActive }">
+          <span v-if="!searchActive" class="desktop-doc-sidebar__heading">页面切换</span>
+          <div v-else class="sidebar-search-box">
+            <input 
+              ref="searchInputRef"
+              v-model="searchQuery" 
+              type="text" 
+              placeholder="搜索文档..." 
+              @blur="handleSearchBlur"
+            />
+          </div>
+          <button class="sidebar-search-trigger" @click="handleSearchIconClick" aria-label="搜索文档">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </button>
+        </div>
         <hr class="desktop-doc-sidebar__divider" />
         <a
           v-for="link in desktopSidebarLinks"
@@ -1449,11 +1594,11 @@ watch(infoDialogVisible, async visible => {
           @enter="onDocPageEnter"
           @leave="onDocPageLeave"
         >
-          <div v-if="frontmatter.home" key="vp-route-home">
+          <div v-if="frontmatter.home && !searchQuery.trim()" key="vp-route-home">
             <Content />
           </div>
           <article
-            v-else
+            v-else-if="!searchQuery.trim()"
             ref="docArticleRef"
             :key="page.relativePath"
             class="doc-article bg-white border shadow-sm p-4 p-md-5"
@@ -1463,6 +1608,32 @@ watch(infoDialogVisible, async visible => {
             }"
           >
             <Content />
+          </article>
+          
+          <article
+            v-else
+            key="vp-route-search"
+            class="search-results-article bg-white border shadow-sm p-4 p-md-5"
+          >
+            <h1 class="mb-4">搜索结果（共{{ searchResults.length }}条）</h1>
+            <hr class="mb-4"/>
+            <div class="search-results-list">
+              <a 
+                v-for="(res, index) in searchResults" 
+                :key="index" 
+                :href="withBase(res.link)" 
+                class="search-result-item"
+                @click="handleResultClick"
+              >
+                <h3 class="search-result-title">{{ res.title }}</h3>
+                <p class="search-result-snippet">
+                  {{ res.snippetBefore }}<span class="search-highlight">{{ res.match }}</span>{{ res.snippetAfter }}
+                </p>
+              </a>
+              <div v-if="searchResults.length === 0" class="text-muted pt-3">
+                未找到包含 "{{ searchQuery }}" 的结果。
+              </div>
+            </div>
           </article>
         </Transition>
       </div>
