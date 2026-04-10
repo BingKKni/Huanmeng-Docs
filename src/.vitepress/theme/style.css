@@ -276,7 +276,7 @@ a:hover {
 }
 
 .site-header .nav {
-  gap: 0.35rem;
+  gap: 0.5rem;
 }
 
 .site-header .nav-link {
@@ -314,6 +314,22 @@ a:hover {
     background-color: #0069d9;
     border-color: #0062cc;
   }
+}
+
+.nav-link--external {
+  position: relative;
+}
+
+.nav-link-external-icon {
+  position: absolute;
+  top: 5px;
+  right: 8px;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.nav-link--external:hover .nav-link-external-icon {
+  opacity: 1;
 }
 
 @media (min-width: 992px) {

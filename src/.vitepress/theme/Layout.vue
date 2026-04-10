@@ -143,14 +143,10 @@ const navLinks = [
     isActive: relativePath => relativePath === 'docs/index.md' || relativePath.startsWith('docs/')
   },
   {
-    href: '/markdown-examples.html',
-    label: 'Markdown 示例',
-    isActive: relativePath => relativePath === 'markdown-examples.md'
-  },
-  {
-    href: '/api-examples.html',
-    label: 'Runtime API',
-    isActive: relativePath => relativePath === 'api-examples.md'
+    href: 'https://github.com/BingKKni/Huanmeng-Docs',
+    label: 'Github',
+    isExternal: true,
+    isActive: () => false
   }
 ]
 
@@ -425,6 +421,7 @@ function isActiveLink(link) {
 }
 
 function getNavHref(link) {
+  if (link.isExternal) return link.href
   return withBase(link.href)
 }
 
@@ -1518,11 +1515,14 @@ watch(infoDialogVisible, async visible => {
               v-for="link in navLinks"
               :key="link.href"
               class="nav-link"
-              :class="{ active: isActiveLink(link) }"
+              :class="{ active: isActiveLink(link), 'nav-link--external': link.isExternal }"
               :href="getNavHref(link)"
+              :target="link.isExternal ? '_blank' : undefined"
+              :rel="link.isExternal ? 'noopener noreferrer' : undefined"
               :aria-current="isActiveLink(link) ? 'page' : undefined"
             >
               {{ link.label }}
+              <svg v-if="link.isExternal" class="nav-link-external-icon" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
             </a>
           </nav>
 
@@ -1557,11 +1557,14 @@ watch(infoDialogVisible, async visible => {
                 v-for="link in navLinks"
                 :key="link.href"
                 class="nav-link"
-                :class="{ active: isActiveLink(link) }"
+                :class="{ active: isActiveLink(link), 'nav-link--external': link.isExternal }"
                 :href="getNavHref(link)"
+                :target="link.isExternal ? '_blank' : undefined"
+                :rel="link.isExternal ? 'noopener noreferrer' : undefined"
                 :aria-current="isActiveLink(link) ? 'page' : undefined"
               >
                 {{ link.label }}
+                <svg v-if="link.isExternal" class="nav-link-external-icon" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
               </a>
             </nav>
           </div>
