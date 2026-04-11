@@ -17,17 +17,37 @@
 点击下面的字就可以直达对应的帮助和攻略了哦。
 :::
 
-<div style="column-count: 2; column-gap: 20px;">
+<div style="column-count: 2; column-gap: 20px; height: 40px;">
     <div>
         <a href="signin">
-            <img src="https://docs.gtimg.com/docs-design-resources/individuation/desktop/tmoji/google_emoji/svg/emoji_u1f4c5-11eeb604c1.svg" width="16" height="16" draggable="false">
+            <img src="https://docs.gtimg.com/docs-design-resources/individuation/desktop/tmoji/google_emoji/svg/emoji_u1f4c5-11eeb604c1.svg" width="20" height="20" draggable="false">
             打卡
         </a>
     </div>
     <div>
-        <a href="adoration">
-            <img src="https://docs.gtimg.com/docs-design-resources/individuation/desktop/tmoji/google_emoji/svg/emoji_u2764-ce9b22dafb.svg" width="16" height="16" draggable="false">
+        <a href="favorability">
+            <img src="https://docs.gtimg.com/docs-design-resources/individuation/desktop/tmoji/google_emoji/svg/emoji_u2764-ce9b22dafb.svg" width="20" height="20" draggable="false">
             好感度
         </a>
     </div>
+</div>
+<div style="column-count: 2; column-gap: 20px; height: 40px;">
+    <div>
+        <a href="luck">
+            ☘今日运势
+        </a>
+    </div>
+    <div>
+        <a href="random_pic">
+            🖼️随机图
+        </a>
+    </div>
+</div>
+<div style="column-count: 2; column-gap: 20px; height: 40px;">
+    <div>
+        <a href="paint_bomb">
+            💥油漆炸弹
+        </a>
+    </div>
+
 </div>
