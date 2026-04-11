@@ -265,6 +265,7 @@ let mobileNavCloseFallbackTimer = null
 const mobileHeaderHidden = ref(false)
 const mobileHeaderElevated = ref(false)
 const isMobileView = ref(false)
+const sidebarSpaceEnough = ref(true)
 
 const lightboxSrc = ref('')
 const lightboxVisible = ref(false)
@@ -484,6 +485,7 @@ function syncViewportMode() {
 function syncDesktopSidebarLayout() {
   if (typeof document === 'undefined') return
   if (!window.matchMedia(DESKTOP_SIDEBAR_MEDIA_QUERY).matches) {
+    sidebarSpaceEnough.value = true
     document.documentElement.style.removeProperty('--hm-desktop-sidebar-left')
     document.documentElement.style.removeProperty('--hm-desktop-sidebar-top')
     document.documentElement.style.removeProperty('--hm-desktop-sidebar-width')
@@ -495,13 +497,20 @@ function syncDesktopSidebarLayout() {
 
   const cr = containerEl.getBoundingClientRect()
 
-  const left = Math.max(16, Math.round(cr.left - (DESKTOP_SIDEBAR_DOC_GAP_PX + DESKTOP_SIDEBAR_WIDTH_PX)))
-  /* 侧栏 top 直接取正文容器视口顶边，确保两者起始高度严格对齐 */
-  const top = Math.max(0, Math.round(cr.top))
-
-  document.documentElement.style.setProperty('--hm-desktop-sidebar-left', `${left}px`)
-  document.documentElement.style.setProperty('--hm-desktop-sidebar-top', `${top}px`)
-  document.documentElement.style.setProperty('--hm-desktop-sidebar-width', `${DESKTOP_SIDEBAR_WIDTH_PX}px`)
+  const requiredSpace = DESKTOP_SIDEBAR_WIDTH_PX + 15
+  if (cr.left < requiredSpace) {
+    sidebarSpaceEnough.value = false
+    document.documentElement.style.removeProperty('--hm-desktop-sidebar-left')
+    document.documentElement.style.removeProperty('--hm-desktop-sidebar-top')
+    document.documentElement.style.removeProperty('--hm-desktop-sidebar-width')
+  } else {
+    sidebarSpaceEnough.value = true
+    const left = Math.max(16, Math.round(cr.left - (DESKTOP_SIDEBAR_DOC_GAP_PX + DESKTOP_SIDEBAR_WIDTH_PX)))
+    const top = Math.max(0, Math.round(cr.top))
+    document.documentElement.style.setProperty('--hm-desktop-sidebar-left', `${left}px`)
+    document.documentElement.style.setProperty('--hm-desktop-sidebar-top', `${top}px`)
+    document.documentElement.style.setProperty('--hm-desktop-sidebar-width', `${DESKTOP_SIDEBAR_WIDTH_PX}px`)
+  }
 }
 
 function clampLightboxScale(scale) {
@@ -550,7 +559,7 @@ const siteHeaderMobileNavExpanded = computed(
 function syncBodyScrollLock() {
   const mobileMenuActive =
     isMobileViewport() && (menuOpen.value || mobileNavClosingHold.value)
-  const shouldLock = infoDialogVisible.value || lightboxVisible.value || mobileMenuActive
+  const shouldLock = infoDialogVisible.value || lightboxVisible.value || mobileMenuActive || mobileSidebarOpen.value
   if (shouldLock === bodyScrollLocked) return
 
   if (shouldLock) {
@@ -854,8 +863,17 @@ function handleDocumentKeydown(e) {
   const isSearchKey = (e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'f' || e.key.toLowerCase() === 'k')
   if (isSearchKey) {
     e.preventDefault()
-    if (isMobileViewport()) {
-      handleMobileSearchClick()
+    if (isMobileViewport() || (shouldShowDesktopSidebar.value && !sidebarSpaceEnough.value)) {
+      if (shouldShowDesktopSidebar.value && !sidebarSpaceEnough.value) {
+        if (!mobileSidebarOpen.value) {
+          mobileSidebarOpen.value = true
+        }
+        nextTick(() => {
+          searchInputRef.value?.focus()
+        })
+      } else {
+        handleMobileSearchClick()
+      }
     } else if (shouldShowDesktopSidebar.value) {
       if (!searchActive.value) {
         handleSearchIconClick()
@@ -1551,6 +1569,10 @@ watch(lightboxVisible, () => {
   syncBodyScrollLock()
 })
 
+watch(mobileSidebarOpen, () => {
+  syncBodyScrollLock()
+})
+
 watch(infoDialogVisible, async visible => {
   syncBodyScrollLock()
   if (!visible) return
@@ -1560,7 +1582,7 @@ watch(infoDialogVisible, async visible => {
 </script>
 
 <template>
-  <div class="site-shell">
+  <div class="site-shell" :class="{ 'sidebar-compact-mode': !sidebarSpaceEnough }">
     <header
       ref="siteHeaderRef"
       class="site-header border-bottom bg-white shadow-sm"
@@ -1677,12 +1699,18 @@ watch(infoDialogVisible, async visible => {
     <!-- 移动端呼出侧边栏按钮 -->
     <button
       v-if="shouldShowDesktopSidebar && !mobileSidebarOpen"
-      class="mobile-sidebar-trigger d-lg-none"
+      class="mobile-sidebar-trigger"
+      :class="{ 'd-lg-none': sidebarSpaceEnough }"
       @click="mobileSidebarOpen = true"
       aria-label="打开侧边栏"
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>
     </button>
+
+    <!-- 侧边栏遮罩 -->
+    <Transition name="sidebar-backdrop-fade">
+      <div v-if="mobileSidebarOpen && shouldShowDesktopSidebar" class="sidebar-backdrop" @click="mobileSidebarOpen = false"></div>
+    </Transition>
 
     <aside
       v-if="shouldShowDesktopSidebar"
@@ -1707,7 +1735,7 @@ watch(infoDialogVisible, async visible => {
             <button class="sidebar-search-trigger" @click="handleSearchIconClick" aria-label="搜索文档">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </button>
-            <button class="sidebar-close-trigger d-lg-none" @click="mobileSidebarOpen = false" aria-label="收起侧边栏">
+            <button class="sidebar-close-trigger" :class="{ 'd-lg-none': sidebarSpaceEnough }" @click="mobileSidebarOpen = false" aria-label="收起侧边栏">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>
             </button>
           </div>
