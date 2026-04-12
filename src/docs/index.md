@@ -1,10 +1,9 @@
-## 来自幻梦的自我介绍
+# 来自幻梦的自我介绍
+---
 
 ![](/img/hm_barefoot.png) ![](/img/hm_black_stockings.png) ![](/img/hm_white_stockings.png)
 
 你好呀，小人类！我是一个多功能的娱乐机器人，主打自创的达尔文游戏，轻度娱乐功能，以及附带了查询《我的世界》多个服务器，和《三角洲行动》的数据查询和攻略哦。
-
----
 
 ## 如何把我邀请到你的群或频道中？
 
@@ -15,7 +14,6 @@
 
 ![#*px #400px](/img/invite_to_group.png) ![#*px #400px](/img/invite_to_guild.png)
 
----
 
 ## 如何调用我的指令？
 
@@ -23,13 +21,11 @@
 
 ![#*px #400px](/img/how_to_use_mobile.png) ![#*px #400px](/img/how_to_use_pc.png)
 
----
 
 ## 在群聊调用指令的禁忌
 
 小人类在群里使用幻梦的时候，切记不要复制指令哦！**由于 QQ 的限制，<u>被复制过的指令幻梦是收不到的</u>，也就不会有回应 qwq！** 必须有效 @幻梦，幻梦才会处理你的指令。
 
----
 
 ## 幻梦太吵了，如何屏蔽部分娱乐功能？
 
@@ -43,7 +39,6 @@
 但相比采用屏蔽的方式，幻梦更加推荐小人类采用友善提醒的方式，提醒群里的人：有人在聊天的时候不要玩幻梦，这样会更好哦！
 :::
 
----
 
 ## 如何支持幻梦？
 
@@ -51,7 +46,6 @@
 
 [支持幻梦](https://docs.qq.com/aio/p/sc7sp6juoyjk6t3?p=oJ0ZeQAb0F1v7KZ2aSJOgx&nlc=1)
 
----
 
 ## 玩法帮助和攻略
 
@@ -76,11 +70,11 @@
 - [恶臭数字论证器](https://docs.qq.com/aio/DZEJoalhPcHZmaVJR?p=Zsp9lWemrEDn0JJniBkoLx)
 - [接龙游戏](https://docs.qq.com/aio/DZEJoalhPcHZmaVJR?p=8YMBaAraYlERWRCdRJxs8s)
 
----
 
 ## 建议、吐槽和反馈
 
 您好小人类，如果在使用中遇到了任何问题，欢迎点击下面的卡片向我们反馈哦~
+
 
 **幻梦官方群入群要求：**
 1. 您的 QQ 等级需大于等于 8 级（两个月亮）；

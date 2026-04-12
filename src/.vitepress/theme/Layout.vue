@@ -292,9 +292,10 @@ const infoDialogConfirmButton = ref(null)
 const MOBILE_MEDIA_QUERY = '(max-width: 767.98px)'
 /** 与 Bootstrap `d-lg-block` / style.css 中桌面侧栏媒体查询一致 */
 const DESKTOP_SIDEBAR_MEDIA_QUERY = '(min-width: 992px)'
-const DESKTOP_SIDEBAR_DOC_GAP_PX = 30
 const DESKTOP_SIDEBAR_WIDTH_PX = 240
-const DESKTOP_SIDEBAR_HEADER_GAP_PX = 50
+const DESKTOP_MAIN_SHIFT_X = 100
+const DESKTOP_SIDEBAR_SHIFT_X = 50
+const DESKTOP_SIDEBAR_SHIFT_Y = 30
 /** 与 style.css 中 .mobile-nav 的 grid-template-rows 时长一致 */
 const MOBILE_NAV_PANEL_MS = 300
 const MOBILE_NAV_CLOSE_FALLBACK_MS = MOBILE_NAV_PANEL_MS + 100
@@ -483,7 +484,6 @@ function syncViewportMode() {
 
 /**
  * 桌面侧栏定位：
- * - 水平：以正文容器左边为基准，向左留 `DESKTOP_SIDEBAR_DOC_GAP_PX` 后绘制 `DESKTOP_SIDEBAR_WIDTH_PX`
  * - 垂直：直接对齐正文容器的视口顶边（cr.top），使侧栏起始高度与正文文档完全一致
  */
 function syncDesktopSidebarLayout() {
@@ -509,8 +509,10 @@ function syncDesktopSidebarLayout() {
     document.documentElement.style.removeProperty('--hm-desktop-sidebar-width')
   } else {
     sidebarSpaceEnough.value = true
-    const left = Math.max(16, Math.round(cr.left - (DESKTOP_SIDEBAR_DOC_GAP_PX + DESKTOP_SIDEBAR_WIDTH_PX)))
-    const top = Math.max(0, Math.round(cr.top))
+    // cr.left 包含 style.css 中的 translateX(100px)，先减去正文偏移恢复基准，再加侧栏要求的 120px 偏移
+    const baseLeft = cr.left - DESKTOP_MAIN_SHIFT_X
+    const left = Math.max(16, Math.round(baseLeft - (DESKTOP_SIDEBAR_WIDTH_PX)) + DESKTOP_SIDEBAR_SHIFT_X)
+    const top = Math.max(0, Math.round(cr.top)) + DESKTOP_SIDEBAR_SHIFT_Y
     document.documentElement.style.setProperty('--hm-desktop-sidebar-left', `${left}px`)
     document.documentElement.style.setProperty('--hm-desktop-sidebar-top', `${top}px`)
     document.documentElement.style.setProperty('--hm-desktop-sidebar-width', `${DESKTOP_SIDEBAR_WIDTH_PX}px`)
@@ -1225,7 +1227,6 @@ function applyMultiImageRowHeights(p, imgs) {
   if (specifiedHeights.length > 0) {
     targetHeight = Math.min(...specifiedHeights)
   } else {
-    const gap = 12
     const containerWidth = p.clientWidth
     const availWidth = containerWidth - gap * (imgs.length - 1)
     const eachWidth = availWidth / imgs.length
@@ -1589,7 +1590,7 @@ watch(infoDialogVisible, async visible => {
   <div class="site-shell" :class="{ 'sidebar-compact-mode': !sidebarSpaceEnough }">
     <header
       ref="siteHeaderRef"
-      class="site-header border-bottom bg-white shadow-sm"
+      class="site-header border-bottom bg-white"
       :class="{
         'mobile-header-hidden': mobileHeaderHidden && !menuOpen,
         'mobile-header-elevated': mobileHeaderElevated && !mobileHeaderHidden,
@@ -1809,7 +1810,7 @@ watch(infoDialogVisible, async visible => {
             v-else-if="!searchQuery.trim()"
             ref="docArticleRef"
             :key="page.relativePath"
-            class="doc-article bg-white border shadow-sm p-4 p-md-5"
+            class="doc-article p-4 p-md-5"
             :class="{
               'docs-index-article': page.relativePath === 'docs/index.md',
               'docs-support-article': page.relativePath === 'docs/support.md'
@@ -1821,7 +1822,7 @@ watch(infoDialogVisible, async visible => {
           <article
             v-else
             key="vp-route-search"
-            class="doc-article search-results-article bg-white border shadow-sm p-4 p-md-5"
+            class="doc-article search-results-article p-4 p-md-5"
           >
             <h1 class="mb-4">搜索结果（共{{ searchResults.length }}条）</h1>
             <hr class="mb-4"/>
@@ -1847,7 +1848,7 @@ watch(infoDialogVisible, async visible => {
       </div>
     </main>
 
-    <footer class="border-top bg-white">
+    <footer class="site-footer border-top">
       <div class="container py-3 d-flex flex-column flex-md-row justify-content-between text-muted small site-footer-inner">
         <span><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" class="text-muted">浙ICP备2026018380号</a></span>
         <span>©2024-{{ currentYear }} 幻梦，保留所有权利</span>
