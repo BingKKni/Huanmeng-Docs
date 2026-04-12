@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitepress'
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs'
+import colorTextPlugin from './plugins/colorText.js'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -22,6 +23,7 @@ export default defineConfig({
     // 需要注册 vitepress-plugin-tabs 的 markdown-it 插件，以支持 ::: tabs 语法
     config(md) {
       md.use(tabsMarkdownPlugin)
+      md.use(colorTextPlugin)
     },
     container: {
       tipLabel: '提示',

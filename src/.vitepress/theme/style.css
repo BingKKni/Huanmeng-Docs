@@ -25,6 +25,18 @@ html {
   --hm-dialog-cancel-text: #666666;
   --hm-dialog-cancel-hover-bg: #f5f5f5;
   --hm-dialog-cancel-hover-border: #cccccc;
+  /* ─── 文本预设色（日间模式） ─── */
+  --ct-auto: #212529;
+  --ct-darkred: #991b1b;
+  --ct-red: #ff0000;
+  --ct-yellow: #edf51a;
+  --ct-orange: #e29810;
+  --ct-green: #16a34a;
+  --ct-darkgreen: #166534;
+  --ct-pink: #f050d8;
+  --ct-purple: #7c3aed;
+  --ct-cyan: #18a7ca;
+  --ct-blue: #3c75f0;
 }
 
 html.dark {
@@ -42,7 +54,32 @@ html.dark {
   --hm-dialog-cancel-text: rgba(235, 239, 245, 0.8);
   --hm-dialog-cancel-hover-bg: #404040;
   --hm-dialog-cancel-hover-border: #585858;
+  /* ─── 文本预设色（夜间模式） ─── */
+  --ct-auto: #e5eaf3;
+  --ct-darkred: #f87171;
+  --ct-red: #ff6b6b;
+  --ct-yellow: #fbbf24;
+  --ct-orange: #fb923c;
+  --ct-green: #4ade80;
+  --ct-darkgreen: #34d399;
+  --ct-pink: #f472b6;
+  --ct-purple: #c084fc;
+  --ct-cyan: #22d3ee;
+  --ct-blue: #60a5fa;
 }
+
+/* ─── 文本快捷 class ─── */
+.ct-auto { color: var(--ct-auto); }
+.ct-darkred { color: var(--ct-darkred); }
+.ct-red { color: var(--ct-red); }
+.ct-yellow { color: var(--ct-yellow); }
+.ct-orange { color: var(--ct-orange); }
+.ct-green { color: var(--ct-green); }
+.ct-darkgreen { color: var(--ct-darkgreen); }
+.ct-pink { color: var(--ct-pink); }
+.ct-purple { color: var(--ct-purple); }
+.ct-cyan { color: var(--ct-cyan); }
+.ct-blue { color: var(--ct-blue); }
 
 body {
   margin: 0;
