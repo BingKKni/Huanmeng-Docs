@@ -16,6 +16,8 @@
         "vitepress": "^1.6.4"
     },
     "dependencies": {
+        "@fontsource-variable/inter": "^5.1.0",
+        "@fontsource/noto-sans-sc": "^5.1.0",
         "bootstrap": "^4.6.2",
         "vitepress-plugin-tabs": "^0.8.0"
     }
