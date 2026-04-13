@@ -6,6 +6,44 @@ import { computed, onBeforeUnmount, onMounted, nextTick, ref, watch } from 'vue'
 const { site, frontmatter, page } = useData()
 
 const tocHeaders = ref([])
+const activeTocId = ref('')
+
+function updateActiveToc() {
+  const headers = tocHeaders.value
+  if (headers.length === 0) {
+    activeTocId.value = ''
+    return
+  }
+  
+  // 增加触底检测：如果滚动到了页面底部，则直接选中最后一个标题
+  const scrollHeight = document.documentElement.scrollHeight
+  const scrollTop = window.scrollY
+  const clientHeight = document.documentElement.clientHeight
+  if (scrollTop + clientHeight >= scrollHeight - 30) {
+    activeTocId.value = headers[headers.length - 1].id
+    return
+  }
+
+  let currentId = ''
+  for (let i = 0; i < headers.length; i++) {
+    const el = document.getElementById(headers[i].id)
+    if (el) {
+      const top = el.getBoundingClientRect().top
+      if (top <= 120) { // 阈值调整，避开可能存在的加厚顶栏
+        currentId = headers[i].id
+      } else {
+        break
+      }
+    }
+  }
+  activeTocId.value = currentId
+}
+
+let tocScrollTimeout = null
+function handleTocScroll() {
+  if (tocScrollTimeout) return
+  updateActiveToc()
+}
 
 onContentUpdated(() => {
   if (!docArticleRef.value) {
@@ -26,13 +64,24 @@ onContentUpdated(() => {
       title: title
     }
   })
+  nextTick(() => {
+    updateActiveToc()
+  })
 })
 
 function scrollToToc(id) {
   const el = document.getElementById(id)
   if (el) {
+    if (tocScrollTimeout) clearTimeout(tocScrollTimeout)
+    activeTocId.value = id
+    
     const top = el.getBoundingClientRect().top + window.scrollY - 80 // offset for site header
     window.scrollTo({ top, behavior: 'smooth' })
+    
+    // 锁定 activeTocId，防止平滑滚动过程中由于阈值判断导致的高亮“回跳”
+    tocScrollTimeout = setTimeout(() => {
+      tocScrollTimeout = null
+    }, 1000)
   }
 }
 
@@ -328,8 +377,9 @@ const MOBILE_MEDIA_QUERY = '(max-width: 767.98px)'
 /** 与 Bootstrap `d-lg-block` / style.css 中桌面侧栏媒体查询一致 */
 const DESKTOP_SIDEBAR_MEDIA_QUERY = '(min-width: 992px)'
 const DESKTOP_SIDEBAR_WIDTH_PX = 240
-const DESKTOP_MAIN_SHIFT_X = 25
-const DESKTOP_SIDEBAR_SHIFT_X = 20
+const DESKTOP_MAIN_SHIFT_X = 10
+const DESKTOP_SIDEBAR_SHIFT_X = -30 // Not used anymore but kept to avoid breaking other things if any
+const DESKTOP_SIDEBAR_GAP = 40
 const DESKTOP_SIDEBAR_SHIFT_Y = 0
 /** 与 style.css 中 .mobile-nav 的 grid-template-rows 时长一致 */
 const MOBILE_NAV_PANEL_MS = 300
@@ -548,7 +598,7 @@ function syncDesktopSidebarLayout() {
     sidebarSpaceEnough.value = true
     // cr.left 包含 style.css 中的 translateX(100px)，先减去正文偏移恢复基准，再加侧栏要求的 120px 偏移
     const baseLeft = cr.left - DESKTOP_MAIN_SHIFT_X
-    const left = Math.max(16, Math.round(baseLeft - (DESKTOP_SIDEBAR_WIDTH_PX)) + DESKTOP_SIDEBAR_SHIFT_X)
+    const left = Math.max(16, Math.round(baseLeft - DESKTOP_SIDEBAR_WIDTH_PX - DESKTOP_SIDEBAR_GAP))
     const top = Math.max(0, Math.round(cr.top)) + DESKTOP_SIDEBAR_SHIFT_Y
     document.documentElement.style.setProperty('--hm-desktop-sidebar-left', `${left}px`)
     document.documentElement.style.setProperty('--hm-desktop-sidebar-top', `${top}px`)
@@ -1268,13 +1318,14 @@ function nextDoubleRaf() {
 
 function applyMultiImageRowHeights(p, imgs) {
   const specifiedHeights = imgs.map(getConstrainedHeight).filter(h => h !== null)
+  const IMG_ROW_GAP_PX = 12
 
   let targetHeight = null
   if (specifiedHeights.length > 0) {
     targetHeight = Math.min(...specifiedHeights)
   } else {
     const containerWidth = p.clientWidth
-    const availWidth = containerWidth - gap * (imgs.length - 1)
+    const availWidth = containerWidth - IMG_ROW_GAP_PX * (imgs.length - 1)
     const eachWidth = availWidth / imgs.length
     const heights = imgs.map(img => {
       if (img.naturalWidth === 0) return Infinity
@@ -1394,6 +1445,7 @@ onMounted(() => {
   document.addEventListener('click', handleVitepressPluginTabClick)
   window.addEventListener('resize', handleWindowResize)
   window.addEventListener('scroll', handleMobileHeaderScroll, { passive: true })
+  window.addEventListener('scroll', handleTocScroll, { passive: true })
 
   const router = useRouter()
   routerProgressPrevBefore = router.onBeforeRouteChange
@@ -1435,6 +1487,7 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', handleVitepressPluginTabClick)
   window.removeEventListener('resize', handleWindowResize)
   window.removeEventListener('scroll', handleMobileHeaderScroll)
+  window.removeEventListener('scroll', handleTocScroll)
   if (bodyScrollLocked) {
     document.body.style.overflow = previousBodyOverflow
   }
@@ -1844,7 +1897,7 @@ watch(infoDialogVisible, async visible => {
           :key="h.id"
           :href="`#${h.id}`"
           class="toc-link"
-          :class="`toc-level-${h.level}`"
+          :class="[`toc-level-${h.level}`, { active: activeTocId === h.id }]"
           @click.prevent="scrollToToc(h.id)"
         >
           {{ h.title }}

@@ -1443,7 +1443,7 @@ html.dark .hm-dialog__title {
 @media (min-width: 992px) {
   main>.container {
     max-width: var(--hm-content-max-width) !important;
-    transform: translateX(45px);
+    transform: translateX(10px);
   }
 }
 
@@ -2558,4 +2558,21 @@ html.dark .hm-search-modal__close {
   color: #212529;
   text-decoration: none;
   transition: none;
+}
+
+.toc-link.active {
+  color: #0076ff;
+  font-weight: 600;
+  position: relative;
+}
+
+.toc-link.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 2px;
+  bottom: 2px;
+  width: 2px;
+  background-color: #0076ff;
+  z-index: 1;
 }
