@@ -6,6 +6,26 @@ html {
   scrollbar-gutter: stable;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  margin: 0;
+  font: inherit;
+}
+
+img,
+svg {
+  vertical-align: middle;
+}
+
 :root {
   --hm-selection-bg: rgba(124, 58, 237, 0.2);
   --hm-code-block-bg: #faf9f5;
@@ -123,7 +143,7 @@ body {
   margin: 0;
   color: #212529;
   background: #ffffff;
-  /* 覆盖 Bootstrap 对 body 设置的 font-family，确保我们的字体栈生效 */
+  /* 统一站点字体栈 */
   font-family:
     -apple-system,
     BlinkMacSystemFont,
@@ -135,6 +155,38 @@ body {
     'Noto Sans SC',
     system-ui,
     sans-serif;
+}
+
+.site-container {
+  width: 100%;
+  padding-right: 0.75rem;
+  padding-left: 0.75rem;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+@media (min-width: 576px) {
+  .site-container {
+    max-width: 540px;
+  }
+}
+
+@media (min-width: 768px) {
+  .site-container {
+    max-width: 720px;
+  }
+}
+
+@media (min-width: 992px) {
+  .site-container {
+    max-width: 960px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .site-container {
+    max-width: 1140px;
+  }
 }
 
 a:hover {
@@ -156,6 +208,8 @@ a:hover {
   position: sticky;
   top: 0;
   z-index: 100;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .site-header-container {
@@ -164,6 +218,10 @@ a:hover {
 }
 
 .site-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
   min-height: 40px;
 }
 
@@ -232,6 +290,8 @@ a:hover {
 }
 
 .site-branding-description {
+  color: #6c757d;
+  font-size: 0.875rem;
   line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
@@ -308,11 +368,6 @@ a:hover {
     transition: width 0.34s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .site-header .d-flex {
-    justify-content: space-between !important;
-    gap: 0.75rem;
-  }
-
   .site-branding {
     flex: 1 1 auto;
   }
@@ -362,12 +417,27 @@ a:hover {
   }
 }
 
-.site-header .nav {
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  padding-left: 0;
+  margin: 0;
+  list-style: none;
   gap: 0.5rem;
 }
 
-.site-header .nav-link {
+.site-nav--desktop {
+  display: none;
+}
+
+.site-header .site-nav {
+  gap: 0.5rem;
+}
+
+.site-nav__link {
+  display: block;
   color: #6c757d;
+  text-decoration: none;
   padding-top: 0.55rem;
   padding-bottom: 0.55rem;
   padding-left: 1.25rem;
@@ -377,37 +447,37 @@ a:hover {
   transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.site-header .nav-link:focus,
-.site-header .nav-link:focus-visible {
+.site-nav__link:focus,
+.site-nav__link:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.18);
 }
 
-.site-header .nav-link.active,
-.site-header .nav-pills .show>.nav-link {
+.site-nav__link.active {
+  color: #fff;
+  background-color: #007bff;
   border-color: #007bff;
 }
 
 @media (hover: hover) {
-  .site-header .nav-link:hover {
+  .site-nav__link:hover {
     color: #212529;
     background-color: #e9ecef;
     border-color: #e9ecef;
   }
 
-  .site-header .nav-link.active:hover,
-  .site-header .nav-pills .show>.nav-link:hover {
+  .site-nav__link.active:hover {
     color: #fff;
     background-color: #0069d9;
     border-color: #0062cc;
   }
 }
 
-.nav-link--external {
+.site-nav__link--external {
   position: relative;
 }
 
-.nav-link-external-icon {
+.site-nav__external-icon {
   position: absolute;
   top: 5px;
   right: 8px;
@@ -415,11 +485,28 @@ a:hover {
   transition: opacity 0.2s ease;
 }
 
-.nav-link--external:hover .nav-link-external-icon {
+.site-nav__link--external:hover .site-nav__external-icon {
   opacity: 1;
 }
 
+@media (min-width: 768px) {
+  .site-nav--desktop {
+    display: flex;
+  }
+
+  .mobile-menu-btn,
+  .mobile-nav,
+  .mobile-nav-backdrop {
+    display: none !important;
+  }
+}
+
 @media (min-width: 992px) {
+  .mobile-sidebar-trigger--desktop-hidden,
+  .sidebar-close-trigger--desktop-hidden {
+    display: none !important;
+  }
+
   .desktop-doc-sidebar {
     position: fixed;
     top: var(--hm-desktop-sidebar-top);
@@ -1503,14 +1590,14 @@ html.dark .hm-dialog__title {
 }
 
 @media (min-width: 992px) {
-  main>.container {
+  .site-main__container {
     max-width: var(--hm-content-max-width) !important;
     transform: translateX(10px);
   }
 }
 
 @media (max-width: 767.98px) {
-  main>.container {
+  .site-main__container {
     padding-left: 0;
     padding-right: 0;
   }
@@ -1541,12 +1628,8 @@ html.dark .hm-dialog__title {
   border-top: 1px solid #e5e7eb;
 }
 
-.site-header {
-  border-bottom-color: #e5e7eb !important;
-}
-
-/* Unify button corners across Bootstrap and VitePress components. */
-.btn,
+/* Unify button corners across theme and VitePress components. */
+.home-btn,
 .VPButton,
 button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']),
 [type='button']:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']),
@@ -1690,20 +1773,58 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
   border-radius: 8px !important;
 }
 
-/* Increase horizontal padding for main action buttons. */
-.btn {
-  padding-left: 0.75rem !important;
-  padding-right: 0.75rem !important;
+.site-main {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
 }
 
-.btn-sm {
-  padding-left: 0.5rem !important;
-  padding-right: 0.5rem !important;
+.doc-article--padded {
+  padding: 1.5rem;
 }
 
-.btn-lg {
-  padding-left: 1.25rem !important;
-  padding-right: 1.25rem !important;
+.site-footer-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.site-footer-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.site-footer-link:hover {
+  color: inherit;
+}
+
+.search-results-title,
+.search-results-divider {
+  margin-bottom: 1.5rem;
+}
+
+.search-results-empty {
+  padding-top: 1rem;
+  color: #6c757d;
+}
+
+@media (min-width: 768px) {
+  .site-main {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+
+  .doc-article--padded {
+    padding: 3rem;
+  }
+
+  .site-footer-inner {
+    flex-direction: row;
+    align-items: center;
+  }
 }
 
 .VPButton.medium {
@@ -1750,8 +1871,49 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
 }
 
 .home-btn {
-  font-size: 1rem !important;
-  padding: 0.6rem 1.75rem !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1.75rem;
+  color: #212529;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: center;
+  text-decoration: none;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.home-btn:focus,
+.home-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.18);
+}
+
+.home-btn--primary {
+  color: #fff;
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.home-btn--primary:hover {
+  color: #fff;
+  background-color: #0069d9;
+  border-color: #0062cc;
+}
+
+.home-btn--outline {
+  color: #007bff;
+  border-color: #007bff;
+}
+
+.home-btn--outline:hover {
+  color: #fff;
+  background-color: #007bff;
+  border-color: #007bff;
 }
 
 /* Home features */
@@ -1985,7 +2147,7 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
   overflow: hidden;
 }
 
-.mobile-nav .nav-link {
+.mobile-nav .site-nav__link {
   width: 100%;
   min-height: 44px;
   border-radius: 8px;
@@ -1994,10 +2156,12 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
   align-items: center;
 }
 
-.mobile-nav-grid {
-  display: grid !important;
+.mobile-nav-links {
+  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.25rem;
 }
 
 /* 点击遮罩关闭菜单 */
@@ -2196,6 +2360,9 @@ html.dark .search-highlight {
 .mobile-nav-search {
   border-bottom: 1px solid rgba(15, 23, 42, 0.05);
   margin-bottom: 0;
+  padding-top: 1rem;
+  padding-right: 1rem;
+  padding-left: 1rem;
   padding-bottom: 0.6rem;
 }
 
@@ -2689,8 +2856,8 @@ html.dark {
 }
 
 /* ── 消除块级元素紧跟列表时的额外下边距 ── */
-/* Bootstrap reboot 给 p / ul / ol 均设了 margin-bottom: 1rem，
-   当 Markdown 中文本行或列表项换行后紧跟另一个列表时会多出一行间距。
+/* 段落/列表的默认外边距会让“紧跟另一个列表”的场景显得偏松，
+   这里用 :has() 精确匹配并收紧该类间距。
    用 :has() 精确匹配"后面跟着列表"的元素，更改其底部 margin。 */
 .doc-article p:has(+ ul),
 .doc-article p:has(+ ol),

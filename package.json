@@ -1,6 +1,19 @@
 {
+  "name": "huanmeng-docs",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "docs:dev": "vitepress dev src --port 23333",
+    "docs:build": "vitepress build src",
+    "docs:preview": "vitepress preview src",
+    "dev": "npm run docs:dev"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4"
+  },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
-    "@fontsource/noto-sans-sc": "^5.2.9"
+    "@fontsource/noto-sans-sc": "^5.2.9",
+    "vitepress-plugin-tabs": "^0.8.0"
   }
 }
