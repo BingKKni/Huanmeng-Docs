@@ -3,7 +3,7 @@
 ### 我怎么被幻梦屏蔽了？
 <div class="hm-center">
 
-![#*px #350px](/img/appeal_main.png)
+![](/img/appeal_main.png){height="350"}
 
 </div>
 

@@ -3,7 +3,6 @@
 }
 
 html {
-  font-family: 'Inter Variable', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
   scrollbar-gutter: stable;
 }
 
@@ -124,6 +123,18 @@ body {
   margin: 0;
   color: #212529;
   background: #ffffff;
+  /* 覆盖 Bootstrap 对 body 设置的 font-family，确保我们的字体栈生效 */
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    'Microsoft YaHei UI',
+    'Microsoft YaHei',
+    'Hiragino Sans GB',
+    'Source Han Sans SC',
+    'Noto Sans CJK SC',
+    'Noto Sans SC',
+    system-ui,
+    sans-serif;
 }
 
 a:hover {
@@ -463,6 +474,21 @@ a:hover {
     background-color: transparent;
   }
 
+  .desktop-doc-sidebar__item-link {
+    width: 100%;
+    text-align: left;
+  }
+
+  button.desktop-doc-sidebar__item-link {
+    appearance: none;
+    border: 0;
+  }
+
+  .desktop-doc-sidebar__item-label {
+    min-width: 0;
+    flex: 1;
+  }
+
   .desktop-doc-sidebar__link:hover {
     color: #212529;
     background-color: #e9ecef;
@@ -483,14 +509,22 @@ a:hover {
     flex-direction: column;
   }
 
-  .desktop-doc-sidebar__link.has-children {
-    justify-content: space-between;
+  .sidebar-menu-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 20px;
+    min-height: 20px;
+    margin-left: auto;
+    padding: 0;
+    color: #6c757d;
+    pointer-events: none;
   }
 
   .sidebar-menu-icon {
     width: 14px;
     height: 14px;
-    margin-left: auto;
     color: #6c757d;
     transition: transform 0.2s ease;
   }
@@ -522,7 +556,7 @@ a:hover {
     display: flex;
     align-items: center;
     min-height: 38px;
-    padding: 0.4rem 0.75rem 0.4rem 2.4rem;
+    padding: 0.4rem 0.75rem 0.4rem calc(1.55rem + var(--sidebar-depth, 1) * 0.9rem);
     color: #555c63;
     text-decoration: none;
     font-size: 0.95rem;
@@ -651,6 +685,21 @@ a:hover {
     background-color: transparent;
   }
 
+  .desktop-doc-sidebar__item-link {
+    width: 100%;
+    text-align: left;
+  }
+
+  button.desktop-doc-sidebar__item-link {
+    appearance: none;
+    border: 0;
+  }
+
+  .desktop-doc-sidebar__item-label {
+    min-width: 0;
+    flex: 1;
+  }
+
   .desktop-doc-sidebar__link:hover {
     color: #212529;
     background-color: #e9ecef;
@@ -670,14 +719,22 @@ a:hover {
     flex-direction: column;
   }
 
-  .desktop-doc-sidebar__link.has-children {
-    justify-content: space-between;
+  .sidebar-menu-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 20px;
+    min-height: 20px;
+    margin-left: auto;
+    padding: 0;
+    color: #6c757d;
+    pointer-events: none;
   }
 
   .sidebar-menu-icon {
     width: 14px;
     height: 14px;
-    margin-left: auto;
     color: #6c757d;
     transition: transform 0.2s ease;
   }
@@ -709,7 +766,7 @@ a:hover {
     display: flex;
     align-items: center;
     min-height: 38px;
-    padding: 0.4rem 0.75rem 0.4rem 2.4rem;
+    padding: 0.4rem 0.75rem 0.4rem calc(1.55rem + var(--sidebar-depth, 1) * 0.9rem);
     color: #555c63;
     text-decoration: none;
     font-size: 0.95rem;
@@ -1034,6 +1091,11 @@ div[class*='language-']>.copy[data-copy-state='error'] {
 
 .doc-article .hm-center {
   text-align: center;
+}
+
+.doc-article img.hm-center-img {
+  display: block;
+  margin: 0 auto;
 }
 
 /* 支持页：头图与署名居中；仅署名行改字色 */
@@ -2422,14 +2484,22 @@ html.dark .hm-search-modal__close {
     flex-direction: column;
   }
 
-  .sidebar-compact-mode .desktop-doc-sidebar__link.has-children {
-    justify-content: space-between;
+  .sidebar-compact-mode .sidebar-menu-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 20px;
+    min-height: 20px;
+    margin-left: auto;
+    padding: 0;
+    color: #6c757d;
+    pointer-events: none;
   }
 
   .sidebar-compact-mode .sidebar-menu-icon {
     width: 14px;
     height: 14px;
-    margin-left: auto;
     color: #6c757d;
     transition: transform 0.2s ease;
   }
@@ -2461,7 +2531,7 @@ html.dark .hm-search-modal__close {
     display: flex;
     align-items: center;
     min-height: 38px;
-    padding: 0.4rem 0.75rem 0.4rem 2.4rem;
+    padding: 0.4rem 0.75rem 0.4rem calc(1.55rem + var(--sidebar-depth, 1) * 0.9rem);
     color: #555c63;
     text-decoration: none;
     font-size: 0.95rem;
@@ -2616,4 +2686,15 @@ html.dark {
   50% {
     opacity: 1;
   }
+}
+
+/* ── 消除块级元素紧跟列表时的额外下边距 ── */
+/* Bootstrap reboot 给 p / ul / ol 均设了 margin-bottom: 1rem，
+   当 Markdown 中文本行或列表项换行后紧跟另一个列表时会多出一行间距。
+   用 :has() 精确匹配"后面跟着列表"的元素，更改其底部 margin。 */
+.doc-article p:has(+ ul),
+.doc-article p:has(+ ol),
+.doc-article ol:has(+ ul),
+.doc-article ul:has(+ ol) {
+  margin-bottom: 0.1rem;
 }

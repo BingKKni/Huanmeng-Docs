@@ -23,6 +23,8 @@ export default defineConfig({
   markdown: {
     // 需要注册 vitepress-plugin-tabs 的 markdown-it 插件，以支持 ::: tabs 语法
     config(md) {
+      // 让 Markdown 中的单个文本换行也渲染为 <br>
+      md.set({ breaks: true })
       md.use(tabsMarkdownPlugin)
       md.use(colorTextPlugin)
     },

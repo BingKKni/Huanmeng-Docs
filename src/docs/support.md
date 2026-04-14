@@ -1,6 +1,6 @@
 # 支持幻梦
 
-![#*px #400px](/img/donate_main.png)
+![](/img/donate_main.png){height="400"}
 
 (图片作者: 悠tacC)
 
@@ -56,13 +56,12 @@
 ### 支持方式
 ::: tabs variant:hm-donate
 == 支付宝
-![#*px #350px](/img/donate_alipay_redbag.png) 
-![#*px #350px](/img/donate_alipay.png)
+![](/img/donate_alipay_redbag.png){height="350"} 
+![](/img/donate_alipay.png){height="350"}
 
 == 微信
-![#*px #350px](/img/donate_wechat.png)
+![](/img/donate_wechat.png){height="350"}
 
 == QQ
-![#*px #350px](/img/donate_qq.png)
+![](/img/donate_qq.png){height="350"}
 :::
-

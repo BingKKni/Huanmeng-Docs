@@ -1,6 +1,7 @@
 <script setup>
 import { useData, useRouter, withBase, onContentUpdated } from 'vitepress'
 import { computed, onBeforeUnmount, onMounted, nextTick, ref, watch } from 'vue'
+import SidebarNavItem from './components/SidebarNavItem.vue'
 
 
 const { site, frontmatter, page } = useData()
@@ -188,9 +189,21 @@ function stripMarkdown(str) {
 
 // Compute allDocsContent once since rawDocs doesn't change during navigation
 let cachedAllDocsContent = null
+function sidebarItemHasChildren(item) {
+  return Array.isArray(item.children) && item.children.length > 0
+}
+
+function flattenSidebarLinks(items) {
+  return items.flatMap(item => [
+    item,
+    ...(sidebarItemHasChildren(item) ? flattenSidebarLinks(item.children) : [])
+  ])
+}
+
 function getAllDocsContent() {
   if (cachedAllDocsContent) return cachedAllDocsContent
   const arr = []
+  const searchableLinks = [...navLinks, ...flattenSidebarLinks(desktopSidebarLinks)]
   for (const path in rawDocs) {
     const rawContent = rawDocs[path] || ''
     
@@ -202,7 +215,7 @@ function getAllDocsContent() {
     
     let title = ''
     try {
-      for (const item of [...navLinks, ...desktopSidebarLinks]) {
+      for (const item of searchableLinks) {
          const itemHrefBase = item.href.replace(/\/$/, '')
          const linkBase = link.replace(/\/$/, '')
          if (itemHrefBase === linkBase) {
@@ -346,11 +359,26 @@ const desktopSidebarLinks = [
     isActive: relativePath => relativePath === 'docs/entertainment/index.md',
     hasAnyActive: relativePath => relativePath === 'docs/entertainment/index.md' || relativePath.startsWith('docs/entertainment/'),
     children: [
-      { href: '/docs/entertainment/signin.html', label: '打卡', isActive: relativePath => relativePath === 'docs/entertainment/signin.md' },
-      { href: '/docs/entertainment/sence.html', label: '好感度', isActive: relativePath => relativePath === 'docs/entertainment/sence.md' },
-      { href: '/docs/entertainment/random_image.html', label: '随机图', isActive: relativePath => relativePath === 'docs/entertainment/random_image.md' },
-      { href: '/docs/entertainment/fortune.html', label: '运势', isActive: relativePath => relativePath === 'docs/entertainment/fortune.md' },
-      { href: '/docs/entertainment/paint_bomb.html', label: '油漆炸弹', isActive: relativePath => relativePath === 'docs/entertainment/paint_bomb.md' }
+      { href: '/docs/entertainment/signin', label: '打卡', isActive: relativePath => relativePath === 'docs/entertainment/signin.md' },
+      { href: '/docs/entertainment/fortune', label: '运势', isActive: relativePath => relativePath === 'docs/entertainment/fortune.md' },
+      { href: '/docs/entertainment/sence', label: '好感度', isActive: relativePath => relativePath === 'docs/entertainment/sence.md' },
+      {
+        href: '/docs/entertainment/ctc/',
+        label: '圈小猫',
+        isActive: relativePath => relativePath === 'docs/entertainment/ctc/index.md',
+        hasAnyActive: relativePath => relativePath.startsWith('docs/entertainment/ctc/'),
+        children: [
+          {
+            href: '/docs/entertainment/ctc/multiplayer',
+            label: '多人模式',
+            isActive: relativePath => relativePath === 'docs/entertainment/ctc/multiplayer.md'
+          }
+        ]
+      },
+      { href: '/docs/entertainment/random_image', label: '随机图', isActive: relativePath => relativePath === 'docs/entertainment/random_image.md' },
+      { href: '/docs/entertainment/paint_bomb', label: '油漆炸弹', isActive: relativePath => relativePath === 'docs/entertainment/paint_bomb.md' },
+      { href: '/docs/entertainment/twenty_four_points', label: '二十四点', isActive: relativePath => relativePath === 'docs/entertainment/twenty_four_points.md' },
+      { href: '/docs/entertainment/word_chain', label: '词汇接龙', isActive: relativePath => relativePath === 'docs/entertainment/word_chain.md' }
     ]
   },
   { 
@@ -359,7 +387,7 @@ const desktopSidebarLinks = [
     isActive: relativePath => relativePath === 'docs/delta_force/index.md',
     hasAnyActive: relativePath => relativePath === 'docs/delta_force/index.md' || relativePath.startsWith('docs/delta_force/'),
     children: [
-      { href: '/docs/delta_force/password.html', label: '每日密码门位置', isActive: relativePath => relativePath === 'docs/delta_force/password.md' }
+      { href: '/docs/delta_force/password', label: '每日密码门位置', isActive: relativePath => relativePath === 'docs/delta_force/password.md' }
     ]
   },
   { 
@@ -368,31 +396,11 @@ const desktopSidebarLinks = [
     isActive: relativePath => relativePath === 'docs/faq/index.md',
     hasAnyActive: relativePath => relativePath === 'docs/faq/index.md' || relativePath.startsWith('docs/faq/'),
     children: [
-      { href: '/docs/faq/appeal.html', label: '封禁申诉', isActive: relativePath => relativePath === 'docs/faq/appeal.md' }
+      { href: '/docs/faq/appeal', label: '封禁申诉', isActive: relativePath => relativePath === 'docs/faq/appeal.md' }
     ]
   },
-  { href: '/docs/support.html', label: '🧋 支持幻梦', isActive: relativePath => relativePath === 'docs/support.md' },
+  { href: '/docs/support', label: '🧋 支持幻梦', isActive: relativePath => relativePath === 'docs/support.md' },
 ]
-
-const expandedSidebarKeys = ref({})
-
-watch(() => page.value.relativePath, (newPath) => {
-  desktopSidebarLinks.forEach(link => {
-    if (link.children && link.hasAnyActive && link.hasAnyActive(newPath)) {
-      expandedSidebarKeys.value[link.href] = true
-    }
-  })
-}, { immediate: true })
-
-function handleSidebarLinkClick(e, link) {
-  if (!link.children) return
-  if (isActiveLink(link)) {
-    e.preventDefault()
-    expandedSidebarKeys.value[link.href] = !expandedSidebarKeys.value[link.href]
-  } else {
-    expandedSidebarKeys.value[link.href] = true
-  }
-}
 
 const currentYear = new Date().getFullYear()
 /** 文档/首页切换时驱动淡入淡出（与导航切换同一套 key） */
@@ -1167,27 +1175,6 @@ function isImageOnlyParagraph(p) {
   })
 }
 
-// 解析 alt 文本中的高度约束语法，如 "*px 300px" → 300
-// 返回像素数值，或 null 表示无约束
-function parseConstrainedHeight(alt) {
-  if (!alt) return null
-  const m = alt.match(/^#\*px\s+#(\d+(?:\.\d+)?)px$/i)
-  return m ? parseFloat(m[1]) : null
-}
-
-function getConstrainedHeight(img) {
-  const cached = img.dataset.hmConstrainedHeight
-  if (cached) return parseFloat(cached)
-
-  const parsed = parseConstrainedHeight(img.alt)
-  if (parsed !== null) {
-    img.dataset.hmConstrainedHeight = String(parsed)
-    img.alt = ''
-  }
-
-  return parsed
-}
-
 function bindLightboxTrigger(img) {
   if (img.dataset.hmLightboxBound === '1') return
   img.dataset.hmLightboxBound = '1'
@@ -1360,7 +1347,7 @@ function scheduleImageRowProcessing(force = false) {
 
 /**
  * vitepress-plugin-tabs 非当前面板用 v-if 卸载，切换标签会挂载全新 DOM；
- * 须在激活后重新跑图片行/高度约束逻辑（否则 #*px #…px 等仅首屏标签生效）。
+ * 须在激活后重新跑图片行布局逻辑，否则仅首屏标签会正确计算图片行高度。
  * 键盘切换见 handleDocumentKeydown（左右箭头）。
  */
 function handleVitepressPluginTabClick(ev) {
@@ -1378,23 +1365,16 @@ function nextDoubleRaf() {
 }
 
 function applyMultiImageRowHeights(p, imgs) {
-  const specifiedHeights = imgs.map(getConstrainedHeight).filter(h => h !== null)
   const IMG_ROW_GAP_PX = 12
-
-  let targetHeight = null
-  if (specifiedHeights.length > 0) {
-    targetHeight = Math.min(...specifiedHeights)
-  } else {
-    const containerWidth = p.clientWidth
-    const availWidth = containerWidth - IMG_ROW_GAP_PX * (imgs.length - 1)
-    const eachWidth = availWidth / imgs.length
-    const heights = imgs.map(img => {
-      if (img.naturalWidth === 0) return Infinity
-      return eachWidth * (img.naturalHeight / img.naturalWidth)
-    })
-    const minHeight = Math.min(...heights.filter(h => h !== Infinity && h > 0))
-    if (minHeight > 0 && isFinite(minHeight)) targetHeight = Math.round(minHeight)
-  }
+  const containerWidth = p.clientWidth
+  const availWidth = containerWidth - IMG_ROW_GAP_PX * (imgs.length - 1)
+  const eachWidth = availWidth / imgs.length
+  const heights = imgs.map(img => {
+    if (img.naturalWidth === 0) return Infinity
+    return eachWidth * (img.naturalHeight / img.naturalWidth)
+  })
+  const minHeight = Math.min(...heights.filter(h => h !== Infinity && h > 0))
+  const targetHeight = minHeight > 0 && isFinite(minHeight) ? Math.round(minHeight) : null
 
   imgs.forEach(img => {
     bindLightboxTrigger(img)
@@ -1418,31 +1398,21 @@ async function processImageRowsAsync({ force = false, root = null } = {}) {
   const article = root ?? docArticleRef.value
   if (!article) return
 
-  const pending = []
+  // 1. 先确保文档内的所有图片都绑定了灯箱
+  article.querySelectorAll('img').forEach(img => {
+    bindLightboxTrigger(img)
+  })
 
+  // 2. 然后处理「纯图片段落」的多图并排布局
+  const pending = []
   article.querySelectorAll('p').forEach(p => {
-    if (!force && p.dataset.hmProcessed) return
+    if (!force && p.dataset.hmProcessedRow) return
 
     const imgs = Array.from(p.querySelectorAll('img'))
-    if (imgs.length === 0 || !isImageOnlyParagraph(p)) return
+    // 只有当段落内只有图片（且不只一张）时，才应用 Row 布局
+    if (imgs.length <= 1 || !isImageOnlyParagraph(p)) return
 
-    p.dataset.hmProcessed = '1'
-
-    if (imgs.length === 1) {
-      const img = imgs[0]
-      const constrainedHeight = getConstrainedHeight(img)
-      if (constrainedHeight) {
-        img.style.height = `${constrainedHeight}px`
-        img.style.objectFit = 'cover'
-      } else {
-        img.style.removeProperty('height')
-        img.style.removeProperty('object-fit')
-      }
-
-      bindLightboxTrigger(img)
-      return
-    }
-
+    p.dataset.hmProcessedRow = '1'
     p.classList.add('hm-img-row')
 
     const loadPromises = imgs.map(img => {
@@ -1501,6 +1471,7 @@ onMounted(() => {
   nextTick(() => {
     processContentActions()
     syncDesktopSidebarLayout()
+    processImageRows({ force: true })
   })
   document.addEventListener('keydown', handleDocumentKeydown)
   document.addEventListener('click', handleVitepressPluginTabClick)
@@ -1906,43 +1877,10 @@ watch(infoDialogVisible, async visible => {
           </div>
         </div>
         <hr class="desktop-doc-sidebar__divider" />
-        <div v-for="link in desktopSidebarLinks" :key="`desktop-sidebar-${link.href}`" class="desktop-doc-sidebar__group">
-          <a
-            class="desktop-doc-sidebar__link"
-            :class="{ active: isActiveLink(link), 'has-children': link.children }"
-            :href="getNavHref(link)"
-            :aria-current="isActiveLink(link) ? 'page' : undefined"
-            @click="handleSidebarLinkClick($event, link)"
-          >
-            {{ link.label }}
-            <svg 
-              v-if="link.children" 
-              class="sidebar-menu-icon" 
-              :class="{ expanded: expandedSidebarKeys[link.href] }"
-              xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            >
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-          </a>
-          <div 
-            v-if="link.children" 
-            class="desktop-doc-sidebar__children"
-            :class="{ expanded: expandedSidebarKeys[link.href] }"
-          >
-            <div class="desktop-doc-sidebar__children-inner">
-              <a
-                v-for="child in link.children"
-                :key="`desktop-sidebar-child-${child.href}`"
-                class="desktop-doc-sidebar__child-link"
-                :class="{ active: child.isActive(page.relativePath) }"
-                :href="getNavHref(child)"
-                :aria-current="child.isActive(page.relativePath) ? 'page' : undefined"
-              >
-                {{ child.label }}
-              </a>
-            </div>
-          </div>
-        </div>
+        <SidebarNavItem
+          :items="desktopSidebarLinks"
+          :page-relative-path="page.relativePath"
+        />
       </nav>
     </aside>
 
