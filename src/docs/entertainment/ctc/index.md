@@ -1,4 +1,7 @@
 # 🐱 圈小猫
+::: info
+本游戏基于 [Ganlv 的 phaser-catch-the-cat](https://ganlvtech.github.io/phaser-catch-the-cat/) 改写而成。
+:::
 
 ## 前提剧情
 **口牙！这个白色的小猫偷走了小布丁的一只鞋子！小人类，快帮我抓住它，别让它跑啦~！**
