@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitepress'
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs'
 import colorTextPlugin from './plugins/colorText.js'
+import tableEnhancePlugin from './plugins/tableEnhance.js'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -27,6 +28,7 @@ export default defineConfig({
       md.set({ breaks: true })
       md.use(tabsMarkdownPlugin)
       md.use(colorTextPlugin)
+      md.use(tableEnhancePlugin)
     },
     container: {
       tipLabel: '提示',
