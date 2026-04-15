@@ -445,7 +445,7 @@ const infoDialogShowCancel = ref(false)
 let infoDialogOnConfirm = null
 const infoDialogConfirmButton = ref(null)
 const MOBILE_MEDIA_QUERY = '(max-width: 767.98px)'
-/** 与 Bootstrap `d-lg-block` / style.css 中桌面侧栏媒体查询一致 */
+/** 与 style.css 中桌面侧栏媒体查询一致 */
 const DESKTOP_SIDEBAR_MEDIA_QUERY = '(min-width: 992px)'
 const DESKTOP_SIDEBAR_WIDTH_PX = 240
 const DESKTOP_MAIN_SHIFT_X = 10
@@ -1723,43 +1723,43 @@ watch(infoDialogVisible, async visible => {
   <div class="site-shell" :class="{ 'sidebar-compact-mode': !sidebarSpaceEnough }">
     <header
       ref="siteHeaderRef"
-      class="site-header border-bottom bg-white"
+      class="site-header"
       :class="{
         'mobile-header-hidden': mobileHeaderHidden && !menuOpen,
         'mobile-header-elevated': mobileHeaderElevated && !mobileHeaderHidden,
         'site-header--mobile-nav-open': siteHeaderMobileNavExpanded
       }"
     >
-      <div class="container site-header-container">
-        <div class="d-flex align-items-center justify-content-between site-header-inner">
+      <div class="site-container site-header-container">
+        <div class="site-header-inner">
           <div class="site-branding">
             <a class="site-branding-title" :href="withBase('/')">
               <span class="site-branding-title-desktop">幻梦</span>
               <span class="site-branding-title-mobile">{{ currentPageLabel }}</span>
             </a>
-            <div class="text-muted small site-branding-description">{{ currentPageLabel }}</div>
+            <div class="site-branding-description">{{ currentPageLabel }}</div>
           </div>
 
           <!-- 桌面端导航，仅 md 及以上可见 -->
-          <nav class="nav nav-pills d-none d-md-flex">
+          <nav class="site-nav site-nav--desktop">
             <a
               v-for="link in navLinks"
               :key="link.href"
-              class="nav-link"
-              :class="{ active: isActiveLink(link), 'nav-link--external': link.isExternal }"
+              class="site-nav__link"
+              :class="{ active: isActiveLink(link), 'site-nav__link--external': link.isExternal }"
               :href="getNavHref(link)"
               :target="link.isExternal ? '_blank' : undefined"
               :rel="link.isExternal ? 'noopener noreferrer' : undefined"
               :aria-current="isActiveLink(link) ? 'page' : undefined"
             >
               {{ link.label }}
-              <svg v-if="link.isExternal" class="nav-link-external-icon" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              <svg v-if="link.isExternal" class="site-nav__external-icon" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
             </a>
           </nav>
 
           <!-- 移动端汉堡按钮，仅 md 以下可见 -->
           <button
-            class="mobile-menu-btn d-md-none"
+            class="mobile-menu-btn"
             :class="{ open: menuOpen }"
             type="button"
             aria-label="站点导航"
@@ -1777,14 +1777,14 @@ watch(infoDialogVisible, async visible => {
 
         <!-- 移动端下拉导航 -->
         <div
-          class="mobile-nav d-md-none"
+          class="mobile-nav"
           :class="{ open: menuOpen }"
           :aria-hidden="menuOpen ? 'false' : 'true'"
           @transitionend.self="onMobileNavTransitionEnd"
         >
           <div class="mobile-nav-inner">
             <!-- 移动端搜索框 -->
-            <div class="mobile-nav-search pt-3 px-3">
+            <div class="mobile-nav-search">
               <div class="mobile-search-box">
                 <input 
                   ref="mobileSearchInputRef"
@@ -1795,19 +1795,19 @@ watch(infoDialogVisible, async visible => {
                 <svg class="mobile-search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               </div>
             </div>
-            <nav id="mobile-site-nav" class="nav nav-pills mobile-nav-grid pt-2 pb-1" aria-label="移动端站点导航">
+            <nav id="mobile-site-nav" class="site-nav mobile-nav-links" aria-label="移动端站点导航">
               <a
                 v-for="link in navLinks"
                 :key="link.href"
-                class="nav-link"
-                :class="{ active: isActiveLink(link), 'nav-link--external': link.isExternal }"
+                class="site-nav__link"
+                :class="{ active: isActiveLink(link), 'site-nav__link--external': link.isExternal }"
                 :href="getNavHref(link)"
                 :target="link.isExternal ? '_blank' : undefined"
                 :rel="link.isExternal ? 'noopener noreferrer' : undefined"
                 :aria-current="isActiveLink(link) ? 'page' : undefined"
               >
                 {{ link.label }}
-                <svg v-if="link.isExternal" class="nav-link-external-icon" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                <svg v-if="link.isExternal" class="site-nav__external-icon" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
               </a>
             </nav>
           </div>
@@ -1831,14 +1831,14 @@ watch(infoDialogVisible, async visible => {
 
     <!-- 点击遮罩关闭移动端菜单 -->
     <Transition name="mobile-nav-backdrop-fade">
-      <div v-if="menuOpen && !searchQuery.trim()" class="mobile-nav-backdrop d-md-none" @click="closeMobileMenu"></div>
+      <div v-if="menuOpen && !searchQuery.trim()" class="mobile-nav-backdrop" @click="closeMobileMenu"></div>
     </Transition>
 
     <!-- 移动端呼出侧边栏按钮 -->
     <button
       v-if="shouldShowDesktopSidebar && !mobileSidebarOpen"
       class="mobile-sidebar-trigger"
-      :class="{ 'd-lg-none': sidebarSpaceEnough }"
+      :class="{ 'mobile-sidebar-trigger--desktop-hidden': sidebarSpaceEnough }"
       @click="mobileSidebarOpen = true"
       aria-label="打开侧边栏"
     >
@@ -1873,7 +1873,7 @@ watch(infoDialogVisible, async visible => {
             <button class="sidebar-search-trigger" @click="handleSearchIconClick" aria-label="搜索文档">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </button>
-            <button class="sidebar-close-trigger" :class="{ 'd-lg-none': sidebarSpaceEnough }" @click="mobileSidebarOpen = false" aria-label="收起侧边栏">
+            <button class="sidebar-close-trigger" :class="{ 'sidebar-close-trigger--desktop-hidden': sidebarSpaceEnough }" @click="mobileSidebarOpen = false" aria-label="收起侧边栏">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>
             </button>
           </div>
@@ -1908,12 +1908,12 @@ watch(infoDialogVisible, async visible => {
     </aside>
 
     <main
-      class="py-4 py-md-5"
+      class="site-main"
       :class="{ 'hmdoc-index-main': !frontmatter.home && page.relativePath === 'hmdoc/index.md' }"
     >
       <div
         ref="mainContainerRef"
-        class="container"
+        class="site-container site-main__container"
         :class="{ 'hmdoc-index-container': !frontmatter.home && page.relativePath === 'hmdoc/index.md' }"
       >
         <Transition
@@ -1931,7 +1931,7 @@ watch(infoDialogVisible, async visible => {
             v-else-if="!searchQuery.trim()"
             ref="docArticleRef"
             :key="page.relativePath"
-            class="doc-article p-4 p-md-5"
+            class="doc-article doc-article--padded"
             :class="{
               'docs-index-article': page.relativePath === 'docs/index.md',
               'docs-support-article': page.relativePath === 'docs/support.md'
@@ -1943,10 +1943,10 @@ watch(infoDialogVisible, async visible => {
           <article
             v-else
             key="vp-route-search"
-            class="doc-article search-results-article p-4 p-md-5"
+            class="doc-article search-results-article doc-article--padded"
           >
-            <h1 class="mb-4">搜索结果（共{{ searchResults.length }}条）</h1>
-            <hr class="mb-4"/>
+            <h1 class="search-results-title">搜索结果（共{{ searchResults.length }}条）</h1>
+            <hr class="search-results-divider"/>
             <div class="search-results-list">
               <a 
                 v-for="(res, index) in searchResults" 
@@ -1960,7 +1960,7 @@ watch(infoDialogVisible, async visible => {
                   {{ res.snippetBefore }}<span class="search-highlight">{{ res.match }}</span>{{ res.snippetAfter }}
                 </p>
               </a>
-              <div v-if="searchResults.length === 0" class="text-muted pt-3">
+              <div v-if="searchResults.length === 0" class="search-results-empty">
                 未找到包含 "{{ searchQuery }}" 的结果。
               </div>
             </div>
@@ -1969,11 +1969,11 @@ watch(infoDialogVisible, async visible => {
       </div>
     </main>
 
-    <footer class="site-footer border-top">
-      <div class="container py-3 d-flex flex-column flex-md-row justify-content-between text-muted small site-footer-inner">
-        <span><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" class="text-muted">浙ICP备2026018380号</a></span>
+    <footer class="site-footer">
+      <div class="site-container site-footer-inner">
+        <span><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" class="site-footer-link">浙ICP备2026018380号</a></span>
         <span>©2024-{{ currentYear }} 幻梦，保留所有权利</span>
-        <span><a href="https://register.ccopyright.com.cn/query.html" target="_blank" rel="noopener noreferrer" class="text-muted">软件著作权登记号: 2024SR0589691</a></span>
+        <span><a href="https://register.ccopyright.com.cn/query.html" target="_blank" rel="noopener noreferrer" class="site-footer-link">软件著作权登记号: 2024SR0589691</a></span>
       </div>
     </footer>
 

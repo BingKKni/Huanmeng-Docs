@@ -7,8 +7,8 @@ home: true
     <h1 class="home-title">幻梦Bot</h1>
     <p class="home-subtitle">你的二次元多功能QQ娱乐伙伴</p>
     <div class="home-hero-actions">
-        <a class="btn btn-primary btn-lg home-btn" href="/docs/">开始使用</a>
-        <a class="btn btn-outline-primary btn-lg home-btn" href="/docs/">使用文档</a>
+        <a class="home-btn home-btn--primary" href="/docs/">开始使用</a>
+        <a class="home-btn home-btn--outline" href="/docs/">使用文档</a>
     </div>
 </div>
 
