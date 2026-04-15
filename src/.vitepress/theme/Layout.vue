@@ -379,8 +379,8 @@ const desktopSidebarLinks = [
       { href: '/docs/entertainment/paint_bomb', label: '油漆炸弹', isActive: relativePath => relativePath === 'docs/entertainment/paint_bomb.md' },
       { href: '/docs/entertainment/twenty_four_points', label: '二十四点', isActive: relativePath => relativePath === 'docs/entertainment/twenty_four_points.md' },
       { href: '/docs/entertainment/word_chain', label: '词汇接龙', isActive: relativePath => relativePath === 'docs/entertainment/word_chain.md' },
-      { href: '/docs/entertainment/flipcard', label: '翻牌', isActive: relativePath => relativePath === 'docs/entertainment/flipcard.md' },
-      { href: '/docs/entertainment/decrypt', label: '破译', isActive: relativePath => relativePath === 'docs/entertainment/decrypt.md' }
+      { href: '/docs/entertainment/flop', label: '翻牌', isActive: relativePath => relativePath === 'docs/entertainment/flop.md' },
+      { href: '/docs/entertainment/password_cracker', label: '破译', isActive: relativePath => relativePath === 'docs/entertainment/password_cracker.md' }
     ]
   },
   { 

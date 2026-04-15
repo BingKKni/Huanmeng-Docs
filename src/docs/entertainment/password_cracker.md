@@ -7,23 +7,23 @@
 ## 玩法（超级详细）
 1. 点击按钮来开始游戏。
 
-![](/img/decrypt/start.png){.hm-center-img width="600"}
+![](/img/password_cracker/start.png){.hm-center-img width="600"}
 
 2. 此时按照剧情显示：你点亮了箱子上的显示屏，要求你在指定的时间内打入正确的密码，否则计时结束箱子会自爆以惩罚尝试破解它的人。小人类将默认有5次机会来猜密码，那么请点击下面的 **🆕点击输入密码** ，猜一个密码吧~
 - **{#ff0000}密码没有重复的数字{}，所以不用猜 1122 1233 这样的密码噢！**
 
 <div style="column-count: 2; column-gap: 20px;">
     <div>
-        <img src="/img/decrypt/round0.png">
+        <img src="/img/password_cracker/round0.png">
     </div>
     <div>
-        <img src="/img/decrypt/round0_tip.png">
+        <img src="/img/password_cracker/round0_tip.png">
     </div>
 </div>
 
 3. 在小人类输完第一个密码之后，箱子将会返回以下结果：
 
-![](/img/decrypt/round1.png){.hm-center-img width="600"}
+![](/img/password_cracker/round1.png){.hm-center-img width="600"}
 
 - ✅表示最终密码包含这个数字，且密码位置正确。
 - 🟠表示最终密码是有这个数字的，只是位置不对。
@@ -41,7 +41,7 @@
 
 4. **{#0000ff}记住：优先猜没有猜过的数字！{}我们第一次猜的是1234，那么第二次我们就猜5678。**这里进一步猜测，得到了以下结果：
 
-![](/img/decrypt/round2.png){.hm-center-img width="600"}
+![](/img/password_cracker/round2.png){.hm-center-img width="600"}
 
 - 根据结果可以得知，第三位数字对了，它是7，根据上一个密码猜测，我们确定了密码4位数字的其中两位，也就是` ??74 `。
 - 根据第一次密码猜测得知，数字1和3位置不对，不过后两位密码数字我们已经确认下来了，那我们只需要推理出前两位数字，就可以得到完整的密码！
@@ -51,7 +51,7 @@
 
 5. 我们来输入密码验证：
 
-![](/img/decrypt/round3.png){.hm-center-img width="600"}
+![](/img/password_cracker/round3.png){.hm-center-img width="600"}
 
 - 根据前面推理出来的密码，我们成功破译并打开了宝物箱子，拿到了里面的奖励~！
 - 基本的玩法就是这样了，相信看到这里的小人类，已经懂得了至少如何去破译（猜）密码了吧？也许可以回去上手玩一下啦awa~
@@ -62,17 +62,17 @@
 ## 新手常犯错误
 **常犯错误1（最多）**：猜测密码时猜重复数字。如1111，1122等（不用这样猜!）。
 
-![](/img/decrypt/tip_dup.png){.hm-center-img width="600"}
+![](/img/password_cracker/tip_dup.png){.hm-center-img width="600"}
 
 **常犯错误2**：每步思考用时过久。
 **解释**：简单难度下，有240秒时间供你猜密码，小人类应该时刻关注剩余时间，每次猜密码所用时间不宜超过10秒，每步思考时间太久很容易会超时导致箱子自爆失去奖励。
 
-![](/img/decrypt/tip_duration.png){.hm-center-img width="600"}
+![](/img/password_cracker/tip_duration.png){.hm-center-img width="600"}
 
 **常犯错误3**：重复猜打❌的数字。
 **解释**：打❌的数字就不用再猜了，就是告诉小人类密码里不会有这个数字，此时应该猜没猜过的数字来尽快推理！
 
-![](/img/decrypt/tip_exclude.png){.hm-center-img width="600"}
+![](/img/password_cracker/tip_exclude.png){.hm-center-img width="600"}
 
 
 ## 奖励与惩罚
@@ -92,7 +92,7 @@
 ## 进阶方法
 在私信环境下，小人类可以直接打入数字来猜测密码，无需点击按钮，非常方便！
 
-![](/img/decrypt/tip_numeric.png){.hm-center-img width="600"}
+![](/img/password_cracker/tip_numeric.png){.hm-center-img width="600"}
 
 
 ## 道具掉落

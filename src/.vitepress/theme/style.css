@@ -33,8 +33,10 @@ svg {
   --hm-code-lang-color: rgba(33, 37, 41, 0.42);
   --hm-code-line-highlight: rgba(15, 23, 42, 0.055);
   --hm-desktop-sidebar-left: 16px;
+  /* 由 Layout.vue 按导航栏位置写入 documentElement，此处为首屏前的回退值 */
   --hm-desktop-sidebar-top: 120px;
-  /* 侧栏高度由入口数量自动撑开，不再顶到底 */
+  /* 桌面文档侧栏距视口底部的留白，与 top 共同限定固定侧栏高度 */
+  --hm-desktop-sidebar-bottom: 50px;
   --hm-dialog-overlay: rgba(0, 0, 0, 0.3);
   --hm-dialog-surface: #ffffff;
   --hm-dialog-border: rgba(255, 255, 255, 0.7);
@@ -509,8 +511,8 @@ a:hover {
 
   .desktop-doc-sidebar {
     position: fixed;
-    top: 100px;
-    bottom: 50px;
+    top: var(--hm-desktop-sidebar-top);
+    bottom: var(--hm-desktop-sidebar-bottom);
     left: var(--hm-desktop-sidebar-left);
     width: var(--hm-desktop-sidebar-width);
     z-index: 80;
@@ -522,7 +524,7 @@ a:hover {
     flex-direction: column;
     gap: 10px;
     height: 100%;
-    max-height: calc(100vh - 100px);
+    max-height: calc(100vh - var(--hm-desktop-sidebar-top) - var(--hm-desktop-sidebar-bottom));
     padding: 10px;
     overflow-y: auto;
     overflow-x: hidden;

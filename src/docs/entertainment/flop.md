@@ -16,7 +16,7 @@
             <p>第一次翻牌不受任何局内或局外加成影响，失败概率固定。</p>
         </li>
     </ul>
-    <img src="/img/flipcard/failrate.png">
+    <img src="/img/flop/failrate.png">
 </div>
 <div style="column-count: 2; column-gap: 20px;">
     <ul>
@@ -24,7 +24,7 @@
             <p>每次翻牌成功都会给予打卡额度加成；</p>
         </li>
     </ul>
-    <img src="/img/flipcard/signin_buff.png">
+    <img src="/img/flop/signin_buff.png">
 </div>
 <div style="column-count: 2; column-gap: 20px;">
     <ul>
@@ -32,7 +32,7 @@
             <p>第 <code>2</code> 次及以上翻牌成功，将额外获得额度奖励。</p>
         </li>
     </ul>
-    <img src="/img/flipcard/edu_reward.png">
+    <img src="/img/flop/edu_reward.png">
 </div>
 <div style="column-count: 2; column-gap: 20px;">
     <ul>
@@ -40,7 +40,7 @@
             <p>单次翻牌成功上限 <code>8</code> 次。第八次翻牌<font color="#ffd700">若成功</font>，将翻到<font color="#ffd700">金色牌</font>，给予大量打卡加成和额度奖励。</p>
         </li>
     </ul>
-    <img src="/img/flipcard/golden_card.png">
+    <img src="/img/flop/golden_card.png">
 </div>
 <div style="column-count: 2; column-gap: 20px;">
     <ul>
@@ -49,8 +49,8 @@
         </li>
     </ul>
     <div style="column-count: 2; column-gap: 20px;">
-        <img src="/img/flipcard/purple.png">
-        <img src="/img/flipcard/red.png">
+        <img src="/img/flop/purple.png">
+        <img src="/img/flop/red.png">
     </div>
 </div>
 <div style="column-count: 2; column-gap: 20px;">
@@ -79,7 +79,7 @@
             </li>
         </ol>
     </ul>
-    <img src="/img/flipcard/reset.png" style="position: auto;">
+    <img src="/img/flop/reset.png" style="position: auto;">
 </div>
 
 ::: info
@@ -155,7 +155,7 @@
             <p>人设需要审核通过后，属性才会生效！</p>
         </blockquote>
     </div>
-    <img src="/img/flipcard/personality.png">
+    <img src="/img/flop/personality.png">
 </div>
 <div style="column-count: 2; column-gap: 20px;">
     <ul>
@@ -163,5 +163,5 @@
             <p>抽取 <strong>每日运势加成</strong> ，有概率抽到翻牌加成，这将有助于小人类更好的翻到金色牌~</p>
         </li>
     </ul>
-    <img src="/img/flipcard/fortune.png">
+    <img src="/img/flop/fortune.png">
 </div>
