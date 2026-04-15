@@ -422,7 +422,8 @@ a:hover {
 @media (min-width: 992px) {
   .desktop-doc-sidebar {
     position: fixed;
-    top: var(--hm-desktop-sidebar-top);
+    top: 100px;
+    bottom: 50px;
     left: var(--hm-desktop-sidebar-left);
     width: var(--hm-desktop-sidebar-width);
     z-index: 80;
@@ -433,14 +434,35 @@ a:hover {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    height: auto;
+    height: 100%;
+    max-height: calc(100vh - 100px);
     padding: 10px;
-    overflow: visible;
+    overflow-y: auto;
+    overflow-x: hidden;
     background: #fefefe;
     border: 1px #dfdfdf solid;
     border-radius: 8px;
     box-shadow: none;
     pointer-events: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(107, 114, 128, 0.72) transparent;
+  }
+
+  .desktop-doc-sidebar__panel::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .desktop-doc-sidebar__panel::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .desktop-doc-sidebar__panel::-webkit-scrollbar-thumb {
+    background: rgba(107, 114, 128, 0.48);
+    border-radius: 999px;
+  }
+
+  .desktop-doc-sidebar__panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(107, 114, 128, 0.72);
   }
 
   /* 侧栏顶部标题：「页面切换」 */
