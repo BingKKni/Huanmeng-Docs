@@ -25,8 +25,9 @@ watch(activeTocId, async (newId) => {
     const idSelector = CSS.escape(newId)
     const linkEl = document.querySelector(`.toc-nav .toc-link[href="#${idSelector}"]`) || document.querySelector(`.toc-nav .toc-link[href="#${newId}"]`)
     if (linkEl) {
-      const pillHeight = 16;
-      const topOffset = linkEl.offsetTop + (linkEl.offsetHeight - pillHeight) / 2;
+      const pillHeight = 16
+      const pillVisualOffset = 0.5
+      const topOffset = Math.round(linkEl.offsetTop + (linkEl.offsetHeight - pillHeight) / 2 + pillVisualOffset)
       tocIndicatorStyle.value = {
         transform: `translateY(${topOffset}px)`,
         height: `${pillHeight}px`,
@@ -582,6 +583,9 @@ const sidebarSpaceEnough = ref(true)
 const lightboxSrc = ref('')
 const lightboxVisible = ref(false)
 const lightboxScale = ref(1)
+const lightboxOffsetX = ref(0)
+const lightboxOffsetY = ref(0)
+const lightboxImageTransition = ref('transform 0.18s ease')
 const lightboxPhase = ref('closed')
 const lightboxBackdropOpacity = ref(0)
 const lightboxRootRef = ref(null)
@@ -609,8 +613,13 @@ const MOBILE_NAV_PANEL_MS = 300
 const MOBILE_NAV_CLOSE_FALLBACK_MS = MOBILE_NAV_PANEL_MS + 100
 const MOBILE_HEADER_SCROLL_DELTA = 8
 const LIGHTBOX_SCALE_MIN = 1
+const MOBILE_LIGHTBOX_SCALE_MAX = 4
+const MOBILE_LIGHTBOX_DOUBLE_TAP_SCALE = 2.5
 const DESKTOP_LIGHTBOX_SCALE_MAX = 4
 const DESKTOP_LIGHTBOX_SCALE_STEP = 0.2
+const LIGHTBOX_DOUBLE_TAP_DELAY_MS = 280
+const LIGHTBOX_GESTURE_CLICK_SUPPRESS_MS = 360
+const LIGHTBOX_DRAG_START_THRESHOLD_PX = 4
 /** 遮罩最深约 50% 黑 */
 const LIGHTBOX_OVERLAY_MAX = 0.5
 /** 灯箱打开：位移 + 遮罩淡入 */
@@ -667,6 +676,18 @@ let bodyScrollLocked = false
 let lightboxOriginImg = null
 /** 打开瞬间的缩略图矩形，源节点已不在 DOM 时作回退 */
 let thumbRectSnapshot = { left: 0, top: 0, width: 0, height: 0 }
+let lightboxPinching = false
+let lightboxPinchLastDistance = 0
+let lightboxPinchLastMidpoint = null
+let lightboxLastTapAt = 0
+let lightboxSuppressClickUntil = 0
+let lightboxDragging = false
+let lightboxDragMoved = false
+let lightboxDragFromPinch = false
+let lightboxDragStartX = 0
+let lightboxDragStartY = 0
+let lightboxDragStartOffsetX = 0
+let lightboxDragStartOffsetY = 0
 let previousBodyOverflow = ''
 let imageRowProcessFrame = 0
 let imageRowForceProcess = false
@@ -731,6 +752,16 @@ function tickNavRouteProgress() {
 }
 
 function beginRouteNavProgress(href) {
+  if (isMobileViewport()) {
+    navRoutePendingKey = null
+    clearNavRouteProgressTimers()
+    navRouteProgress.value = 0
+    navRouteProgressVisible.value = false
+    navRouteProgressFading.value = false
+    navRouteProgressSmooth.value = false
+    return
+  }
+
   clearNavRouteProgressTimers()
   const now = performance.now()
   if (lastRouteSwitchStartedAt && now - lastRouteSwitchStartedAt <= DOC_PAGE_FAST_SWITCH_WINDOW_MS) {
@@ -925,15 +956,144 @@ function closeSidebar() {
 
 function clampLightboxScale(scale) {
   const maxScale = isMobileViewport()
-    ? LIGHTBOX_SCALE_MIN
+    ? MOBILE_LIGHTBOX_SCALE_MAX
     : DESKTOP_LIGHTBOX_SCALE_MAX
 
   return Math.min(Math.max(scale, LIGHTBOX_SCALE_MIN), maxScale)
 }
 
+function resetLightboxGestureState() {
+  lightboxImageTransition.value = 'transform 0.18s ease'
+  lightboxOffsetX.value = 0
+  lightboxOffsetY.value = 0
+  lightboxPinching = false
+  lightboxPinchLastDistance = 0
+  lightboxPinchLastMidpoint = null
+  lightboxLastTapAt = 0
+  lightboxSuppressClickUntil = 0
+  lightboxDragging = false
+  lightboxDragMoved = false
+  lightboxDragFromPinch = false
+  lightboxDragStartX = 0
+  lightboxDragStartY = 0
+  lightboxDragStartOffsetX = 0
+  lightboxDragStartOffsetY = 0
+}
+
+function suppressLightboxClick() {
+  lightboxSuppressClickUntil = Date.now() + LIGHTBOX_GESTURE_CLICK_SUPPRESS_MS
+}
+
+function getLightboxViewportSize() {
+  const root = lightboxRootRef.value
+  if (!root) {
+    return {
+      width: window.innerWidth,
+      height: window.innerHeight
+    }
+  }
+
+  const rect = root.getBoundingClientRect()
+  const style = window.getComputedStyle(root)
+  const horizontalPadding = (Number.parseFloat(style.paddingLeft) || 0) + (Number.parseFloat(style.paddingRight) || 0)
+  const verticalPadding = (Number.parseFloat(style.paddingTop) || 0) + (Number.parseFloat(style.paddingBottom) || 0)
+
+  return {
+    width: Math.max(rect.width - horizontalPadding, 0),
+    height: Math.max(rect.height - verticalPadding, 0)
+  }
+}
+
+function clampLightboxOffset(x, y, scale = lightboxScale.value) {
+  const img = lightboxImgRef.value
+  if (!img || scale <= LIGHTBOX_SCALE_MIN) {
+    return { x: 0, y: 0 }
+  }
+
+  const baseWidth = img.offsetWidth || img.clientWidth
+  const baseHeight = img.offsetHeight || img.clientHeight
+  if (baseWidth < 2 || baseHeight < 2) {
+    return { x, y }
+  }
+
+  const viewport = getLightboxViewportSize()
+  const maxOffsetX = Math.max((baseWidth * scale - viewport.width) / 2, 0)
+  const maxOffsetY = Math.max((baseHeight * scale - viewport.height) / 2, 0)
+
+  return {
+    x: Math.min(Math.max(x, -maxOffsetX), maxOffsetX),
+    y: Math.min(Math.max(y, -maxOffsetY), maxOffsetY)
+  }
+}
+
+function setLightboxOffset(x, y, scale = lightboxScale.value) {
+  const next = clampLightboxOffset(x, y, scale)
+  lightboxOffsetX.value = Number(next.x.toFixed(2))
+  lightboxOffsetY.value = Number(next.y.toFixed(2))
+}
+
+function zoomLightboxAroundPoint(nextScale, clientX, clientY) {
+  const previousScale = lightboxScale.value
+  const clampedScale = clampLightboxScale(nextScale)
+
+  if (Math.abs(clampedScale - previousScale) < 0.001) {
+    if (clampedScale <= LIGHTBOX_SCALE_MIN) {
+      setLightboxOffset(0, 0, LIGHTBOX_SCALE_MIN)
+    }
+    return
+  }
+
+  if (clampedScale <= LIGHTBOX_SCALE_MIN) {
+    lightboxScale.value = LIGHTBOX_SCALE_MIN
+    setLightboxOffset(0, 0, LIGHTBOX_SCALE_MIN)
+    return
+  }
+
+  const img = lightboxImgRef.value
+  if (!img) {
+    lightboxScale.value = clampedScale
+    return
+  }
+
+  const rect = img.getBoundingClientRect()
+  const centerX = rect.left + rect.width / 2
+  const centerY = rect.top + rect.height / 2
+  const ratio = clampedScale / previousScale
+  const nextOffsetX = lightboxOffsetX.value + (1 - ratio) * (clientX - centerX)
+  const nextOffsetY = lightboxOffsetY.value + (1 - ratio) * (clientY - centerY)
+
+  lightboxScale.value = clampedScale
+  setLightboxOffset(nextOffsetX, nextOffsetY, clampedScale)
+}
+
+function getTouchDistance(touches) {
+  if (touches.length < 2) return 0
+
+  const first = touches[0]
+  const second = touches[1]
+  return Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY)
+}
+
+function getTouchesMidpoint(touches) {
+  if (touches.length < 2) return null
+
+  const first = touches[0]
+  const second = touches[1]
+  return {
+    x: (first.clientX + second.clientX) / 2,
+    y: (first.clientY + second.clientY) / 2
+  }
+}
+
 function syncLightboxScale() {
   if (!lightboxVisible.value) return
-  lightboxScale.value = clampLightboxScale(lightboxScale.value)
+  const nextScale = clampLightboxScale(lightboxScale.value)
+  lightboxScale.value = nextScale
+  if (nextScale <= LIGHTBOX_SCALE_MIN) {
+    setLightboxOffset(0, 0, LIGHTBOX_SCALE_MIN)
+    return
+  }
+  setLightboxOffset(lightboxOffsetX.value, lightboxOffsetY.value, nextScale)
 }
 
 function clearMobileNavCloseFallback() {
@@ -1032,6 +1192,7 @@ function openLightboxWithoutFlyAnimation(src) {
   thumbRectSnapshot = { left: 0, top: 0, width: 0, height: 0 }
   lightboxSrc.value = src
   lightboxScale.value = 1
+  resetLightboxGestureState()
   lightboxPhase.value = 'open'
   lightboxBackdropOpacity.value = LIGHTBOX_OVERLAY_MAX
   lightboxVisible.value = true
@@ -1050,6 +1211,7 @@ async function openLightbox(src, originEl) {
 
   lightboxSrc.value = src
   lightboxScale.value = 1
+  resetLightboxGestureState()
   lightboxPhase.value = 'opening'
   lightboxBackdropOpacity.value = 0
   lightboxVisible.value = true
@@ -1167,6 +1329,7 @@ function finishCloseLightbox() {
   lightboxVisible.value = false
   lightboxSrc.value = ''
   lightboxScale.value = 1
+  resetLightboxGestureState()
   lightboxPhase.value = 'closed'
   lightboxBackdropOpacity.value = 0
   lightboxOriginImg = null
@@ -1322,8 +1485,10 @@ function handleDocumentKeydown(e) {
   if (menuOpen.value) closeMobileMenu()
 }
 
-function handleLightboxClick() {
+function handleLightboxClick(e) {
   if (lightboxPhase.value !== 'open') return
+  if (Date.now() < lightboxSuppressClickUntil) return
+  if (!isMobileViewport() && e.target instanceof Element && e.target.closest('.hm-lightbox__content')) return
   startLightboxCloseAnimation()
 }
 
@@ -1335,9 +1500,175 @@ function handleDesktopLightboxWheel(e) {
     ? DESKTOP_LIGHTBOX_SCALE_STEP
     : -DESKTOP_LIGHTBOX_SCALE_STEP
 
-  lightboxScale.value = clampLightboxScale(
-    Number((lightboxScale.value + scaleDelta).toFixed(2))
+  zoomLightboxAroundPoint(
+    Number((lightboxScale.value + scaleDelta).toFixed(2)),
+    e.clientX,
+    e.clientY
   )
+}
+
+function handleLightboxTouchStart(e) {
+  if (!isMobileViewport()) return
+  if (lightboxPhase.value !== 'open') return
+
+  if (e.touches.length === 2) {
+    const distance = getTouchDistance(e.touches)
+    const midpoint = getTouchesMidpoint(e.touches)
+    if (distance < 2 || !midpoint) return
+
+    lightboxDragging = false
+    lightboxDragMoved = false
+    lightboxPinching = true
+    lightboxPinchLastDistance = distance
+    lightboxPinchLastMidpoint = midpoint
+    lightboxImageTransition.value = 'none'
+    lightboxLastTapAt = 0
+    suppressLightboxClick()
+    e.preventDefault()
+    return
+  }
+
+  if (e.touches.length !== 1) return
+  if (lightboxScale.value <= LIGHTBOX_SCALE_MIN) return
+
+  const touch = e.touches[0]
+  lightboxDragging = true
+  lightboxDragMoved = false
+  lightboxDragFromPinch = false
+  lightboxDragStartX = touch.clientX
+  lightboxDragStartY = touch.clientY
+  lightboxDragStartOffsetX = lightboxOffsetX.value
+  lightboxDragStartOffsetY = lightboxOffsetY.value
+  lightboxImageTransition.value = 'none'
+  e.preventDefault()
+}
+
+function handleLightboxTouchMove(e) {
+  if (!isMobileViewport()) return
+  if (lightboxPhase.value !== 'open') return
+
+  if (lightboxPinching && e.touches.length === 2) {
+    const distance = getTouchDistance(e.touches)
+    const midpoint = getTouchesMidpoint(e.touches)
+    if (distance < 2 || !midpoint || lightboxPinchLastDistance < 2 || !lightboxPinchLastMidpoint) {
+      return
+    }
+
+    const panDeltaX = midpoint.x - lightboxPinchLastMidpoint.x
+    const panDeltaY = midpoint.y - lightboxPinchLastMidpoint.y
+    setLightboxOffset(
+      lightboxOffsetX.value + panDeltaX,
+      lightboxOffsetY.value + panDeltaY,
+      lightboxScale.value
+    )
+    zoomLightboxAroundPoint(
+      Number((lightboxScale.value * distance / lightboxPinchLastDistance).toFixed(3)),
+      midpoint.x,
+      midpoint.y
+    )
+    lightboxPinchLastDistance = distance
+    lightboxPinchLastMidpoint = midpoint
+    suppressLightboxClick()
+    e.preventDefault()
+    return
+  }
+
+  if (!lightboxDragging || e.touches.length !== 1) return
+
+  const touch = e.touches[0]
+  const deltaX = touch.clientX - lightboxDragStartX
+  const deltaY = touch.clientY - lightboxDragStartY
+  if (
+    !lightboxDragMoved &&
+    (Math.abs(deltaX) >= LIGHTBOX_DRAG_START_THRESHOLD_PX || Math.abs(deltaY) >= LIGHTBOX_DRAG_START_THRESHOLD_PX)
+  ) {
+    lightboxDragMoved = true
+  }
+
+  setLightboxOffset(
+    lightboxDragStartOffsetX + deltaX,
+    lightboxDragStartOffsetY + deltaY,
+    lightboxScale.value
+  )
+  if (lightboxDragMoved) suppressLightboxClick()
+  e.preventDefault()
+}
+
+function handleLightboxTouchEnd(e) {
+  if (!isMobileViewport()) return
+  if (lightboxPhase.value !== 'open') return
+
+  if (lightboxPinching) {
+    if (e.touches.length < 2) {
+      lightboxPinching = false
+      lightboxPinchLastDistance = 0
+      lightboxPinchLastMidpoint = null
+      lightboxImageTransition.value = 'transform 0.18s ease'
+      suppressLightboxClick()
+
+      if (e.touches.length === 1 && lightboxScale.value > LIGHTBOX_SCALE_MIN) {
+        const touch = e.touches[0]
+        lightboxDragging = true
+        lightboxDragMoved = false
+        lightboxDragFromPinch = true
+        lightboxDragStartX = touch.clientX
+        lightboxDragStartY = touch.clientY
+        lightboxDragStartOffsetX = lightboxOffsetX.value
+        lightboxDragStartOffsetY = lightboxOffsetY.value
+        lightboxImageTransition.value = 'none'
+      }
+    }
+    return
+  }
+
+  if (lightboxDragging) {
+    if (e.touches.length === 0) {
+      lightboxDragging = false
+      lightboxDragStartX = 0
+      lightboxDragStartY = 0
+      lightboxDragStartOffsetX = lightboxOffsetX.value
+      lightboxDragStartOffsetY = lightboxOffsetY.value
+      lightboxImageTransition.value = 'transform 0.18s ease'
+      if (lightboxDragMoved) {
+        suppressLightboxClick()
+      } else if (isMobileViewport() && !lightboxDragFromPinch) {
+        lightboxLastTapAt = 0
+        suppressLightboxClick()
+        startLightboxCloseAnimation()
+      }
+      lightboxDragFromPinch = false
+    }
+    return
+  }
+
+  if (e.touches.length !== 0 || e.changedTouches.length !== 1) return
+
+  const now = Date.now()
+  if (now - lightboxLastTapAt > 0 && now - lightboxLastTapAt <= LIGHTBOX_DOUBLE_TAP_DELAY_MS) {
+    const touch = e.changedTouches[0]
+    if (lightboxScale.value > LIGHTBOX_SCALE_MIN) {
+      zoomLightboxAroundPoint(LIGHTBOX_SCALE_MIN, touch.clientX, touch.clientY)
+    } else {
+      zoomLightboxAroundPoint(MOBILE_LIGHTBOX_DOUBLE_TAP_SCALE, touch.clientX, touch.clientY)
+    }
+    lightboxLastTapAt = 0
+    suppressLightboxClick()
+    e.preventDefault()
+    return
+  }
+
+  lightboxLastTapAt = now
+}
+
+function handleLightboxTouchCancel() {
+  lightboxPinching = false
+  lightboxPinchLastDistance = 0
+  lightboxPinchLastMidpoint = null
+  lightboxDragging = false
+  lightboxDragMoved = false
+  lightboxDragFromPinch = false
+  lightboxImageTransition.value = 'transform 0.18s ease'
+  lightboxLastTapAt = 0
 }
 
 function resetMobileHeaderState() {
@@ -1395,6 +1726,12 @@ watch(
   mobile => {
     syncTocScrollListener()
     if (mobile) {
+      navRoutePendingKey = null
+      clearNavRouteProgressTimers()
+      navRouteProgress.value = 0
+      navRouteProgressVisible.value = false
+      navRouteProgressFading.value = false
+      navRouteProgressSmooth.value = false
       stopDesktopSearchPlaceholderCycle()
       return
     }
@@ -2248,7 +2585,7 @@ watch(infoDialogVisible, async visible => {
 
       <!-- 顶部导航加载进度条（移动端/桌面端统一） -->
       <div
-        v-show="navRouteProgressVisible || navRouteProgressFading"
+        v-show="!isMobileView && (navRouteProgressVisible || navRouteProgressFading)"
         class="site-nav-route-progress"
         :class="{ 'site-nav-route-progress--fading': navRouteProgressFading }"
         aria-hidden="true"
@@ -2468,8 +2805,15 @@ watch(infoDialogVisible, async visible => {
             ref="lightboxImgRef"
             :src="lightboxSrc"
             alt=""
-            :style="{ transform: `scale(${lightboxScale})` }"
+            :style="{
+              transform: `translate3d(${lightboxOffsetX}px, ${lightboxOffsetY}px, 0) scale(${lightboxScale})`,
+              transition: lightboxImageTransition,
+            }"
             @wheel.prevent="handleDesktopLightboxWheel"
+            @touchstart="handleLightboxTouchStart"
+            @touchmove="handleLightboxTouchMove"
+            @touchend="handleLightboxTouchEnd"
+            @touchcancel="handleLightboxTouchCancel"
           >
         </div>
       </div>
