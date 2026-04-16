@@ -10,6 +10,8 @@ html {
 *::before,
 *::after {
   box-sizing: border-box;
+  /* 屏蔽 Android Chrome / WebKit 触摸点击时产生的蓝色矩形高亮 */
+  -webkit-tap-highlight-color: transparent;
 }
 
 button,
@@ -2637,7 +2639,6 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
   transition: none;
   flex-shrink: 0;
   align-self: center;
-  -webkit-tap-highlight-color: transparent;
   -webkit-appearance: none;
   appearance: none;
   outline: none;
@@ -2656,7 +2657,6 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
   transition: none;
   flex: 0 0 auto;
   align-self: center;
-  -webkit-tap-highlight-color: transparent;
   -webkit-appearance: none;
   appearance: none;
   outline: none;

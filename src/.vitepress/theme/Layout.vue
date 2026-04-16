@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { useData, useRouter, withBase, onContentUpdated } from 'vitepress'
 import { computed, onBeforeUnmount, onMounted, nextTick, ref, watch } from 'vue'
 import SidebarNavItem from './components/SidebarNavItem.vue'
@@ -618,11 +618,11 @@ const LIGHTBOX_CLOSE_ANIM_MS = 150
 /** 打开：略先快后慢，落地柔和 */
 const LIGHTBOX_ANIM_EASE = 'cubic-bezier(0.22, 0.82, 0.24, 1)'
 /**
- * 关闭：先快后更快（ease-in）。cubic-bezier(x1,y1,x2,y2)：
+ * 关闭：先快后更快（ease-in）。cubic-bezier(x1,y1,x2,y2)；
  */
 const LIGHTBOX_CLOSE_ANIM_EASE = 'cubic-bezier(0.18, 0, 1, 1)'
 
-/** flip 同时 transform + opacity，打开/关闭各用各自的 ms 与 ease */
+/** flip 同时 transform + opacity，打开/关闭各自用各自的 ms 和 ease */
 function lightboxOpenFlipTransition() {
   const d = LIGHTBOX_OPEN_ANIM_MS
   const e = LIGHTBOX_ANIM_EASE
@@ -635,7 +635,7 @@ function lightboxCloseFlipTransition() {
   return `transform ${d}ms ${e}, opacity ${d}ms ${e}`
 }
 
-/** 无 FLIP 时仅淡入/淡出，仍共用对应 ms、ease */
+/** 非 FLIP 时仅淡入/淡出，仍共用对应 ms、ease */
 function lightboxOpenOpacityOnlyTransition() {
   return `opacity ${LIGHTBOX_OPEN_ANIM_MS}ms ${LIGHTBOX_ANIM_EASE}`
 }
@@ -663,7 +663,7 @@ let lastScrollY = 0
 let bodyScrollLocked = false
 /** 点击打开时的文档内图片，关闭时优先用其最新 getBoundingClientRect */
 let lightboxOriginImg = null
-/** 打开瞬间的缩略图矩形，源节点已不在 DOM 时作回退 */
+/** 打开瞬间的缩略图矩形，源节点已不在 DOM 时作为退路 */
 let thumbRectSnapshot = { left: 0, top: 0, width: 0, height: 0 }
 let lightboxPinching = false
 let lightboxPinchLastDistance = 0
@@ -681,6 +681,26 @@ let previousBodyOverflow = ''
 let imageRowProcessFrame = 0
 let imageRowForceProcess = false
 let docPageEnterInProgress = false
+// -- 手势状态（侧边栏滑动 + 顶部过滑触发菜单）--------------------------
+/** 手势触点起始位置 */
+let swipeTouchStartX = 0
+let swipeTouchStartY = 0
+/** 是否正在追踪侧边栏手势 */
+let swipeTracking = false
+/** 是否已确认为侧边栏方向的水平滑动（锁轴后不再重判） */
+let swipeAxisLocked = false
+/** 是否确认为垂直方向（排除侧边栏手势） */
+let swipeVerticalLocked = false
+/** 顶部过滑追踪：手指落下时页面是否处于顶部 */
+let overScrollAtTop = false
+/** 触发顶部过滑菜单所需的最小上滑位移（px） */
+const SWIPE_OVERSCROLL_THRESHOLD = 72
+/** 侧边栏右滑：起始触点必须在屏幕左侧的感应边距（px） */
+const SWIPE_LEFT_EDGE_WIDTH = 28
+/** 轴锁定阈值：水平/垂直位移差超过此值才锁轴（px） */
+const SWIPE_AXIS_LOCK_THRESHOLD = 8
+/** 侧边栏手势确认所需的最小水平位移（px） */
+const SWIPE_SIDEBAR_THRESHOLD = 48
 const copyButtonResetTimers = new Map()
 
 /** 移动端文档切换顶部进度条（不占文档流） */
@@ -2020,8 +2040,10 @@ function applyMultiImageRowHeights(p, imgs) {
   })
 
   /* 仅两张并排时 flush：尊重 HTML height + 小间距。≥3 张仍 flush 会按自然宽度换行成多排 */
+  /* 带左/右对齐类时已明确布局意图，跳过 flush，走高度均衡裁剪逻辑 */
+  const hasAlignClass = imgs.some(img => img.classList.contains('hm-left-img') || img.classList.contains('hm-right-img'))
   const allExplicitHeight = imgs.length > 0 && imgs.every(imgHasExplicitHeight)
-  const useFlush = allExplicitHeight && imgs.length === 2
+  const useFlush = allExplicitHeight && imgs.length === 2 && !hasAlignClass
 
   if (useFlush) {
     p.classList.add('hm-img-row--flush')
@@ -2121,6 +2143,78 @@ function cancelDocPageEnterTransition(el) {
   cancel()
 }
 
+// -- 手势处理函数 --------------------------------------------------------
+function handleSwipeTouchStart(e) {
+  if (!isMobileViewport()) return
+  if (e.touches.length !== 1) return
+  const touch = e.touches[0]
+  swipeTouchStartX = touch.clientX
+  swipeTouchStartY = touch.clientY
+  swipeTracking = true
+  swipeAxisLocked = false
+  swipeVerticalLocked = false
+  overScrollAtTop = (window.scrollY <= 0)
+}
+
+function handleSwipeTouchMove(e) {
+  if (!swipeTracking || e.touches.length !== 1) return
+  if (!overScrollAtTop && window.scrollY > 0) return // 快速跳过非顶部垂直滚动
+
+  const touch = e.touches[0]
+  const dx = Math.abs(touch.clientX - swipeTouchStartX)
+  const dy = Math.abs(touch.clientY - swipeTouchStartY)
+
+  if (!swipeAxisLocked && !swipeVerticalLocked) {
+    if (dx < SWIPE_AXIS_LOCK_THRESHOLD && dy < SWIPE_AXIS_LOCK_THRESHOLD) return
+    if (dy > dx) { swipeVerticalLocked = true }
+    else { swipeAxisLocked = true }
+  }
+}
+
+function handleSwipeTouchEnd(e) {
+  if (!swipeTracking) return
+  swipeTracking = false
+  if (!isMobileViewport()) return
+
+  const changedTouch = e.changedTouches[0]
+  if (!changedTouch) return
+
+  const dx = changedTouch.clientX - swipeTouchStartX
+  const dy = changedTouch.clientY - swipeTouchStartY
+
+  // 手势①：在顶部向上拉（先下拉再上推，或直接上拉）超过阈值 → 触发右上角菜单
+  if (overScrollAtTop && swipeVerticalLocked && dy < -SWIPE_OVERSCROLL_THRESHOLD && window.scrollY <= 8) {
+    overScrollAtTop = false
+    toggleMobileMenu()
+    return
+  }
+
+  if (swipeVerticalLocked) { overScrollAtTop = false; return }
+
+  // 手势②：从左边缘右滑呼出侧边栏（仅在侧边栏页面且已关闭时）
+  if (
+    dx >= SWIPE_SIDEBAR_THRESHOLD &&
+    swipeTouchStartX <= SWIPE_LEFT_EDGE_WIDTH &&
+    shouldShowDesktopSidebar.value &&
+    !mobileSidebarOpen.value
+  ) {
+    openSidebar()
+    return
+  }
+
+  // 手势③：任意位置左滑关闭已打开的侧边栏
+  if (dx <= -SWIPE_SIDEBAR_THRESHOLD && mobileSidebarOpen.value) {
+    closeSidebar()
+    return
+  }
+
+  overScrollAtTop = false
+}
+
+function handleSwipeTouchCancel() {
+  swipeTracking = false
+  overScrollAtTop = false
+}
 onMounted(() => {
   syncColorModeFromDocument()
   syncViewportMode()
@@ -2137,6 +2231,11 @@ onMounted(() => {
   window.addEventListener('resize', handleWindowResize)
   window.addEventListener('scroll', handleMobileHeaderScroll, { passive: true })
   syncTocScrollListener()
+  // 全局手势监听
+  document.addEventListener('touchstart', handleSwipeTouchStart, { passive: true })
+  document.addEventListener('touchmove', handleSwipeTouchMove, { passive: true })
+  document.addEventListener('touchend', handleSwipeTouchEnd, { passive: true })
+  document.addEventListener('touchcancel', handleSwipeTouchCancel, { passive: true })
 
   routerProgressPrevBefore = router.onBeforeRouteChange
   routerProgressPrevAfter = router.onAfterRouteChange ?? router.onAfterRouteChanged
@@ -2184,6 +2283,10 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', handleVitepressPluginTabClick)
   window.removeEventListener('resize', handleWindowResize)
   window.removeEventListener('scroll', handleMobileHeaderScroll)
+  document.removeEventListener('touchstart', handleSwipeTouchStart)
+  document.removeEventListener('touchmove', handleSwipeTouchMove)
+  document.removeEventListener('touchend', handleSwipeTouchEnd)
+  document.removeEventListener('touchcancel', handleSwipeTouchCancel)
   if (bodyScrollLocked) {
     document.body.style.overflow = previousBodyOverflow
   }

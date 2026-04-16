@@ -18,19 +18,19 @@ export const RESPONSIVE_IMAGE_PRESETS = Object.freeze({
   'auto-single': Object.freeze({
     id: 'auto-single',
     fallbackWidth: 960,
-    candidateWidths: Object.freeze([720, 960, 1080, 1440, 1600, 1920, 2160]),
+    candidateWidths: Object.freeze([1080, 1440, 1600, 1920, 2160]),
     sizes: '(max-width: 767.98px) calc(100vw - 24px), min(68vw, 1080px)'
   }),
   'auto-double': Object.freeze({
     id: 'auto-double',
     fallbackWidth: 480,
-    candidateWidths: Object.freeze([360, 480, 720, 960, 1080, 1200]),
+    candidateWidths: Object.freeze([720, 960, 1080, 1200]),
     sizes: '(max-width: 767.98px) calc((100vw - 36px) / 2), 534px'
   }),
   'auto-dense': Object.freeze({
     id: 'auto-dense',
     fallbackWidth: 360,
-    candidateWidths: Object.freeze([360, 480, 640]),
+    candidateWidths: Object.freeze([480, 640]),
     sizes: '(max-width: 767.98px) calc((100vw - 48px) / 3), 352px'
   })
 })
@@ -114,7 +114,8 @@ export function extractMarkdownImageUsages(source, filePath = '') {
           sourceSrc,
           sourceFile: filePath,
           requestedWidth: width,
-          requestedHeight: height
+          requestedHeight: height,
+          responsivePresetId: responsivePresetId || 'auto-single'
         })
         continue
       }
