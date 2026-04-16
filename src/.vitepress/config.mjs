@@ -13,6 +13,7 @@ export default defineConfig({
   cleanUrls: true,
   description: "QQ幻梦机器人的说明文档",
   head: [
+    ['meta', { name: 'viewport', content: 'width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no' }],
     ['link', { rel: 'icon', type: 'image/png', href: '/img/hm_icon.png' }],
     // 为方便爬虫机器人能够爬取到网页信息，这里要设置一些属性
     ['meta', { property: 'og:title', content: '幻梦Bot' }],

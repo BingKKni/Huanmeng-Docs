@@ -1855,6 +1855,7 @@ html.dark .hm-dialog__title {
   overflow: hidden;
   background: transparent;
   cursor: pointer;
+  overscroll-behavior: contain;
 }
 
 .hm-lightbox--busy {
@@ -1906,6 +1907,7 @@ html.dark .hm-dialog__title {
   object-fit: contain;
   transform-origin: center center;
   transition: transform 0.18s ease;
+  will-change: transform;
   user-select: none;
   -webkit-user-drag: none;
 }
@@ -1943,14 +1945,19 @@ html.dark .hm-dialog__title {
   .hm-lightbox {
     padding: 16px;
     cursor: default;
+    touch-action: none;
+  }
+
+  .hm-lightbox__content {
+    touch-action: none;
   }
 
   .hm-lightbox img {
     max-width: 92vw;
     max-height: calc(100vh - 48px);
     cursor: default;
-    /* 双指缩放交给系统手势，不再用脚本模拟双击放大 */
-    touch-action: pinch-zoom;
+    /* 由灯箱自身接管双击 / 双指缩放，避免浏览器放大整页。 */
+    touch-action: none;
     transition: transform 0.18s ease;
   }
 }
