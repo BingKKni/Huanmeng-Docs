@@ -17,15 +17,15 @@ home: true
     <div class="home-feature-list">
         <div class="home-feature-item">
             <h3>娱乐功能</h3>
-            <p>覆盖用户众多需求。今日老婆、沉浸式剧情模式、今日超能力、还有好玩的达尔文游戏功能</p>
+            <p>覆盖用户众多需求。今日老婆、沉浸式剧情模式、<br class="home-feature-break">今日超能力、还有好玩的达尔文游戏功能</p>
         </div>
         <div class="home-feature-item">
             <h3>我的世界查榜</h3>
-            <p>一键查询战绩！支持布吉岛、Hypixel、EaseCation和DoMCer我的世界服务器</p>
+            <p>一键查询战绩！支持布吉岛、Hypixel、<br class="home-feature-break">EaseCation 和 DoMCer 我的世界服务器</p>
         </div>
         <div class="home-feature-item">
             <h3>弹性功能开关</h3>
-            <p>不需要某些功能？幻梦的设置指令可以让群管理很方便的开关幻梦的任意功能，不再刷屏</p>
+            <p>不需要某些功能？幻梦的设置指令可以让群管理<br class="home-feature-break">很方便地开关幻梦的任意功能，不再刷屏</p>
         </div>
     </div>
     <hr class="home-divider">

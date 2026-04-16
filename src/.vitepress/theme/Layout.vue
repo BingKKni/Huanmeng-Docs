@@ -501,8 +501,6 @@ const navLinks = [
   }
 ]
 
-const mobileNavLinks = [...navLinks, githubLink]
-
 /* 侧边栏定义 */
 const desktopSidebarLinks = [
   { href: '/docs/', label: '🏠 首页', isActive: relativePath => relativePath === 'docs/index.md' },
@@ -813,11 +811,6 @@ function completeRouteNavProgressByKey(key) {
 
 function isActiveLink(link) {
   return link.isActive(page.value.relativePath)
-}
-
-function getNavHref(link) {
-  if (link.isExternal) return link.href
-  return withBase(link.href)
 }
 
 function isMobileViewport() {
@@ -2454,14 +2447,11 @@ watch(infoDialogVisible, async visible => {
                 v-for="link in navLinks"
                 :key="link.href"
                 class="site-nav__link"
-                :class="{ active: isActiveLink(link), 'site-nav__link--external': link.isExternal }"
-                :href="getNavHref(link)"
-                :target="link.isExternal ? '_blank' : undefined"
-                :rel="link.isExternal ? 'noopener noreferrer' : undefined"
+                :class="{ active: isActiveLink(link) }"
+                :href="withBase(link.href)"
                 :aria-current="isActiveLink(link) ? 'page' : undefined"
               >
                 {{ link.label }}
-                <svg v-if="link.isExternal" class="site-nav__external-icon" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
               </a>
             </nav>
           </div>
@@ -2566,17 +2556,14 @@ watch(infoDialogVisible, async visible => {
             </div>
             <nav id="mobile-site-nav" class="site-nav mobile-nav-links" aria-label="移动端站点导航">
               <a
-                v-for="link in mobileNavLinks"
+                v-for="link in navLinks"
                 :key="link.href"
                 class="site-nav__link"
-                :class="{ active: isActiveLink(link), 'site-nav__link--external': link.isExternal }"
-                :href="getNavHref(link)"
-                :target="link.isExternal ? '_blank' : undefined"
-                :rel="link.isExternal ? 'noopener noreferrer' : undefined"
+                :class="{ active: isActiveLink(link) }"
+                :href="withBase(link.href)"
                 :aria-current="isActiveLink(link) ? 'page' : undefined"
               >
                 {{ link.label }}
-                <svg v-if="link.isExternal" class="site-nav__external-icon" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
               </a>
             </nav>
           </div>

@@ -2348,6 +2348,56 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
   color: #6c757d;
 }
 
+.home-feature-break {
+  display: none;
+}
+
+@media (max-width: 575.98px) {
+  .home-features {
+    margin-top: 100px;
+  }
+
+  .home-divider {
+    width: 70%;
+    margin: 0 auto;
+  }
+
+  .home-feature-list {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: 0;
+  }
+
+  .home-feature-item {
+    width: 70%;
+    padding: 14px 0 16px;
+    text-align: center;
+  }
+
+  .home-feature-item + .home-feature-item {
+    border-top: 1px solid #dee2e6;
+  }
+
+  .home-feature-item h3 {
+    margin-bottom: 12px;
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  .home-feature-item p {
+    max-width: 19.5em;
+    margin: 0 auto;
+    text-align: center;
+    line-height: 1.9;
+    text-wrap: pretty;
+  }
+
+  .home-feature-break {
+    display: inline;
+  }
+}
+
 /* Group entry card */
 .group-card {
   display: flex;
