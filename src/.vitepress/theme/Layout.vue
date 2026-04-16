@@ -1410,7 +1410,10 @@ function bindLightboxTrigger(img) {
   if (img.dataset.hmLightboxBound === '1') return
   img.dataset.hmLightboxBound = '1'
   img.style.cursor = 'pointer'
-  img.addEventListener('click', () => openLightbox(img.src, img))
+  img.addEventListener('click', () => {
+    const lightboxSrc = img.dataset.hmFullSrc || img.currentSrc || img.src
+    openLightbox(lightboxSrc, img)
+  })
 }
 
 function openInfoDialog(message, title = '信息', onConfirm = null, showCancel = false) {
@@ -1531,8 +1534,10 @@ function bindCodeBlockCopy(block) {
   })
 }
 
-function processCodeBlocks() {
-  document.querySelectorAll(".site-shell div[class*='language-']").forEach(bindCodeBlockCopy)
+function processCodeBlocks(root = null) {
+  const container = root ?? docArticleRef.value
+  if (!container) return
+  container.querySelectorAll("div[class*='language-']").forEach(bindCodeBlockCopy)
 }
 
 function bindJoinGroupButtons(root = null) {
@@ -1558,8 +1563,14 @@ function bindJoinGroupButtons(root = null) {
 }
 
 function processContentActions(root = null) {
-  processCodeBlocks()
+  processCodeBlocks(root)
   bindJoinGroupButtons(root)
+}
+
+function bindLightboxTriggers(root = null) {
+  const article = root ?? docArticleRef.value
+  if (!article) return
+  article.querySelectorAll('img').forEach(bindLightboxTrigger)
 }
 
 function scheduleImageRowProcessing(force = false) {
@@ -1593,6 +1604,31 @@ function nextDoubleRaf() {
   return new Promise(resolve => {
     requestAnimationFrame(() => requestAnimationFrame(resolve))
   })
+}
+
+function prepareImageRows({ force = false, root = null } = {}) {
+  const article = root ?? docArticleRef.value
+  if (!article) return []
+
+  bindLightboxTriggers(article)
+
+  const preparedRows = []
+  article.querySelectorAll('p').forEach(p => {
+    if (!force && p.dataset.hmProcessedRow) return
+
+    const imgs = Array.from(p.querySelectorAll('img'))
+    if (imgs.length <= 1 || !isImageOnlyParagraph(p)) return
+
+    p.dataset.hmProcessedRow = '1'
+    p.classList.add('hm-img-row')
+    preparedRows.push({ p, imgs })
+
+    if (imgs.every(img => img.complete && img.naturalWidth > 0)) {
+      applyMultiImageRowHeights(p, imgs)
+    }
+  })
+
+  return preparedRows
 }
 
 function imgHasExplicitHeight(img) {
@@ -1653,23 +1689,12 @@ async function processImageRowsAsync({ force = false, root = null } = {}) {
   const article = root ?? docArticleRef.value
   if (!article) return
 
-  // 1. 先确保文档内的所有图片都绑定了灯箱
-  article.querySelectorAll('img').forEach(img => {
-    bindLightboxTrigger(img)
-  })
+  // 1. 先同步准备多图行骨架，避免首帧布局跳动
+  const preparedRows = prepareImageRows({ force, root: article })
 
   // 2. 然后处理「纯图片段落」的多图并排布局
   const pending = []
-  article.querySelectorAll('p').forEach(p => {
-    if (!force && p.dataset.hmProcessedRow) return
-
-    const imgs = Array.from(p.querySelectorAll('img'))
-    // 只有当段落内只有图片（且不只一张）时，才应用 Row 布局
-    if (imgs.length <= 1 || !isImageOnlyParagraph(p)) return
-
-    p.dataset.hmProcessedRow = '1'
-    p.classList.add('hm-img-row')
-
+  preparedRows.forEach(({ p, imgs }) => {
     const loadPromises = imgs.map(img => {
       if (img.complete && img.naturalHeight > 0) return Promise.resolve()
       return new Promise(r => {
@@ -1823,9 +1848,9 @@ async function onDocPageEnter(el, done) {
       return
     }
     if (el.classList.contains('doc-article')) {
-      await processImageRowsAsync({ force: true, root: el })
-      bindJoinGroupButtons(el)
-      void applyPendingSearchHeading()
+      prepareImageRows({ force: true, root: el })
+      bindLightboxTriggers(el)
+      processContentActions(el)
     }
   } catch (e) {
     console.error(e)
@@ -1883,6 +1908,10 @@ async function onDocPageEnter(el, done) {
     if (!cancelled) {
       if (el.classList.contains('doc-article') && !el.classList.contains('search-results-article')) {
         docPageEnterInProgress = false
+        requestAnimationFrame(() => {
+          if (!el.isConnected) return
+          void processImageRowsAsync({ force: true, root: el })
+        })
       }
       el.style.transition = ''
       el.style.opacity = ''

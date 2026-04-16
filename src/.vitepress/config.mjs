@@ -1,7 +1,11 @@
 import { defineConfig } from 'vitepress'
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs'
 import colorTextPlugin from './plugins/colorText.js'
+import imageThumbnailPlugin from './plugins/imageThumbnail.mjs'
 import tableEnhancePlugin from './plugins/tableEnhance.js'
+import { loadImageThumbnailManifest } from './image-thumbnail-utils.mjs'
+
+const imageThumbnailManifest = loadImageThumbnailManifest()
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -29,6 +33,7 @@ export default defineConfig({
       md.use(tabsMarkdownPlugin)
       md.use(colorTextPlugin)
       md.use(tableEnhancePlugin)
+      md.use(imageThumbnailPlugin, { manifest: imageThumbnailManifest })
     },
     container: {
       tipLabel: '提示',
