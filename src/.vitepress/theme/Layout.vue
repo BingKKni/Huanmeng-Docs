@@ -12,6 +12,10 @@ const activeTocId = ref('')
 const tocIndicatorStyle = ref({ transform: 'translateY(0)', height: '0', opacity: '0' })
 
 watch(activeTocId, async (newId) => {
+  if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767.98px)').matches) {
+    tocIndicatorStyle.value.opacity = '0'
+    return
+  }
   if (!newId) {
     tocIndicatorStyle.value.opacity = '0'
     return
@@ -37,6 +41,11 @@ watch(activeTocId, async (newId) => {
 }, { immediate: true })
 
 function updateActiveToc() {
+  if (isMobileViewport()) {
+    activeTocId.value = ''
+    return
+  }
+
   const headers = tocHeaders.value
   if (headers.length === 0) {
     activeTocId.value = ''
@@ -68,19 +77,47 @@ function updateActiveToc() {
 }
 
 let tocScrollTimeout = null
+let tocScrollListening = false
 function handleTocScroll() {
+  if (isMobileViewport()) return
   if (tocScrollTimeout) return
+  updateActiveToc()
+}
+
+function startTocScrollListener() {
+  if (typeof window === 'undefined' || tocScrollListening || isMobileViewport()) return
+  window.addEventListener('scroll', handleTocScroll, { passive: true })
+  tocScrollListening = true
+}
+
+function stopTocScrollListener() {
+  if (typeof window === 'undefined' || !tocScrollListening) return
+  window.removeEventListener('scroll', handleTocScroll)
+  tocScrollListening = false
+}
+
+function syncTocScrollListener() {
+  if (isMobileViewport()) {
+    stopTocScrollListener()
+    activeTocId.value = ''
+    tocIndicatorStyle.value.opacity = '0'
+    return
+  }
+
+  startTocScrollListener()
   updateActiveToc()
 }
 
 onContentUpdated(() => {
   if (!docArticleRef.value) {
     tocHeaders.value = []
+    activeTocId.value = ''
     return
   }
   const headings = Array.from(docArticleRef.value.querySelectorAll('h1, h2, h3, h4'))
   if (headings.length === 0) {
     tocHeaders.value = []
+    activeTocId.value = ''
     return
   }
   tocHeaders.value = headings.map(h => {
@@ -93,7 +130,7 @@ onContentUpdated(() => {
     }
   })
   nextTick(() => {
-    updateActiveToc()
+    syncTocScrollListener()
     void applyPendingSearchHeading()
   })
 })
@@ -225,15 +262,17 @@ function scrollToToc(id) {
   scrollToHeading(id, { updateHash: true })
 }
 
-const shouldShowTOC = computed(() => shouldShowDesktopSidebar.value && tocHeaders.value.length > 0)
+const shouldShowTOC = computed(() => !isMobileView.value && shouldShowDesktopSidebar.value && tocHeaders.value.length > 0)
 // --- Search Logic ---
-const rawDocs = import.meta.glob('../../docs/**/*.md', { query: '?raw', import: 'default', eager: true })
+const SEARCH_INDEX_PATH = '/search-index.json'
 const searchQuery = ref('')
 const searchInputRef = ref(null)
 const mobileSearchInputRef = ref(null)
 const globalSearchModalActive = ref(false)
 const globalSearchInputRef = ref(null)
 const isDarkMode = ref(false)
+const searchIndex = ref([])
+const searchIndexLoaded = ref(false)
 const desktopSearchPlaceholders = [
   '搜索内容...',
   '搜索关键词...',
@@ -250,231 +289,43 @@ let desktopSearchPlaceholderResetTimer = null
 let pendingSearchHeadingId = ''
 let pendingSearchHeadingTitle = ''
 let pendingSearchHeadingFrame = null
+let searchIndexPromise = null
 
-// Regex patterns pre-compiled
-const mdStripRegexes = [
-  { p: /^---[\s\S]*?^---/m, r: '' }, // strip frontmatter
-  { p: /```[\s\S]*?```/g, r: '' }, // strip code blocks
-  { p: /`([^`]+)`/g, r: '$1' }, // inline code
-  { p: /<br\s*\/?>/gi, r: '\n' }, // keep line breaks before stripping html
-  { p: /<[^>]*>/g, r: '' }, // html
-  { p: /!\[[^\]]*\]\([^)]*\)/g, r: '' }, // images
-  { p: /\[([^\]]+)\]\([^)]+\)/g, r: '$1' }, // links
-  { p: /^#{1,6}\s+/gm, r: '' }, // ATX headers
-  { p: /^==\s+/gm, r: '' }, // strip tab markers
-  { p: /(?:\*\*|__)(.*?)(?:\*\*|__)/g, r: '$1' }, // bold
-  { p: /(?:\*|_)(.*?)(?:\*|_)/g, r: '$1' }, // italic
-  { p: /^\s*>\s+/gm, r: '' }, // blockquotes
-  { p: /^\s*[-*+]\s+/gm, r: '' }, // lists
-  { p: /^\s*\d+\.\s+/gm, r: '' }, // ordered lists
-  { p: /^:::\s*\w*.*$/gm, r: '' }, // custom blocks
-  { p: /:::/g, r: '' }
-]
+async function ensureSearchIndexLoaded() {
+  if (searchIndexLoaded.value) return searchIndex.value
+  if (typeof window === 'undefined') return []
+  if (searchIndexPromise) return searchIndexPromise
 
-const markdownStyleTokenRegex = /^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z][\w-]*)$/
-const markdownAttributePartRegex = /^(?:[#.][\w-]+|[\w:-]+(?:=(?:"[^"]*"|'[^']*'|[^\s]+))?)$/
-const markdownTableDividerRegex = /^\s*\|?(?:\s*:?-{3,}:?\s*\|)+\s*:?-{3,}:?\s*\|?\s*$/
-const markdownTableRowRegex = /^\s*\|.*\|\s*$/
-
-function isMarkdownAttributeBlock(token) {
-  const parts = token.trim().split(/\s+/).filter(Boolean)
-  return parts.length > 0 && parts.every(part => markdownAttributePartRegex.test(part))
-}
-
-function stripMarkdownStyleWrappers(str) {
-  return str.replace(/\{(#[0-9a-fA-F]{3,8}|[a-zA-Z][\w-]*)\}([^{}]*?)\{\s*\}/g, (match, token, content) => {
-    if (!markdownStyleTokenRegex.test(token)) return match
-    return content
-  })
-}
-
-function stripMarkdownAttributeBlocks(str) {
-  return str.replace(/\{([^{}\n]+)\}/g, (match, token, offset, source) => {
-    if (!isMarkdownAttributeBlock(token)) return match
-
-    let prevIndex = offset - 1
-    while (prevIndex >= 0 && /\s/.test(source[prevIndex])) {
-      prevIndex -= 1
-    }
-
-    return prevIndex >= 0 && [')', ']', '>'].includes(source[prevIndex]) ? '' : match
-  })
-}
-
-function normalizeMarkdownTableLine(line) {
-  if (markdownTableDividerRegex.test(line)) return ''
-  if (!markdownTableRowRegex.test(line)) return line
-
-  return line
-    .trim()
-    .replace(/^\||\|$/g, '')
-    .split('|')
-    .map(cell => cell.trim())
-    .filter(Boolean)
-    .join(' ')
-}
-
-function slugifyHeading(text) {
-  return text
-    .trim()
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[\s!-/:-@\[-`{-~]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}
-
-function createHeadingSlugger() {
-  const seen = new Map()
-
-  return title => {
-    const base = slugifyHeading(title) || 'section'
-    const count = seen.get(base) || 0
-    seen.set(base, count + 1)
-    return count === 0 ? base : `${base}-${count}`
-  }
-}
-
-function stripMarkdown(str) {
-  let result = str
-  result = stripMarkdownStyleWrappers(result)
-  result = stripMarkdownAttributeBlocks(result)
-  for (const { p, r } of mdStripRegexes) {
-    result = result.replace(p, r)
-  }
-
-  result = result
-    .split(/\r?\n/)
-    .map(normalizeMarkdownTableLine)
-    .filter(Boolean)
-    .join('\n')
-    .replace(/\n+/g, ' ')
-
-  return result.trim()
-}
-
-// Compute allDocsContent once since rawDocs doesn't change during navigation
-let cachedAllDocsContent = null
-function sidebarItemHasChildren(item) {
-  return Array.isArray(item.children) && item.children.length > 0
-}
-
-function flattenSidebarLinks(items) {
-  return items.flatMap(item => [
-    item,
-    ...(sidebarItemHasChildren(item) ? flattenSidebarLinks(item.children) : [])
-  ])
-}
-
-function resolveDocTitle(path, rawContent, searchableLinks) {
-  for (const item of searchableLinks) {
-    const itemHrefBase = item.href.replace(/\/$/, '')
-    const link = path.replace('../../', '/').replace(/\.md$/, '.html').replace(/\/index\.html$/, '/')
-    const linkBase = link.replace(/\/$/, '')
-    if (itemHrefBase === linkBase) return item.label
-  }
-
-  const titleMatch = rawContent.match(/^#\s+(.*)/m)
-  if (titleMatch) return stripMarkdown(titleMatch[1])
-
-  const h2Match = rawContent.match(/^##\s+(.*)/m)
-  if (h2Match) return stripMarkdown(h2Match[1])
-
-  const parts = path.split('/')
-  const filename = parts[parts.length - 1].replace(/\.md$/, '')
-  return filename === 'index' ? parts[parts.length - 2] || '首页' : filename
-}
-
-function buildDocSearchSections(rawContent, docTitle) {
-  const lines = rawContent.split(/\r?\n/)
-  const slug = createHeadingSlugger()
-  const sections = []
-  let inFence = false
-  let current = {
-    title: docTitle,
-    id: '',
-    lines: [],
-    isRoot: true
-  }
-
-  function pushCurrentSection() {
-    const content = stripMarkdown(current.lines.join('\n'))
-    if (!content && current.isRoot) return
-
-    sections.push({
-      title: current.title,
-      docTitle,
-      id: current.id,
-      headingTitle: current.isRoot ? docTitle : current.title,
-      content,
-      searchText: [current.title, content]
-        .filter(Boolean)
-        .join(' ')
-        .trim()
-    })
-  }
-
-  for (const line of lines) {
-    const trimmed = line.trim()
-    if (trimmed.startsWith('```')) {
-      inFence = !inFence
-      current.lines.push(line)
-      continue
-    }
-
-    if (!inFence) {
-      const headingMatch = line.match(/^(#{1,6})\s+(.*)$/)
-      if (headingMatch) {
-        pushCurrentSection()
-        const title = stripMarkdown(headingMatch[2]).replace(/\s+/g, ' ').trim() || docTitle
-        current = {
-          title,
-          id: slug(title),
-          lines: [],
-          isRoot: false
-        }
-        continue
+  searchIndexPromise = fetch(withBase(SEARCH_INDEX_PATH), { cache: 'force-cache' })
+    .then(async response => {
+      if (!response.ok) {
+        throw new Error(`search-index-http-${response.status}`)
       }
-    }
 
-    current.lines.push(line)
-  }
+      const data = await response.json()
+      searchIndex.value = Array.isArray(data) ? data : []
+      searchIndexLoaded.value = true
+      return searchIndex.value
+    })
+    .catch(error => {
+      console.error('Failed to load search index:', error)
+      searchIndex.value = []
+      return searchIndex.value
+    })
+    .finally(() => {
+      searchIndexPromise = null
+    })
 
-  pushCurrentSection()
-  return sections
-}
-
-function getAllDocsContent() {
-  if (cachedAllDocsContent) return cachedAllDocsContent
-  const arr = []
-  const searchableLinks = [...navLinks, ...flattenSidebarLinks(desktopSidebarLinks)]
-  for (const path in rawDocs) {
-    const rawContent = rawDocs[path] || ''
-    
-    let link = path.replace('../../', '/')
-    link = link.replace(/\.md$/, '.html')
-    if (link.endsWith('/index.html')) {
-      link = link.replace('/index.html', '/')
-    }
-
-    const title = resolveDocTitle(path, rawContent, searchableLinks)
-    const sections = buildDocSearchSections(rawContent, title)
-    for (const section of sections) {
-      arr.push({
-        ...section,
-        link: section.id ? `${link}#${section.id}` : link
-      })
-    }
-  }
-  cachedAllDocsContent = arr
-  return arr
+  return searchIndexPromise
 }
 
 const searchResults = computed(() => {
   if (!searchQuery.value.trim()) return []
   const query = searchQuery.value.toLowerCase()
   const results = []
-  const docs = getAllDocsContent()
+  const docs = searchIndex.value
+
+  if (docs.length === 0) return results
   
   for (let i = 0, len = docs.length; i < len; i++) {
     const doc = docs[i]
@@ -508,6 +359,11 @@ const searchResults = computed(() => {
     }
   }
   return results
+})
+
+watch(searchQuery, query => {
+  if (!query.trim()) return
+  void ensureSearchIndexLoaded()
 })
 
 function clearPendingSearchHeadingFrame() {
@@ -1523,6 +1379,7 @@ function handleWindowResize() {
 watch(
   isMobileView,
   mobile => {
+    syncTocScrollListener()
     if (mobile) {
       stopDesktopSearchPlaceholderCycle()
       return
@@ -1878,7 +1735,7 @@ onMounted(() => {
   document.addEventListener('click', handleVitepressPluginTabClick)
   window.addEventListener('resize', handleWindowResize)
   window.addEventListener('scroll', handleMobileHeaderScroll, { passive: true })
-  window.addEventListener('scroll', handleTocScroll, { passive: true })
+  syncTocScrollListener()
 
   routerProgressPrevBefore = router.onBeforeRouteChange
   routerProgressPrevAfter = router.onAfterRouteChange ?? router.onAfterRouteChanged
@@ -1908,6 +1765,7 @@ onBeforeUnmount(() => {
   copyButtonResetTimers.forEach(timer => clearTimeout(timer))
   copyButtonResetTimers.clear()
   clearNavRouteProgressTimers()
+  stopTocScrollListener()
   navRoutePendingKey = null
 
   try {
@@ -1921,7 +1779,6 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', handleVitepressPluginTabClick)
   window.removeEventListener('resize', handleWindowResize)
   window.removeEventListener('scroll', handleMobileHeaderScroll)
-  window.removeEventListener('scroll', handleTocScroll)
   if (bodyScrollLocked) {
     document.body.style.overflow = previousBodyOverflow
   }
