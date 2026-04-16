@@ -863,7 +863,7 @@ a:hover {
     width: 14px;
     height: 14px;
     color: #6c757d;
-    transition: transform 0.2s ease;
+    transition: none;
   }
 
   .sidebar-menu-icon.expanded {
@@ -873,7 +873,7 @@ a:hover {
   .desktop-doc-sidebar__children {
     display: grid;
     grid-template-rows: 0fr;
-    transition: grid-template-rows 0.2s ease, margin-top 0.2s;
+    transition: none;
     overflow: hidden;
   }
 
@@ -1112,7 +1112,7 @@ a:hover {
     width: 14px;
     height: 14px;
     color: #6c757d;
-    transition: transform 0.2s ease;
+    transition: none;
   }
 
   .sidebar-menu-icon.expanded {
@@ -1122,7 +1122,7 @@ a:hover {
   .desktop-doc-sidebar__children {
     display: grid;
     grid-template-rows: 0fr;
-    transition: grid-template-rows 0.2s ease, margin-top 0.2s;
+    transition: none;
     overflow: hidden;
   }
 
@@ -3111,7 +3111,7 @@ html.dark .hm-search-modal__close {
     width: 14px;
     height: 14px;
     color: #6c757d;
-    transition: transform 0.2s ease;
+    transition: none;
   }
 
   .sidebar-compact-mode .sidebar-menu-icon.expanded {
@@ -3121,7 +3121,7 @@ html.dark .hm-search-modal__close {
   .sidebar-compact-mode .desktop-doc-sidebar__children {
     display: grid;
     grid-template-rows: 0fr;
-    transition: grid-template-rows 0.2s ease, margin-top 0.2s;
+    transition: none;
     overflow: hidden;
   }
 

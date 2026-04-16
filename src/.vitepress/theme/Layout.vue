@@ -227,7 +227,7 @@ function flashHeading(el) {
   }, 1200)
 }
 
-function scrollToHeading(id, { updateHash = false, fallbackTitle = '' } = {}) {
+function scrollToHeading(id, { updateHash = false, fallbackTitle = '', instant = false } = {}) {
   const el = findHeadingElement(id, fallbackTitle)
   if (!el) return false
 
@@ -241,6 +241,20 @@ function scrollToHeading(id, { updateHash = false, fallbackTitle = '' } = {}) {
   const top = el.getBoundingClientRect().top + window.scrollY - 120
   const distance = Math.abs(top - window.scrollY)
   const duration = Math.min(Math.max(distance * 0.25, 300), 650)
+
+  if (instant) {
+    window.scrollTo(0, top)
+    if (updateHash) {
+      const url = new URL(window.location.href)
+      url.hash = targetId
+      window.history.replaceState(null, '', url)
+    }
+    flashHeading(el)
+    tocScrollTimeout = setTimeout(() => {
+      tocScrollTimeout = null
+    }, 50)
+    return true
+  }
 
   smoothScrollTo(top, duration, () => {
     if (updateHash) {
@@ -399,7 +413,7 @@ async function applyPendingSearchHeading(retries = 60) {
   const targetTitle = pendingSearchHeadingTitle
   await nextTick()
 
-  if (scrollToHeading(targetId, { updateHash: true, fallbackTitle: targetTitle })) {
+  if (scrollToHeading(targetId, { updateHash: true, fallbackTitle: targetTitle, instant: true })) {
     pendingSearchHeadingId = ''
     pendingSearchHeadingTitle = ''
     return
@@ -1606,6 +1620,26 @@ function nextDoubleRaf() {
   })
 }
 
+function nextRaf() {
+  return new Promise(resolve => {
+    requestAnimationFrame(resolve)
+  })
+}
+
+function resetDocPageTransitionStyles(el) {
+  el.style.transition = ''
+  el.style.opacity = ''
+  el.style.transform = ''
+}
+
+function finishDocPageTransitionNow(el) {
+  resetDocPageTransitionStyles(el)
+  if (el.classList.contains('doc-article') && !el.classList.contains('search-results-article')) {
+    docPageEnterInProgress = false
+  }
+  docPageTransitionState.delete(el)
+}
+
 function prepareImageRows({ force = false, root = null } = {}) {
   const article = root ?? docArticleRef.value
   if (!article) return []
@@ -1774,6 +1808,9 @@ onMounted(() => {
   router.onAfterRouteChange = async href => {
     setPendingSearchHeading(getHashTargetFromHref(href), pendingSearchHeadingTitle)
     await routerProgressPrevAfter?.(href)
+    requestAnimationFrame(() => {
+      completeRouteNavProgressByKey(routeNavComparableKey(href))
+    })
   }
 })
 
@@ -1834,17 +1871,30 @@ function onDocPageBeforeEnter(el) {
     cancelled: false,
     cancelEnter: null
   })
+
   el.style.transition = 'none'
+
+  if (isMobileViewport()) {
+    el.style.opacity = '1'
+    el.style.transform = 'translateY(0)'
+    return
+  }
+
   el.style.opacity = '0'
   el.style.transform = 'translateY(12px)'
 }
 
 async function onDocPageEnter(el, done) {
   const runId = docPageTransitionState.get(el)?.runId
+  const finishInvalidEnter = () => {
+    finishDocPageTransitionNow(el)
+    done()
+  }
+
   try {
     await nextTick()
     if (!isDocPageTransitionValid(el, runId)) {
-      done()
+      finishInvalidEnter()
       return
     }
     if (el.classList.contains('doc-article')) {
@@ -1857,19 +1907,40 @@ async function onDocPageEnter(el, done) {
   }
 
   if (!isDocPageTransitionValid(el, runId)) {
-    done()
+    finishInvalidEnter()
     return
   }
 
   completeRouteNavProgressByKey(routeNavComparableKey(window.location.href))
 
-  await nextDoubleRaf()
-  if (!isDocPageTransitionValid(el, runId)) {
+  if (isMobileViewport()) {
+    await nextRaf()
+    if (!isDocPageTransitionValid(el, runId)) {
+      finishInvalidEnter()
+      return
+    }
+
+    finishDocPageTransitionNow(el)
+    if (el.classList.contains('doc-article') && !el.classList.contains('search-results-article')) {
+      requestAnimationFrame(() => {
+        if (!el.isConnected) return
+        void processImageRowsAsync({ force: true, root: el })
+      })
+      requestAnimationFrame(() => {
+        void applyPendingSearchHeading()
+      })
+    }
     done()
     return
   }
 
-  const ms = performance.now() < docPageDisableAnimUntil ? 0 : DOC_PAGE_TRANSITION_MS
+  await nextDoubleRaf()
+  if (!isDocPageTransitionValid(el, runId)) {
+    finishInvalidEnter()
+    return
+  }
+
+  const ms = isMobileViewport() || performance.now() < docPageDisableAnimUntil ? 0 : DOC_PAGE_TRANSITION_MS
   let finished = false
   let tid = null
   let rafOuter = null
@@ -1905,6 +1976,7 @@ async function onDocPageEnter(el, done) {
         docPageTransitionState.delete(el)
       }
     }
+    resetDocPageTransitionStyles(el)
     if (!cancelled) {
       if (el.classList.contains('doc-article') && !el.classList.contains('search-results-article')) {
         docPageEnterInProgress = false
@@ -1913,9 +1985,6 @@ async function onDocPageEnter(el, done) {
           void processImageRowsAsync({ force: true, root: el })
         })
       }
-      el.style.transition = ''
-      el.style.opacity = ''
-      el.style.transform = ''
       if (el.classList.contains('doc-article') && !el.classList.contains('search-results-article')) {
         requestAnimationFrame(() => {
           void applyPendingSearchHeading()
@@ -1935,7 +2004,7 @@ async function onDocPageEnter(el, done) {
   if (ms === 0) {
     el.style.opacity = '1'
     el.style.transform = 'translateY(0)'
-    safeDone()
+    requestAnimationFrame(safeDone)
     return
   }
 
@@ -1956,7 +2025,7 @@ function onDocPageLeave(el, done) {
   const state = docPageTransitionState.get(el)
   if (state) state.cancelled = true
   cancelDocPageEnterTransition(el)
-  const ms = performance.now() < docPageDisableAnimUntil ? 0 : DOC_PAGE_TRANSITION_MS
+  const ms = isMobileViewport() || performance.now() < docPageDisableAnimUntil ? 0 : DOC_PAGE_TRANSITION_MS
   let finished = false
   const safeDone = () => {
     if (finished) return
@@ -1977,9 +2046,7 @@ function onDocPageLeave(el, done) {
   const tid = window.setTimeout(safeDone, ms + 100)
 
   if (ms === 0) {
-    el.style.opacity = '0'
-    el.style.transform = 'translateY(0)'
-    safeDone()
+    requestAnimationFrame(safeDone)
     return
   }
 

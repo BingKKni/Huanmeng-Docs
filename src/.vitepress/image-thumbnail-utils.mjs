@@ -14,6 +14,27 @@ const DIMENSION_ATTR_RE = /\b(width|height)\s*=\s*(?:"(\d+)"|'(\d+)'|(\d+))/g
 const MARKDOWN_IMAGE_RE = /!\[[^\]]*\]\((\/img\/[^)\s]+)(?:\s+(?:"[^"]*"|'[^']*'))?\)(\{[^{}\n]*\})?/g
 const SKIP_DIRS = new Set(['.vitepress', '.vscode', 'node_modules'])
 
+export const RESPONSIVE_IMAGE_PRESETS = Object.freeze({
+  'auto-single': Object.freeze({
+    id: 'auto-single',
+    fallbackWidth: 960,
+    candidateWidths: Object.freeze([360, 540, 720, 960, 1280, 1600]),
+    sizes: '(max-width: 767.98px) calc(100vw - 24px), min(68vw, 1080px)'
+  }),
+  'auto-double': Object.freeze({
+    id: 'auto-double',
+    fallbackWidth: 480,
+    candidateWidths: Object.freeze([240, 360, 480, 640, 800, 960]),
+    sizes: '(max-width: 767.98px) calc((100vw - 36px) / 2), 534px'
+  }),
+  'auto-dense': Object.freeze({
+    id: 'auto-dense',
+    fallbackWidth: 360,
+    candidateWidths: Object.freeze([240, 360, 480, 640]),
+    sizes: '(max-width: 767.98px) calc((100vw - 48px) / 3), 352px'
+  })
+})
+
 export function normalizePublicImageUrl(url) {
   if (typeof url !== 'string') return null
   const normalized = url.trim().replace(/\\/g, '/')
@@ -24,6 +45,23 @@ export function buildThumbnailKey(sourceSrc, width = null, height = null) {
   const normalizedSrc = normalizePublicImageUrl(sourceSrc)
   if (!normalizedSrc) return ''
   return `${normalizedSrc}|${width ?? ''}|${height ?? ''}`
+}
+
+export function buildResponsiveImageKey(sourceSrc, presetId = '') {
+  const normalizedSrc = normalizePublicImageUrl(sourceSrc)
+  if (!normalizedSrc || !presetId) return ''
+  return `${normalizedSrc}|preset:${presetId}`
+}
+
+export function getResponsiveImagePreset(presetId) {
+  return RESPONSIVE_IMAGE_PRESETS[presetId] ?? null
+}
+
+export function getResponsiveImagePresetIdForCount(count) {
+  if (!Number.isFinite(count) || count <= 0) return null
+  if (count === 1) return 'auto-single'
+  if (count === 2) return 'auto-double'
+  return 'auto-dense'
 }
 
 export function parseDimensionAttributes(attrBlock = '') {
@@ -40,23 +78,57 @@ export function parseDimensionAttributes(attrBlock = '') {
   return { width, height }
 }
 
+function splitMarkdownBlocks(source = '') {
+  return String(source)
+    .split(/\r?\n\s*\r?\n+/)
+    .map(block => block.trim())
+    .filter(Boolean)
+}
+
+function isImageOnlyMarkdownBlock(block) {
+  if (!block) return false
+  const stripped = block.replace(MARKDOWN_IMAGE_RE, '').trim()
+  return stripped === ''
+}
+
 export function extractMarkdownImageUsages(source, filePath = '') {
   const usages = []
 
-  for (const match of source.matchAll(MARKDOWN_IMAGE_RE)) {
-    const sourceSrc = normalizePublicImageUrl(match[1])
-    if (!sourceSrc) continue
+  for (const block of splitMarkdownBlocks(source)) {
+    const matches = [...block.matchAll(MARKDOWN_IMAGE_RE)]
+    if (matches.length === 0) continue
 
-    const { width, height } = parseDimensionAttributes(match[2] ?? '')
-    if (width == null && height == null) continue
+    const responsivePresetId = isImageOnlyMarkdownBlock(block)
+      ? getResponsiveImagePresetIdForCount(matches.length)
+      : null
 
-    usages.push({
-      key: buildThumbnailKey(sourceSrc, width, height),
-      sourceSrc,
-      sourceFile: filePath,
-      requestedWidth: width,
-      requestedHeight: height
-    })
+    for (const match of matches) {
+      const sourceSrc = normalizePublicImageUrl(match[1])
+      if (!sourceSrc) continue
+
+      const { width, height } = parseDimensionAttributes(match[2] ?? '')
+      if (width != null || height != null) {
+        usages.push({
+          kind: 'thumbnail',
+          key: buildThumbnailKey(sourceSrc, width, height),
+          sourceSrc,
+          sourceFile: filePath,
+          requestedWidth: width,
+          requestedHeight: height
+        })
+        continue
+      }
+
+      if (!responsivePresetId) continue
+
+      usages.push({
+        kind: 'responsive',
+        key: buildResponsiveImageKey(sourceSrc, responsivePresetId),
+        sourceSrc,
+        sourceFile: filePath,
+        responsivePresetId
+      })
+    }
   }
 
   return usages
@@ -126,17 +198,18 @@ export function buildThumbnailPublicUrl(sourceSrc, width = null, height = null) 
 
 export function loadImageThumbnailManifest() {
   if (!existsSync(manifestPath)) {
-    return { version: 1, thumbnails: {} }
+    return { version: 2, thumbnails: {}, responsiveImages: {} }
   }
 
   try {
     const raw = readFileSync(manifestPath, 'utf8')
     const parsed = JSON.parse(raw)
     return {
-      version: parsed?.version ?? 1,
-      thumbnails: parsed?.thumbnails ?? {}
+      version: parsed?.version ?? 2,
+      thumbnails: parsed?.thumbnails ?? {},
+      responsiveImages: parsed?.responsiveImages ?? {}
     }
   } catch {
-    return { version: 1, thumbnails: {} }
+    return { version: 2, thumbnails: {}, responsiveImages: {} }
   }
 }
