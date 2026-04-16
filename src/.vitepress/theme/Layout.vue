@@ -5,12 +5,17 @@ import SidebarNavItem from './components/SidebarNavItem.vue'
 
 
 const { site, frontmatter, page } = useData()
+const router = useRouter()
 
 const tocHeaders = ref([])
 const activeTocId = ref('')
 const tocIndicatorStyle = ref({ transform: 'translateY(0)', height: '0', opacity: '0' })
 
 watch(activeTocId, async (newId) => {
+  if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767.98px)').matches) {
+    tocIndicatorStyle.value.opacity = '0'
+    return
+  }
   if (!newId) {
     tocIndicatorStyle.value.opacity = '0'
     return
@@ -36,6 +41,11 @@ watch(activeTocId, async (newId) => {
 }, { immediate: true })
 
 function updateActiveToc() {
+  if (isMobileViewport()) {
+    activeTocId.value = ''
+    return
+  }
+
   const headers = tocHeaders.value
   if (headers.length === 0) {
     activeTocId.value = ''
@@ -67,19 +77,47 @@ function updateActiveToc() {
 }
 
 let tocScrollTimeout = null
+let tocScrollListening = false
 function handleTocScroll() {
+  if (isMobileViewport()) return
   if (tocScrollTimeout) return
+  updateActiveToc()
+}
+
+function startTocScrollListener() {
+  if (typeof window === 'undefined' || tocScrollListening || isMobileViewport()) return
+  window.addEventListener('scroll', handleTocScroll, { passive: true })
+  tocScrollListening = true
+}
+
+function stopTocScrollListener() {
+  if (typeof window === 'undefined' || !tocScrollListening) return
+  window.removeEventListener('scroll', handleTocScroll)
+  tocScrollListening = false
+}
+
+function syncTocScrollListener() {
+  if (isMobileViewport()) {
+    stopTocScrollListener()
+    activeTocId.value = ''
+    tocIndicatorStyle.value.opacity = '0'
+    return
+  }
+
+  startTocScrollListener()
   updateActiveToc()
 }
 
 onContentUpdated(() => {
   if (!docArticleRef.value) {
     tocHeaders.value = []
+    activeTocId.value = ''
     return
   }
   const headings = Array.from(docArticleRef.value.querySelectorAll('h1, h2, h3, h4'))
   if (headings.length === 0) {
     tocHeaders.value = []
+    activeTocId.value = ''
     return
   }
   tocHeaders.value = headings.map(h => {
@@ -92,7 +130,8 @@ onContentUpdated(() => {
     }
   })
   nextTick(() => {
-    updateActiveToc()
+    syncTocScrollListener()
+    void applyPendingSearchHeading()
   })
 })
 
@@ -121,142 +160,176 @@ function smoothScrollTo(endY, duration, callback) {
   requestAnimationFrame(step);
 }
 
-function scrollToToc(id) {
-  const el = document.getElementById(id)
-  if (el) {
-    if (tocScrollTimeout) clearTimeout(tocScrollTimeout)
-    activeTocId.value = id
-    
-    const top = el.getBoundingClientRect().top + window.scrollY - 120 // offset for site header
-    const distance = Math.abs(top - window.scrollY)
-    const duration = Math.min(Math.max(distance * 0.25, 300), 650)
-    
-    smoothScrollTo(top, duration, () => {
-      el.classList.remove('heading-flash')
-      void el.offsetWidth
-      el.classList.add('heading-flash')
-      setTimeout(() => {
-        el.classList.remove('heading-flash')
-      }, 1200)
-    })
-    
-    // 锁定 activeTocId，防止平滑滚动过程中由于阈值判断导致的高亮“回跳”
-    tocScrollTimeout = setTimeout(() => {
-      tocScrollTimeout = null
-    }, duration + 50)
+function normalizeHashTarget(hash) {
+  if (!hash) return ''
+  const raw = hash.startsWith('#') ? hash.slice(1) : hash
+  try {
+    return decodeURIComponent(raw)
+  } catch {
+    return raw
   }
 }
 
-const shouldShowTOC = computed(() => {
-  return shouldShowDesktopSidebar.value && sidebarSpaceEnough.value && tocHeaders.value.length > 0
-})
+function getHashTargetFromHref(href) {
+  try {
+    return normalizeHashTarget(new URL(href, window.location.href).hash)
+  } catch {
+    return normalizeHashTarget(href.split('#')[1] || '')
+  }
+}
+
+function getActiveDocArticle() {
+  const article = docArticleRef.value
+  if (article && !article.classList.contains('search-results-article')) {
+    return article
+  }
+
+  return document.querySelector('article.doc-article:not(.search-results-article)')
+}
+
+function normalizeHeadingText(text) {
+  return String(text || '')
+    .replace(/\s+#$/, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function findHeadingElement(id, title = '') {
+  const normalizedId = normalizeHashTarget(id)
+  const article = getActiveDocArticle()
+  if (!article) return null
+
+  if (normalizedId) {
+    const byId = article.querySelector(`#${CSS.escape(normalizedId)}`) || document.getElementById(normalizedId)
+    if (byId && article.contains(byId)) return byId
+  }
+
+  const normalizedTitle = normalizeHeadingText(title)
+  if (!normalizedTitle) return null
+
+  const headings = article.querySelectorAll('h1, h2, h3, h4, h5, h6')
+
+  for (const heading of headings) {
+    if (normalizeHeadingText(heading.textContent) === normalizedTitle) {
+      return heading
+    }
+  }
+
+  return null
+}
+
+function flashHeading(el) {
+  el.classList.remove('heading-flash')
+  void el.offsetWidth
+  el.classList.add('heading-flash')
+  setTimeout(() => {
+    el.classList.remove('heading-flash')
+  }, 1200)
+}
+
+function scrollToHeading(id, { updateHash = false, fallbackTitle = '' } = {}) {
+  const el = findHeadingElement(id, fallbackTitle)
+  if (!el) return false
+
+  const targetId = el.id || normalizeHashTarget(id)
+
+  if (tocScrollTimeout) clearTimeout(tocScrollTimeout)
+  if (targetId && tocHeaders.value.some(header => header.id === targetId)) {
+    activeTocId.value = targetId
+  }
+
+  const top = el.getBoundingClientRect().top + window.scrollY - 120
+  const distance = Math.abs(top - window.scrollY)
+  const duration = Math.min(Math.max(distance * 0.25, 300), 650)
+
+  smoothScrollTo(top, duration, () => {
+    if (updateHash) {
+      const url = new URL(window.location.href)
+      url.hash = targetId
+      window.history.replaceState(null, '', url)
+    }
+    flashHeading(el)
+  })
+
+  tocScrollTimeout = setTimeout(() => {
+    tocScrollTimeout = null
+  }, duration + 50)
+
+  return true
+}
+
+function scrollToToc(id) {
+  scrollToHeading(id, { updateHash: true })
+}
+
+const shouldShowTOC = computed(() => !isMobileView.value && shouldShowDesktopSidebar.value && tocHeaders.value.length > 0)
 // --- Search Logic ---
-const rawDocs = import.meta.glob('../../docs/**/*.md', { query: '?raw', import: 'default', eager: true })
-const searchActive = ref(false)
+const SEARCH_INDEX_PATH = '/search-index.json'
 const searchQuery = ref('')
 const searchInputRef = ref(null)
 const mobileSearchInputRef = ref(null)
 const globalSearchModalActive = ref(false)
 const globalSearchInputRef = ref(null)
-
-// Regex patterns pre-compiled
-const mdStripRegexes = [
-  { p: /^---[\s\S]*?^---/m, r: '' }, // strip frontmatter
-  { p: /```[\s\S]*?```/g, r: '' }, // strip code blocks
-  { p: /`([^`]+)`/g, r: '$1' }, // inline code
-  { p: /<[^>]*>/g, r: '' }, // html
-  { p: /!\[[^\]]*\]\([^)]*\)/g, r: '' }, // images
-  { p: /\[([^\]]+)\]\([^)]+\)/g, r: '$1' }, // links
-  { p: /^#{1,6}\s+/gm, r: '' }, // ATX headers
-  { p: /^==\s+/gm, r: '' }, // strip tab markers
-  { p: /(?:\*\*|__)(.*?)(?:\*\*|__)/g, r: '$1' }, // bold
-  { p: /(?:\*|_)(.*?)(?:\*|_)/g, r: '$1' }, // italic
-  { p: /^\s*>\s+/gm, r: '' }, // blockquotes
-  { p: /^\s*[-*+]\s+/gm, r: '' }, // lists
-  { p: /^\s*\d+\.\s+/gm, r: '' }, // ordered lists
-  { p: /^:::\s*\w*.*$/gm, r: '' }, // custom blocks
-  { p: /:::/g, r: '' },
-  { p: /\n+/g, r: ' ' } // condense newlines
+const isDarkMode = ref(false)
+const searchIndex = ref([])
+const searchIndexLoaded = ref(false)
+const desktopSearchPlaceholders = [
+  '搜索内容...',
+  '搜索关键词...',
+  '随便搜点...',
+  '来搜点什么吧...',
+  '寻找文案...'
 ]
+const desktopSearchPlaceholder = ref(desktopSearchPlaceholders[0])
+const desktopSearchPlaceholderAnimating = ref(false)
+let desktopSearchPlaceholderIndex = 0
+let desktopSearchPlaceholderCycleTimer = null
+let desktopSearchPlaceholderSwapTimer = null
+let desktopSearchPlaceholderResetTimer = null
+let pendingSearchHeadingId = ''
+let pendingSearchHeadingTitle = ''
+let pendingSearchHeadingFrame = null
+let searchIndexPromise = null
 
-function stripMarkdown(str) {
-  let result = str
-  for (const { p, r } of mdStripRegexes) {
-    result = result.replace(p, r)
-  }
-  return result.trim()
-}
+async function ensureSearchIndexLoaded() {
+  if (searchIndexLoaded.value) return searchIndex.value
+  if (typeof window === 'undefined') return []
+  if (searchIndexPromise) return searchIndexPromise
 
-// Compute allDocsContent once since rawDocs doesn't change during navigation
-let cachedAllDocsContent = null
-function sidebarItemHasChildren(item) {
-  return Array.isArray(item.children) && item.children.length > 0
-}
-
-function flattenSidebarLinks(items) {
-  return items.flatMap(item => [
-    item,
-    ...(sidebarItemHasChildren(item) ? flattenSidebarLinks(item.children) : [])
-  ])
-}
-
-function getAllDocsContent() {
-  if (cachedAllDocsContent) return cachedAllDocsContent
-  const arr = []
-  const searchableLinks = [...navLinks, ...flattenSidebarLinks(desktopSidebarLinks)]
-  for (const path in rawDocs) {
-    const rawContent = rawDocs[path] || ''
-    
-    let link = path.replace('../../', '/')
-    link = link.replace(/\.md$/, '.html')
-    if (link.endsWith('/index.html')) {
-      link = link.replace('/index.html', '/')
-    }
-    
-    let title = ''
-    try {
-      for (const item of searchableLinks) {
-         const itemHrefBase = item.href.replace(/\/$/, '')
-         const linkBase = link.replace(/\/$/, '')
-         if (itemHrefBase === linkBase) {
-            title = item.label
-            break
-         }
+  searchIndexPromise = fetch(withBase(SEARCH_INDEX_PATH), { cache: 'force-cache' })
+    .then(async response => {
+      if (!response.ok) {
+        throw new Error(`search-index-http-${response.status}`)
       }
-    } catch { /* ignore */ }
-    
-    if (!title) {
-       const titleMatch = rawContent.match(/^#\s+(.*)/m)
-       if (titleMatch) {
-          title = titleMatch[1].trim()
-       } else {
-          const h2Match = rawContent.match(/^##\s+(.*)/m)
-          if (h2Match) {
-             title = h2Match[1].trim()
-          } else {
-             const parts = path.split('/')
-             const filename = parts[parts.length - 1].replace(/\.md$/, '')
-             title = filename === 'index' ? parts[parts.length - 2] || '首页' : filename
-          }
-       }
-    }
-    
-    const content = stripMarkdown(rawContent)
-    arr.push({ title, link, content })
-  }
-  cachedAllDocsContent = arr
-  return arr
+
+      const data = await response.json()
+      searchIndex.value = Array.isArray(data) ? data : []
+      searchIndexLoaded.value = true
+      return searchIndex.value
+    })
+    .catch(error => {
+      console.error('Failed to load search index:', error)
+      searchIndex.value = []
+      return searchIndex.value
+    })
+    .finally(() => {
+      searchIndexPromise = null
+    })
+
+  return searchIndexPromise
 }
 
 const searchResults = computed(() => {
   if (!searchQuery.value.trim()) return []
   const query = searchQuery.value.toLowerCase()
   const results = []
-  const docs = getAllDocsContent()
+  const docs = searchIndex.value
+
+  if (docs.length === 0) return results
   
   for (let i = 0, len = docs.length; i < len; i++) {
     const doc = docs[i]
-    const rawContent = doc.content
+    const rawContent = doc.searchText
     const lowerContent = rawContent.toLowerCase()
     
     let index = lowerContent.indexOf(query)
@@ -274,7 +347,10 @@ const searchResults = computed(() => {
       
       results.push({
         title: doc.title,
+        docTitle: doc.docTitle,
         link: doc.link,
+        headingId: doc.id,
+        headingTitle: doc.headingTitle,
         snippetBefore,
         match: snippetMatch,
         snippetAfter
@@ -285,22 +361,91 @@ const searchResults = computed(() => {
   return results
 })
 
-function handleResultClick() {
-  searchQuery.value = ''
-  searchActive.value = false
-  closeMobileMenu()
+watch(searchQuery, query => {
+  if (!query.trim()) return
+  void ensureSearchIndexLoaded()
+})
+
+function clearPendingSearchHeadingFrame() {
+  if (pendingSearchHeadingFrame != null) {
+    cancelAnimationFrame(pendingSearchHeadingFrame)
+    pendingSearchHeadingFrame = null
+  }
 }
 
-function handleSearchIconClick() {
-  if (!searchActive.value) {
-    searchActive.value = true
-    nextTick(() => {
-      searchInputRef.value?.focus()
+function setPendingSearchHeading(id, title = '') {
+  pendingSearchHeadingId = normalizeHashTarget(id)
+  pendingSearchHeadingTitle = normalizeHeadingText(title)
+}
+
+async function applyPendingSearchHeading(retries = 60) {
+  clearPendingSearchHeadingFrame()
+  if (!pendingSearchHeadingId && !pendingSearchHeadingTitle) return
+
+  if (docPageEnterInProgress || !getActiveDocArticle()) {
+    if (retries <= 0) {
+      pendingSearchHeadingId = ''
+      pendingSearchHeadingTitle = ''
+      return
+    }
+
+    pendingSearchHeadingFrame = requestAnimationFrame(() => {
+      void applyPendingSearchHeading(retries - 1)
     })
-  } else {
-    searchActive.value = false
-    searchQuery.value = ''
+    return
   }
+
+  const targetId = pendingSearchHeadingId
+  const targetTitle = pendingSearchHeadingTitle
+  await nextTick()
+
+  if (scrollToHeading(targetId, { updateHash: true, fallbackTitle: targetTitle })) {
+    pendingSearchHeadingId = ''
+    pendingSearchHeadingTitle = ''
+    return
+  }
+
+  if (retries <= 0) {
+    pendingSearchHeadingId = ''
+    pendingSearchHeadingTitle = ''
+    return
+  }
+
+  pendingSearchHeadingFrame = requestAnimationFrame(() => {
+    void applyPendingSearchHeading(retries - 1)
+  })
+}
+
+function handleResultClick(result, event) {
+  searchQuery.value = ''
+  closeMobileMenu()
+  mobileSidebarOpen.value = false
+
+  if (typeof window === 'undefined') return
+
+  const targetHref = withBase(result.link)
+  const currentRouteKey = routeNavComparableKey(window.location.href)
+  const targetRouteKey = routeNavComparableKey(targetHref)
+
+  setPendingSearchHeading(result.headingId, result.headingTitle)
+
+  if (currentRouteKey !== targetRouteKey) return
+
+  event.preventDefault()
+  window.history.pushState(null, '', targetHref)
+
+  if (result.headingId || result.headingTitle) {
+    void applyPendingSearchHeading()
+    return
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function focusDesktopSearch() {
+  nextTick(() => {
+    searchInputRef.value?.focus()
+  })
 }
 
 function handleMobileSearchClick() {
@@ -314,11 +459,7 @@ function handleMobileSearchClick() {
       mobileSearchInputRef.value?.focus()
     }
   } else {
-    // Desktop Home fallback
-    globalSearchModalActive.value = true
-    nextTick(() => {
-      globalSearchInputRef.value?.focus()
-    })
+    focusDesktopSearch()
   }
 }
 
@@ -326,14 +467,15 @@ function closeGlobalSearch() {
   globalSearchModalActive.value = false
   searchQuery.value = ''
 }
-function handleSearchBlur() {
-  setTimeout(() => {
-    if (!searchQuery.value && searchActive.value && document.activeElement !== searchInputRef.value) {
-      searchActive.value = false
-    }
-  }, 150)
-}
 
+
+const APPEARANCE_STORAGE_KEY = 'vitepress-theme-appearance'
+const githubLink = {
+  href: 'https://github.com/BingKKni/Huanmeng-Docs',
+  label: 'Github',
+  isExternal: true,
+  isActive: () => false
+}
 
 const navLinks = [
   { href: '/', label: '首页', isActive: relativePath => relativePath === 'index.md' },
@@ -341,14 +483,10 @@ const navLinks = [
     href: '/docs/',
     label: '机器人文档',
     isActive: relativePath => relativePath === 'docs/index.md' || relativePath.startsWith('docs/')
-  },
-  {
-    href: 'https://github.com/BingKKni/Huanmeng-Docs',
-    label: 'Github',
-    isExternal: true,
-    isActive: () => false
   }
 ]
+
+const mobileNavLinks = [...navLinks, githubLink]
 
 /* 侧边栏定义 */
 const desktopSidebarLinks = [
@@ -417,6 +555,7 @@ const currentPageLabel = computed(() => {
 const shouldShowDesktopSidebar = computed(() => page.value.relativePath.startsWith('docs/'))
 
 const mobileSidebarOpen = ref(false)
+const desktopSidebarCollapsed = ref(false)
 const menuOpen = ref(false)
 /** 关闭菜单时延迟到面板收起动画结束再撤掉顶栏 overflow，否则下拉层会被立刻裁掉 */
 const mobileNavClosingHold = ref(false)
@@ -447,8 +586,7 @@ const infoDialogConfirmButton = ref(null)
 const MOBILE_MEDIA_QUERY = '(max-width: 767.98px)'
 /** 与 style.css 中桌面侧栏媒体查询一致 */
 const DESKTOP_SIDEBAR_MEDIA_QUERY = '(min-width: 992px)'
-const DESKTOP_SIDEBAR_WIDTH_PX = 240
-const DESKTOP_MAIN_SHIFT_X = 10
+const DESKTOP_SIDEBAR_WIDTH_PX = 256
 const DESKTOP_SIDEBAR_SHIFT_X = -30 // Not used anymore but kept to avoid breaking other things if any
 const DESKTOP_SIDEBAR_GAP = 40
 const DESKTOP_SIDEBAR_SHIFT_Y = 0
@@ -503,6 +641,12 @@ const NAV_ROUTE_PROGRESS_FADE_MS = 360
 const DOC_PAGE_TRANSITION_MS = 240
 const DOC_PAGE_FAST_SWITCH_WINDOW_MS = 180
 const DOC_PAGE_FAST_SWITCH_DISABLE_ANIM_MS = 420
+const DESKTOP_SEARCH_PLACEHOLDER_IDLE_MS = 4000
+const DESKTOP_SEARCH_PLACEHOLDER_ANIM_MS = 1200
+const DESKTOP_SEARCH_PLACEHOLDER_SWAP_MS = DESKTOP_SEARCH_PLACEHOLDER_ANIM_MS / 2
+const desktopSearchPlaceholderAnimationStyle = {
+  '--hm-search-placeholder-anim-ms': `${DESKTOP_SEARCH_PLACEHOLDER_ANIM_MS}ms`
+}
 let lastScrollY = 0
 let bodyScrollLocked = false
 /** 点击打开时的文档内图片，关闭时优先用其最新 getBoundingClientRect */
@@ -512,6 +656,7 @@ let thumbRectSnapshot = { left: 0, top: 0, width: 0, height: 0 }
 let previousBodyOverflow = ''
 let imageRowProcessFrame = 0
 let imageRowForceProcess = false
+let docPageEnterInProgress = false
 const copyButtonResetTimers = new Map()
 
 /** 移动端文档切换顶部进度条（不占文档流） */
@@ -634,14 +779,86 @@ function isMobileViewport() {
   return isMobileView.value
 }
 
+function syncColorModeFromDocument() {
+  if (typeof document === 'undefined') return
+  isDarkMode.value = document.documentElement.classList.contains('dark')
+}
+
+function setColorMode(mode) {
+  if (typeof document === 'undefined') return
+
+  const shouldUseDark = mode === 'dark'
+  document.documentElement.classList.toggle('dark', shouldUseDark)
+  document.documentElement.style.colorScheme = shouldUseDark ? 'dark' : 'light'
+  isDarkMode.value = shouldUseDark
+
+  try {
+    window.localStorage.setItem(APPEARANCE_STORAGE_KEY, mode)
+  } catch {
+    /* ignore storage failures */
+  }
+}
+
+function toggleColorMode() {
+  setColorMode(isDarkMode.value ? 'light' : 'dark')
+}
+
 function syncViewportMode() {
   isMobileView.value = window.matchMedia(MOBILE_MEDIA_QUERY).matches
 }
 
-/**
- * 桌面侧栏定位：
- * - 垂直：直接对齐正文容器的视口顶边（cr.top），使侧栏起始高度与正文文档完全一致
- */
+function clearDesktopSearchPlaceholderTimers() {
+  if (desktopSearchPlaceholderCycleTimer != null) {
+    clearTimeout(desktopSearchPlaceholderCycleTimer)
+    desktopSearchPlaceholderCycleTimer = null
+  }
+  if (desktopSearchPlaceholderSwapTimer != null) {
+    clearTimeout(desktopSearchPlaceholderSwapTimer)
+    desktopSearchPlaceholderSwapTimer = null
+  }
+  if (desktopSearchPlaceholderResetTimer != null) {
+    clearTimeout(desktopSearchPlaceholderResetTimer)
+    desktopSearchPlaceholderResetTimer = null
+  }
+}
+
+function scheduleDesktopSearchPlaceholderCycle() {
+  if (typeof window === 'undefined') return
+  if (isMobileViewport()) return
+  clearDesktopSearchPlaceholderTimers()
+  desktopSearchPlaceholderCycleTimer = window.setTimeout(runDesktopSearchPlaceholderCycle, DESKTOP_SEARCH_PLACEHOLDER_IDLE_MS)
+}
+
+function stopDesktopSearchPlaceholderCycle() {
+  clearDesktopSearchPlaceholderTimers()
+  desktopSearchPlaceholderAnimating.value = false
+}
+
+function runDesktopSearchPlaceholderCycle() {
+  if (typeof window === 'undefined') return
+  desktopSearchPlaceholderCycleTimer = null
+  if (isMobileViewport()) {
+    stopDesktopSearchPlaceholderCycle()
+    return
+  }
+
+  desktopSearchPlaceholderAnimating.value = true
+
+  desktopSearchPlaceholderSwapTimer = window.setTimeout(() => {
+    desktopSearchPlaceholderSwapTimer = null
+    desktopSearchPlaceholderIndex = (desktopSearchPlaceholderIndex + 1) % desktopSearchPlaceholders.length
+    desktopSearchPlaceholder.value = desktopSearchPlaceholders[desktopSearchPlaceholderIndex]
+  }, DESKTOP_SEARCH_PLACEHOLDER_SWAP_MS)
+
+  desktopSearchPlaceholderResetTimer = window.setTimeout(() => {
+    desktopSearchPlaceholderAnimating.value = false
+    desktopSearchPlaceholderResetTimer = null
+    desktopSearchPlaceholderSwapTimer = null
+    scheduleDesktopSearchPlaceholderCycle()
+  }, DESKTOP_SEARCH_PLACEHOLDER_ANIM_MS)
+}
+
+/** 桌面侧栏定位：顶部对齐导航栏底边，左侧贴齐屏幕。 */
 function syncDesktopSidebarLayout() {
   if (typeof document === 'undefined') return
   if (!window.matchMedia(DESKTOP_SIDEBAR_MEDIA_QUERY).matches) {
@@ -653,37 +870,43 @@ function syncDesktopSidebarLayout() {
   }
 
   const containerEl = mainContainerRef.value
-  if (!containerEl) return
+  const headerEl = siteHeaderRef.value
+  if (!containerEl || !headerEl) return
 
   const cr = containerEl.getBoundingClientRect()
 
-  const requiredSpace = DESKTOP_SIDEBAR_WIDTH_PX + 15
-  if (cr.left < requiredSpace) {
-    sidebarSpaceEnough.value = false
-    document.documentElement.style.removeProperty('--hm-desktop-sidebar-left')
-    document.documentElement.style.removeProperty('--hm-desktop-sidebar-top')
-    document.documentElement.style.removeProperty('--hm-desktop-sidebar-width')
-    document.documentElement.style.removeProperty('--hm-desktop-toc-left')
-    document.documentElement.style.removeProperty('--hm-desktop-toc-display')
+  sidebarSpaceEnough.value = true
+  const headerRect = headerEl.getBoundingClientRect()
+  const top = Math.max(0, Math.round(headerRect.bottom))
+  document.documentElement.style.setProperty('--hm-desktop-sidebar-left', '0px')
+  document.documentElement.style.setProperty('--hm-desktop-sidebar-top', `${top}px`)
+  document.documentElement.style.setProperty('--hm-desktop-sidebar-width', `${DESKTOP_SIDEBAR_WIDTH_PX}px`)
+
+  const tocLeft = Math.round(cr.right) + 24
+  document.documentElement.style.setProperty('--hm-desktop-toc-left', `${tocLeft}px`)
+  if (tocLeft + 220 > document.documentElement.clientWidth) {
+    document.documentElement.style.setProperty('--hm-desktop-toc-display', `none`)
   } else {
-    sidebarSpaceEnough.value = true
-    // cr.left 包含 style.css 中的 translateX(100px)，先减去正文偏移恢复基准，再加侧栏要求的 120px 偏移
-    const baseLeft = cr.left - DESKTOP_MAIN_SHIFT_X
-    const left = Math.max(16, Math.round(baseLeft - DESKTOP_SIDEBAR_WIDTH_PX - DESKTOP_SIDEBAR_GAP))
-    const top = Math.max(0, Math.round(cr.top)) + DESKTOP_SIDEBAR_SHIFT_Y
-    document.documentElement.style.setProperty('--hm-desktop-sidebar-left', `${left}px`)
-    document.documentElement.style.setProperty('--hm-desktop-sidebar-top', `${top}px`)
-    document.documentElement.style.setProperty('--hm-desktop-sidebar-width', `${DESKTOP_SIDEBAR_WIDTH_PX}px`)
-    
-    // Calculate right TOC layout
-    const tocLeft = Math.round(cr.right) + 40
-    document.documentElement.style.setProperty('--hm-desktop-toc-left', `${tocLeft}px`)
-    if (tocLeft + 220 > document.documentElement.clientWidth) {
-      document.documentElement.style.setProperty('--hm-desktop-toc-display', `none`)
-    } else {
-      document.documentElement.style.setProperty('--hm-desktop-toc-display', `block`)
-    }
+    document.documentElement.style.setProperty('--hm-desktop-toc-display', `block`)
   }
+}
+
+function openSidebar() {
+  if (isMobileViewport()) {
+    mobileSidebarOpen.value = true
+    return
+  }
+
+  desktopSidebarCollapsed.value = false
+}
+
+function closeSidebar() {
+  if (isMobileViewport()) {
+    mobileSidebarOpen.value = false
+    return
+  }
+
+  desktopSidebarCollapsed.value = true
 }
 
 function clampLightboxScale(scale) {
@@ -718,7 +941,7 @@ function armMobileNavCloseHold() {
 
 function onMobileNavTransitionEnd(e) {
   if (menuOpen.value) return
-  if (e.propertyName !== 'grid-template-rows') return
+  if (e.propertyName !== 'transform' && e.propertyName !== 'opacity') return
   mobileNavClosingHold.value = false
   clearMobileNavCloseFallback()
   syncBodyScrollLock()
@@ -1036,26 +1259,13 @@ function handleDocumentKeydown(e) {
   const isSearchKey = (e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'f' || e.key.toLowerCase() === 'k')
   if (isSearchKey) {
     e.preventDefault()
-    if (isMobileViewport() || (shouldShowDesktopSidebar.value && !sidebarSpaceEnough.value)) {
-      if (shouldShowDesktopSidebar.value && !sidebarSpaceEnough.value) {
-        if (!mobileSidebarOpen.value) {
-          mobileSidebarOpen.value = true
-        }
-        nextTick(() => {
-          searchInputRef.value?.focus()
-        })
-      } else {
-        handleMobileSearchClick()
-      }
-    } else if (shouldShowDesktopSidebar.value) {
-      if (!searchActive.value) {
-        handleSearchIconClick()
-      } else {
-        searchInputRef.value?.focus()
-      }
-    } else {
-      // Fallback for pages without sidebar (e.g. Home)
+    if (isMobileViewport()) {
       handleMobileSearchClick()
+    } else {
+      if (shouldShowDesktopSidebar.value && desktopSidebarCollapsed.value) {
+        desktopSidebarCollapsed.value = false
+      }
+      focusDesktopSearch()
     }
     return
   }
@@ -1087,6 +1297,11 @@ function handleDocumentKeydown(e) {
 
   if (globalSearchModalActive.value) {
     closeGlobalSearch()
+    return
+  }
+
+  if (mobileSidebarOpen.value) {
+    mobileSidebarOpen.value = false
     return
   }
 
@@ -1161,6 +1376,20 @@ function handleWindowResize() {
   mobileHeaderElevated.value = lastScrollY > 12
 }
 
+watch(
+  isMobileView,
+  mobile => {
+    syncTocScrollListener()
+    if (mobile) {
+      stopDesktopSearchPlaceholderCycle()
+      return
+    }
+
+    scheduleDesktopSearchPlaceholderCycle()
+  },
+  { immediate: true }
+)
+
 function isImageOnlyParagraph(p) {
   return Array.from(p.childNodes).every(n => {
     if (n.nodeType === 8) return true
@@ -1181,7 +1410,10 @@ function bindLightboxTrigger(img) {
   if (img.dataset.hmLightboxBound === '1') return
   img.dataset.hmLightboxBound = '1'
   img.style.cursor = 'pointer'
-  img.addEventListener('click', () => openLightbox(img.src, img))
+  img.addEventListener('click', () => {
+    const lightboxSrc = img.dataset.hmFullSrc || img.currentSrc || img.src
+    openLightbox(lightboxSrc, img)
+  })
 }
 
 function openInfoDialog(message, title = '信息', onConfirm = null, showCancel = false) {
@@ -1302,8 +1534,10 @@ function bindCodeBlockCopy(block) {
   })
 }
 
-function processCodeBlocks() {
-  document.querySelectorAll(".site-shell div[class*='language-']").forEach(bindCodeBlockCopy)
+function processCodeBlocks(root = null) {
+  const container = root ?? docArticleRef.value
+  if (!container) return
+  container.querySelectorAll("div[class*='language-']").forEach(bindCodeBlockCopy)
 }
 
 function bindJoinGroupButtons(root = null) {
@@ -1329,8 +1563,14 @@ function bindJoinGroupButtons(root = null) {
 }
 
 function processContentActions(root = null) {
-  processCodeBlocks()
+  processCodeBlocks(root)
   bindJoinGroupButtons(root)
+}
+
+function bindLightboxTriggers(root = null) {
+  const article = root ?? docArticleRef.value
+  if (!article) return
+  article.querySelectorAll('img').forEach(bindLightboxTrigger)
 }
 
 function scheduleImageRowProcessing(force = false) {
@@ -1364,6 +1604,31 @@ function nextDoubleRaf() {
   return new Promise(resolve => {
     requestAnimationFrame(() => requestAnimationFrame(resolve))
   })
+}
+
+function prepareImageRows({ force = false, root = null } = {}) {
+  const article = root ?? docArticleRef.value
+  if (!article) return []
+
+  bindLightboxTriggers(article)
+
+  const preparedRows = []
+  article.querySelectorAll('p').forEach(p => {
+    if (!force && p.dataset.hmProcessedRow) return
+
+    const imgs = Array.from(p.querySelectorAll('img'))
+    if (imgs.length <= 1 || !isImageOnlyParagraph(p)) return
+
+    p.dataset.hmProcessedRow = '1'
+    p.classList.add('hm-img-row')
+    preparedRows.push({ p, imgs })
+
+    if (imgs.every(img => img.complete && img.naturalWidth > 0)) {
+      applyMultiImageRowHeights(p, imgs)
+    }
+  })
+
+  return preparedRows
 }
 
 function imgHasExplicitHeight(img) {
@@ -1424,23 +1689,12 @@ async function processImageRowsAsync({ force = false, root = null } = {}) {
   const article = root ?? docArticleRef.value
   if (!article) return
 
-  // 1. 先确保文档内的所有图片都绑定了灯箱
-  article.querySelectorAll('img').forEach(img => {
-    bindLightboxTrigger(img)
-  })
+  // 1. 先同步准备多图行骨架，避免首帧布局跳动
+  const preparedRows = prepareImageRows({ force, root: article })
 
   // 2. 然后处理「纯图片段落」的多图并排布局
   const pending = []
-  article.querySelectorAll('p').forEach(p => {
-    if (!force && p.dataset.hmProcessedRow) return
-
-    const imgs = Array.from(p.querySelectorAll('img'))
-    // 只有当段落内只有图片（且不只一张）时，才应用 Row 布局
-    if (imgs.length <= 1 || !isImageOnlyParagraph(p)) return
-
-    p.dataset.hmProcessedRow = '1'
-    p.classList.add('hm-img-row')
-
+  preparedRows.forEach(({ p, imgs }) => {
     const loadPromises = imgs.map(img => {
       if (img.complete && img.naturalHeight > 0) return Promise.resolve()
       return new Promise(r => {
@@ -1492,20 +1746,22 @@ function cancelDocPageEnterTransition(el) {
 }
 
 onMounted(() => {
+  syncColorModeFromDocument()
   syncViewportMode()
   resetMobileHeaderState()
   nextTick(() => {
     processContentActions()
     syncDesktopSidebarLayout()
     processImageRows({ force: true })
+    setPendingSearchHeading(window.location.hash)
+    void applyPendingSearchHeading()
   })
   document.addEventListener('keydown', handleDocumentKeydown)
   document.addEventListener('click', handleVitepressPluginTabClick)
   window.addEventListener('resize', handleWindowResize)
   window.addEventListener('scroll', handleMobileHeaderScroll, { passive: true })
-  window.addEventListener('scroll', handleTocScroll, { passive: true })
+  syncTocScrollListener()
 
-  const router = useRouter()
   routerProgressPrevBefore = router.onBeforeRouteChange
   routerProgressPrevAfter = router.onAfterRouteChange ?? router.onAfterRouteChanged
 
@@ -1516,6 +1772,7 @@ onMounted(() => {
   }
 
   router.onAfterRouteChange = async href => {
+    setPendingSearchHeading(getHashTargetFromHref(href), pendingSearchHeadingTitle)
     await routerProgressPrevAfter?.(href)
   }
 })
@@ -1526,15 +1783,17 @@ onBeforeUnmount(() => {
     document.documentElement.style.removeProperty('--hm-desktop-sidebar-top')
     document.documentElement.style.removeProperty('--hm-desktop-sidebar-width')
   }
+  stopDesktopSearchPlaceholderCycle()
   clearMobileNavCloseFallback()
+  clearPendingSearchHeadingFrame()
   if (imageRowProcessFrame) window.cancelAnimationFrame(imageRowProcessFrame)
   copyButtonResetTimers.forEach(timer => clearTimeout(timer))
   copyButtonResetTimers.clear()
   clearNavRouteProgressTimers()
+  stopTocScrollListener()
   navRoutePendingKey = null
 
   try {
-    const router = useRouter()
     router.onBeforeRouteChange = routerProgressPrevBefore
     router.onAfterRouteChange = routerProgressPrevAfter
   } catch {
@@ -1545,7 +1804,6 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', handleVitepressPluginTabClick)
   window.removeEventListener('resize', handleWindowResize)
   window.removeEventListener('scroll', handleMobileHeaderScroll)
-  window.removeEventListener('scroll', handleTocScroll)
   if (bodyScrollLocked) {
     document.body.style.overflow = previousBodyOverflow
   }
@@ -1555,7 +1813,6 @@ watch(
   () => page.value.relativePath,
   () => {
     searchQuery.value = ''
-    searchActive.value = false
     closeMobileMenu()
 
     closeInfoDialog()
@@ -1564,12 +1821,14 @@ watch(
     nextTick(() => {
       processContentActions()
       syncDesktopSidebarLayout()
+      void applyPendingSearchHeading()
     })
   },
   { flush: 'post' }
 )
 
 function onDocPageBeforeEnter(el) {
+  docPageEnterInProgress = el.classList.contains('doc-article') && !el.classList.contains('search-results-article')
   setDocPageTransitionState(el, {
     runId: ++docPageTransitionRunId,
     cancelled: false,
@@ -1589,8 +1848,9 @@ async function onDocPageEnter(el, done) {
       return
     }
     if (el.classList.contains('doc-article')) {
-      await processImageRowsAsync({ force: true, root: el })
-      bindJoinGroupButtons(el)
+      prepareImageRows({ force: true, root: el })
+      bindLightboxTriggers(el)
+      processContentActions(el)
     }
   } catch (e) {
     console.error(e)
@@ -1646,9 +1906,23 @@ async function onDocPageEnter(el, done) {
       }
     }
     if (!cancelled) {
+      if (el.classList.contains('doc-article') && !el.classList.contains('search-results-article')) {
+        docPageEnterInProgress = false
+        requestAnimationFrame(() => {
+          if (!el.isConnected) return
+          void processImageRowsAsync({ force: true, root: el })
+        })
+      }
       el.style.transition = ''
       el.style.opacity = ''
       el.style.transform = ''
+      if (el.classList.contains('doc-article') && !el.classList.contains('search-results-article')) {
+        requestAnimationFrame(() => {
+          void applyPendingSearchHeading()
+        })
+      }
+    } else if (el.classList.contains('doc-article') && !el.classList.contains('search-results-article')) {
+      docPageEnterInProgress = false
     }
     done()
   }
@@ -1744,7 +2018,13 @@ watch(infoDialogVisible, async visible => {
 </script>
 
 <template>
-  <div class="site-shell" :class="{ 'sidebar-compact-mode': !sidebarSpaceEnough }">
+  <div
+    class="site-shell"
+    :class="{
+      'sidebar-compact-mode': !sidebarSpaceEnough,
+      'site-shell--doc-sidebar': shouldShowDesktopSidebar && !isMobileView && !desktopSidebarCollapsed
+    }"
+  >
     <header
       ref="siteHeaderRef"
       class="site-header"
@@ -1757,29 +2037,90 @@ watch(infoDialogVisible, async visible => {
       <div class="site-container site-header-container">
         <div class="site-header-inner">
           <div class="site-branding">
-            <a class="site-branding-title" :href="withBase('/')">
-              <span class="site-branding-title-desktop">幻梦</span>
-              <span class="site-branding-title-mobile">{{ currentPageLabel }}</span>
+            <a class="site-branding-link" :href="withBase('/')" aria-label="幻梦Bot 首页">
+              <img class="site-branding-icon" :src="withBase('/img/hm_icon.png')" alt="" aria-hidden="true">
+              <span class="site-branding-text">幻梦Bot</span>
             </a>
-            <div class="site-branding-description">{{ currentPageLabel }}</div>
           </div>
 
-          <!-- 桌面端导航，仅 md 及以上可见 -->
-          <nav class="site-nav site-nav--desktop">
-            <a
-              v-for="link in navLinks"
-              :key="link.href"
-              class="site-nav__link"
-              :class="{ active: isActiveLink(link), 'site-nav__link--external': link.isExternal }"
-              :href="getNavHref(link)"
-              :target="link.isExternal ? '_blank' : undefined"
-              :rel="link.isExternal ? 'noopener noreferrer' : undefined"
-              :aria-current="isActiveLink(link) ? 'page' : undefined"
-            >
-              {{ link.label }}
-              <svg v-if="link.isExternal" class="site-nav__external-icon" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-            </a>
-          </nav>
+          <div class="site-header-tools">
+            <!-- 桌面端导航，仅 md 及以上可见 -->
+            <nav class="site-nav site-nav--desktop">
+              <a
+                v-for="link in navLinks"
+                :key="link.href"
+                class="site-nav__link"
+                :class="{ active: isActiveLink(link), 'site-nav__link--external': link.isExternal }"
+                :href="getNavHref(link)"
+                :target="link.isExternal ? '_blank' : undefined"
+                :rel="link.isExternal ? 'noopener noreferrer' : undefined"
+                :aria-current="isActiveLink(link) ? 'page' : undefined"
+              >
+                {{ link.label }}
+                <svg v-if="link.isExternal" class="site-nav__external-icon" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              </a>
+            </nav>
+          </div>
+
+          <div class="site-header-search" role="search">
+            <div class="site-header-search__actions" aria-label="快捷操作">
+              <a
+                class="site-header-icon-btn"
+                :href="githubLink.href"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="打开 Github 仓库"
+                title="Github"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.426 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.866-.013-1.699-2.782.605-3.369-1.344-3.369-1.344-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.071 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.748-1.027 2.748-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.748 0 .269.18.58.688.481A10.019 10.019 0 0 0 22 12.017C22 6.484 17.523 2 12 2Z" />
+                </svg>
+              </a>
+              <button
+                type="button"
+                class="site-header-icon-btn"
+                :aria-label="isDarkMode ? '切换到日间模式' : '切换到夜间模式'"
+                :title="isDarkMode ? '切换到日间模式' : '切换到夜间模式'"
+                @click="toggleColorMode"
+              >
+                <svg v-if="isDarkMode" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="4.5"></circle>
+                  <path d="M12 2.5v2.25"></path>
+                  <path d="M12 19.25v2.25"></path>
+                  <path d="M4.93 4.93l1.59 1.59"></path>
+                  <path d="M17.48 17.48l1.59 1.59"></path>
+                  <path d="M2.5 12h2.25"></path>
+                  <path d="M19.25 12h2.25"></path>
+                  <path d="M4.93 19.07l1.59-1.59"></path>
+                  <path d="M17.48 6.52l1.59-1.59"></path>
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M20.742 13.045A8.088 8.088 0 0 1 10.955 3.258a.75.75 0 0 0-.822-.984A9.5 9.5 0 1 0 21.726 13.867a.75.75 0 0 0-.984-.822Z" />
+                </svg>
+              </button>
+            </div>
+            <div class="site-header-search__field">
+              <input
+                ref="searchInputRef"
+                v-model="searchQuery"
+                type="text"
+                :placeholder="desktopSearchPlaceholder"
+                aria-label="搜索内容"
+              />
+              <span
+                v-show="!searchQuery"
+                class="site-header-search__placeholder"
+                :class="{ 'site-header-search__placeholder--animating': desktopSearchPlaceholderAnimating }"
+                :style="desktopSearchPlaceholderAnimationStyle"
+                aria-hidden="true"
+              >
+                {{ desktopSearchPlaceholder }}
+              </span>
+              <button type="button" class="site-header-search__icon" aria-label="聚焦搜索框" @click="focusDesktopSearch">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              </button>
+            </div>
+          </div>
 
           <!-- 移动端汉堡按钮，仅 md 以下可见 -->
           <button
@@ -1821,7 +2162,7 @@ watch(infoDialogVisible, async visible => {
             </div>
             <nav id="mobile-site-nav" class="site-nav mobile-nav-links" aria-label="移动端站点导航">
               <a
-                v-for="link in navLinks"
+                v-for="link in mobileNavLinks"
                 :key="link.href"
                 class="site-nav__link"
                 :class="{ active: isActiveLink(link), 'site-nav__link--external': link.isExternal }"
@@ -1860,53 +2201,51 @@ watch(infoDialogVisible, async visible => {
 
     <!-- 移动端呼出侧边栏按钮 -->
     <button
-      v-if="shouldShowDesktopSidebar && !mobileSidebarOpen"
+      v-if="shouldShowDesktopSidebar && isMobileView && !mobileSidebarOpen"
       class="mobile-sidebar-trigger"
-      :class="{ 'mobile-sidebar-trigger--desktop-hidden': sidebarSpaceEnough }"
-      @click="mobileSidebarOpen = true"
+      @click="openSidebar"
       aria-label="打开侧边栏"
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>
     </button>
 
+    <button
+      v-if="shouldShowDesktopSidebar && !isMobileView && desktopSidebarCollapsed"
+      class="desktop-sidebar-trigger"
+      type="button"
+      aria-label="展开侧边栏"
+      @click="openSidebar"
+    >
+      &gt;&gt;
+    </button>
+
     <!-- 侧边栏遮罩 -->
     <Transition name="sidebar-backdrop-fade">
-      <div v-if="mobileSidebarOpen && shouldShowDesktopSidebar" class="sidebar-backdrop" @click="mobileSidebarOpen = false"></div>
+      <div v-if="mobileSidebarOpen && shouldShowDesktopSidebar && isMobileView" class="sidebar-backdrop" @click="mobileSidebarOpen = false"></div>
     </Transition>
 
     <aside
       v-if="shouldShowDesktopSidebar"
       class="desktop-doc-sidebar"
-      :class="{ 'mobile-open': mobileSidebarOpen }"
+      :class="{ 'mobile-open': mobileSidebarOpen, 'desktop-collapsed': !isMobileView && desktopSidebarCollapsed }"
       aria-label="文档快捷入口"
     >
       <nav class="desktop-doc-sidebar__panel">
-        <!-- 顶部标题与分割站与搜索 -->
-        <div class="sidebar-search-header" :class="{ 'search-active': searchActive }">
-          <span v-if="!searchActive" class="desktop-doc-sidebar__heading">页面切换</span>
-          <div v-else class="sidebar-search-box">
-            <input 
-              ref="searchInputRef"
-              v-model="searchQuery" 
-              type="text" 
-              placeholder="搜索文档..." 
-              @blur="handleSearchBlur"
-            />
-          </div>
+        <div class="sidebar-search-header">
+          <span class="desktop-doc-sidebar__heading">页面切换</span>
           <div class="sidebar-header-actions">
-            <button class="sidebar-search-trigger" @click="handleSearchIconClick" aria-label="搜索文档">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            </button>
-            <button class="sidebar-close-trigger" :class="{ 'sidebar-close-trigger--desktop-hidden': sidebarSpaceEnough }" @click="mobileSidebarOpen = false" aria-label="收起侧边栏">
+            <button class="sidebar-close-trigger" type="button" @click="closeSidebar" aria-label="收起侧边栏">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>
             </button>
           </div>
         </div>
         <hr class="desktop-doc-sidebar__divider" />
-        <SidebarNavItem
-          :items="desktopSidebarLinks"
-          :page-relative-path="page.relativePath"
-        />
+        <div class="desktop-doc-sidebar__body">
+          <SidebarNavItem
+            :items="desktopSidebarLinks"
+            :page-relative-path="page.relativePath"
+          />
+        </div>
       </nav>
     </aside>
 
@@ -1977,8 +2316,9 @@ watch(infoDialogVisible, async visible => {
                 :key="index" 
                 :href="withBase(res.link)" 
                 class="search-result-item"
-                @click="handleResultClick"
+                @click="handleResultClick(res, $event)"
               >
+                <p v-if="res.docTitle !== res.title" class="search-result-context">{{ res.docTitle }}</p>
                 <h3 class="search-result-title">{{ res.title }}</h3>
                 <p class="search-result-snippet">
                   {{ res.snippetBefore }}<span class="search-highlight">{{ res.match }}</span>{{ res.snippetAfter }}
@@ -1996,8 +2336,7 @@ watch(infoDialogVisible, async visible => {
     <footer class="site-footer">
       <div class="site-container site-footer-inner">
         <span><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" class="site-footer-link">浙ICP备2026018380号</a></span>
-        <span>©2024-{{ currentYear }} 幻梦，保留所有权利</span>
-        <span><a href="https://register.ccopyright.com.cn/query.html" target="_blank" rel="noopener noreferrer" class="site-footer-link">软件著作权登记号: 2024SR0589691</a></span>
+        <span>© 2024-{{ currentYear }} 幻梦，保留所有权利</span>
       </div>
     </footer>
 

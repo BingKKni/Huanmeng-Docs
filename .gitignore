@@ -7,6 +7,8 @@ node_modules/
 **/.temp/
 **/0.0.0.0/
 **/.vscode/
+src/public/search-index.json
+src/public/img-thumbs/
 
 # 环境变量与密钥（若有）
 .env
