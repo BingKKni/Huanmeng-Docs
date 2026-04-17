@@ -12,14 +12,14 @@
 - 白色的图是拉 QQ 群
 - 黑色的图是拉 QQ 频道
 
-![](/img/invite_to_group.png){height="400"} ![](/img/invite_to_guild.png){height="400"}
+![](/img/invite_to_group.png){.hm-right-img height="400"} ![](/img/invite_to_guild.png){.hm-left-img height="400"}
 
 
 ## 如何调用我的指令？
 
 很简单的！手机端在聊天框中打入 **"/"（斜杠）**，电脑端点击机器人图标就可以看到我的所有指令啦。
 
-![](/img/how_to_use_mobile.png){height="400"} ![](/img/how_to_use_pc.png){height="400"}
+![](/img/how_to_use_mobile.png){.hm-right-img height="400"} ![](/img/how_to_use_pc.png){.hm-left-img height="400"}
 
 
 ## 在群聊调用指令的禁忌

@@ -133,12 +133,29 @@ async function main() {
       continue
     }
 
+    let scaleFactor = 1
+    if (candidate.responsivePresetId) {
+      let logicalWidth = metadata.width
+      if (candidate.requestedWidth != null) {
+        logicalWidth = candidate.requestedWidth
+      } else if (candidate.requestedHeight != null) {
+        logicalWidth = candidate.requestedHeight * (metadata.width / metadata.height)
+      }
+
+      const preset = getResponsiveImagePreset(candidate.responsivePresetId)
+      if (preset && preset.candidateWidths && logicalWidth > 0) {
+        const matchedWidth = preset.candidateWidths.find(w => w >= logicalWidth)
+        const targetWidth = matchedWidth ?? preset.candidateWidths[preset.candidateWidths.length - 1]
+        scaleFactor = targetWidth / logicalWidth
+      }
+    }
+
     const actualRequestedWidth = candidate.requestedWidth == null
       ? null
-      : Math.min(candidate.requestedWidth, metadata.width)
+      : Math.min(Math.round(candidate.requestedWidth * scaleFactor), metadata.width)
     const actualRequestedHeight = candidate.requestedHeight == null
       ? null
-      : Math.min(candidate.requestedHeight, metadata.height)
+      : Math.min(Math.round(candidate.requestedHeight * scaleFactor), metadata.height)
     const outputSrc = buildThumbnailPublicUrl(
       candidate.sourceSrc,
       actualRequestedWidth,
