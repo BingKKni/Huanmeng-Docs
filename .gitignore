@@ -28,5 +28,8 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
+# AGENT
+AGENTS.md
+
 # 本机专用 npm 源
 # .npmrc
