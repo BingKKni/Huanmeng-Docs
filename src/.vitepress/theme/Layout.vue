@@ -282,7 +282,6 @@ const shouldShowTOC = computed(() => !isMobileView.value && shouldShowDesktopSid
 const SEARCH_INDEX_PATH = '/search-index.json'
 const searchQuery = ref('')
 const searchInputRef = ref(null)
-const mobileSearchInputRef = ref(null)
 const globalSearchModalActive = ref(false)
 const globalSearchInputRef = ref(null)
 const isDarkMode = ref(false)
@@ -481,8 +480,35 @@ const navLinks = [
   { href: '/', label: '首页', isActive: relativePath => relativePath === 'index.md' },
   {
     href: '/docs/',
-    label: '机器人文档',
+    label: '使用文档',
     isActive: relativePath => relativePath === 'docs/index.md' || relativePath.startsWith('docs/')
+  },
+  {
+    href: '/about/',
+    label: '更多',
+    isActive: relativePath => relativePath === 'about/index.md' || relativePath.startsWith('about/')
+  },
+  {
+    label: '社区',
+    isActive: () => false,
+    children: [
+      {
+        href: 'https://qm.qq.com/q/6lmTZCS0SY',
+        label: '群聊',
+        isExternal: true,
+        confirmTitle: '二次确认',
+        confirmMessage: '即将跳转到QQ幻梦官方群，是否继续？',
+        confirmLabel: '确认'
+      },
+      {
+        href: 'https://pd.qq.com/s/13nxjzopi',
+        label: '频道',
+        isExternal: true,
+        confirmTitle: '二次确认',
+        confirmMessage: '即将跳转到QQ幻梦官方频道，是否继续？',
+        confirmLabel: '确认'
+      }
+    ]
   }
 ]
 
@@ -546,6 +572,32 @@ const desktopSidebarLinks = [
   { href: '/docs/support', label: '🧋 支持幻梦', isActive: relativePath => relativePath === 'docs/support.md' },
 ]
 
+const aboutSidebarLinks = [
+  {
+    href: '/about/',
+    label: '🏠 首页',
+    isActive: relativePath => relativePath === 'about/index.md'
+  },
+  {
+    href: '/about/contribution/',
+    label: '📝 贡献指南',
+    isActive: relativePath => relativePath === 'about/contribution/index.md',
+    hasAnyActive: relativePath => relativePath.startsWith('about/contribution/'),
+    children: [
+      {
+        href: '/about/contribution/custom_systax',
+        label: '自定义语法',
+        isActive: relativePath => relativePath === 'about/contribution/custom_systax.md'
+      },
+      {
+        href: '/about/contribution/markdown_systax',
+        label: 'Markdown语法',
+        isActive: relativePath => relativePath === 'about/contribution/markdown_systax.md'
+      }
+    ]
+  }
+]
+
 const currentYear = new Date().getFullYear()
 /** 文档/首页切换时驱动淡入淡出（与导航切换同一套 key） */
 const docContentTransitionKey = computed(() =>
@@ -556,11 +608,20 @@ const currentPageLabel = computed(() => {
   const activeLink = navLinks.find(link => link.isActive(page.value.relativePath))
   return activeLink?.label || page.value.title || site.value.title
 })
-const shouldShowDesktopSidebar = computed(() => page.value.relativePath.startsWith('docs/'))
+const isDocsSection = computed(() => page.value.relativePath.startsWith('docs/'))
+const isAboutSection = computed(() => page.value.relativePath.startsWith('about/'))
+const shouldShowDesktopSidebar = computed(() => isDocsSection.value || isAboutSection.value)
+const currentSidebarLinks = computed(() => {
+  if (isDocsSection.value) return desktopSidebarLinks
+  if (isAboutSection.value) return aboutSidebarLinks
+  return []
+})
 
 const mobileSidebarOpen = ref(false)
 const desktopSidebarCollapsed = ref(false)
 const menuOpen = ref(false)
+const desktopCommunityMenuOpen = ref(false)
+const mobileCommunityMenuOpen = ref(false)
 /** 关闭菜单时延迟到面板收起动画结束再撤掉顶栏 overflow，否则下拉层会被立刻裁掉 */
 const mobileNavClosingHold = ref(false)
 let mobileNavCloseFallbackTimer = null
@@ -588,6 +649,7 @@ const infoDialogVisible = ref(false)
 const infoDialogTitle = ref('信息')
 const infoDialogMessage = ref('')
 const infoDialogShowCancel = ref(false)
+const infoDialogConfirmLabel = ref('确定')
 let infoDialogOnConfirm = null
 const infoDialogConfirmButton = ref(null)
 const MOBILE_MEDIA_QUERY = '(max-width: 767.98px)'
@@ -824,6 +886,65 @@ function isActiveLink(link) {
   return link.isActive(page.value.relativePath)
 }
 
+function isNavDropdownLink(link) {
+  return Array.isArray(link.children) && link.children.length > 0
+}
+
+function isExternalNavLink(link) {
+  return link.isExternal === true
+}
+
+function getNavLinkHref(link) {
+  return isExternalNavLink(link) ? link.href : withBase(link.href)
+}
+
+function closeDesktopCommunityMenu() {
+  desktopCommunityMenuOpen.value = false
+}
+
+function closeMobileCommunityMenu() {
+  mobileCommunityMenuOpen.value = false
+}
+
+function closeCommunityMenus() {
+  closeDesktopCommunityMenu()
+  closeMobileCommunityMenu()
+}
+
+function toggleDesktopCommunityMenu() {
+  desktopCommunityMenuOpen.value = !desktopCommunityMenuOpen.value
+}
+
+function toggleMobileCommunityMenu() {
+  mobileCommunityMenuOpen.value = !mobileCommunityMenuOpen.value
+}
+
+function handleDesktopCommunityMenuDocumentClick(event) {
+  const target = event.target
+  if (!(target instanceof Element)) {
+    closeDesktopCommunityMenu()
+    return
+  }
+  if (target.closest('.site-nav__item--dropdown')) return
+  closeDesktopCommunityMenu()
+}
+
+function handleCommunityLinkClick(event, link) {
+  event.preventDefault()
+  closeCommunityMenus()
+  closeMobileMenu()
+
+  openInfoDialog(
+    link.confirmMessage,
+    link.confirmTitle || '二次确认',
+    () => {
+      openExternalLinkInNewTab(link.href)
+    },
+    true,
+    link.confirmLabel || '确认'
+  )
+}
+
 function isMobileViewport() {
   return isMobileView.value
 }
@@ -873,7 +994,6 @@ function clearDesktopSearchPlaceholderTimers() {
 
 function scheduleDesktopSearchPlaceholderCycle() {
   if (typeof window === 'undefined') return
-  if (isMobileViewport()) return
   clearDesktopSearchPlaceholderTimers()
   desktopSearchPlaceholderCycleTimer = window.setTimeout(runDesktopSearchPlaceholderCycle, DESKTOP_SEARCH_PLACEHOLDER_IDLE_MS)
 }
@@ -886,10 +1006,6 @@ function stopDesktopSearchPlaceholderCycle() {
 function runDesktopSearchPlaceholderCycle() {
   if (typeof window === 'undefined') return
   desktopSearchPlaceholderCycleTimer = null
-  if (isMobileViewport()) {
-    stopDesktopSearchPlaceholderCycle()
-    return
-  }
 
   desktopSearchPlaceholderAnimating.value = true
 
@@ -1157,6 +1273,7 @@ function syncBodyScrollLock() {
 
 function closeMobileMenu() {
   menuOpen.value = false
+  closeMobileCommunityMenu()
 }
 
 function toggleMobileSidebar() {
@@ -1502,6 +1619,11 @@ function handleDocumentKeydown(e) {
     return
   }
 
+  if (desktopCommunityMenuOpen.value) {
+    closeDesktopCommunityMenu()
+    return
+  }
+
   if (mobileSidebarOpen.value) {
     mobileSidebarOpen.value = false
     return
@@ -1733,6 +1855,9 @@ function handleWindowResize() {
     clearMobileNavCloseFallback()
     closeMobileMenu()
     mobileNavClosingHold.value = false
+    closeMobileCommunityMenu()
+  } else {
+    closeDesktopCommunityMenu()
   }
   syncBodyScrollLock()
   scheduleImageRowProcessing(true)
@@ -1748,17 +1873,15 @@ function handleWindowResize() {
 
 watch(
   isMobileView,
-  mobile => {
+  () => {
     syncTocScrollListener()
-    if (mobile) {
+    if (isMobileViewport()) {
       navRoutePendingKey = null
       clearNavRouteProgressTimers()
       navRouteProgress.value = 0
       navRouteProgressVisible.value = false
       navRouteProgressFading.value = false
       navRouteProgressSmooth.value = false
-      stopDesktopSearchPlaceholderCycle()
-      return
     }
 
     scheduleDesktopSearchPlaceholderCycle()
@@ -1792,11 +1915,12 @@ function bindLightboxTrigger(img) {
   })
 }
 
-function openInfoDialog(message, title = '信息', onConfirm = null, showCancel = false) {
+function openInfoDialog(message, title = '信息', onConfirm = null, showCancel = false, confirmLabel = '确定') {
   infoDialogTitle.value = title
   infoDialogMessage.value = message
   infoDialogOnConfirm = onConfirm
   infoDialogShowCancel.value = !!(showCancel.value ?? showCancel)
+  infoDialogConfirmLabel.value = confirmLabel
   infoDialogVisible.value = true
   syncBodyScrollLock()
 }
@@ -1813,7 +1937,33 @@ function closeInfoDialog() {
   infoDialogVisible.value = false
   infoDialogOnConfirm = null
   infoDialogShowCancel.value = false
+  infoDialogConfirmLabel.value = '确定'
   syncBodyScrollLock()
+}
+
+function openExternalLinkInNewTab(href) {
+  const link = document.createElement('a')
+  link.href = href
+  link.target = '_blank'
+  link.rel = 'noopener noreferrer'
+  link.style.display = 'none'
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+}
+
+function handleGithubClick(event) {
+  event.preventDefault()
+
+  openInfoDialog(
+    '即将前往 GitHub（用于查看文档项目源码与更新记录）中的幻梦文档项目页面，是否继续？',
+    '二次确认',
+    () => {
+      openExternalLinkInNewTab(githubLink.href)
+    },
+    true,
+    '确认'
+  )
 }
 
 function updateCopyButtonLabel(button, state) {
@@ -1927,7 +2077,7 @@ function bindJoinGroupButtons(root = null) {
       const href = btn.href
       const target = btn.target || '_blank'
       openInfoDialog(
-        '即将跳转到 幻梦丨🈲广商丨③群，是否确认？',
+        '即将跳转到幻梦QQ群主页，是否确认？',
         '提示',
         () => {
           window.open(href, target)
@@ -2228,6 +2378,7 @@ onMounted(() => {
   })
   document.addEventListener('keydown', handleDocumentKeydown)
   document.addEventListener('click', handleVitepressPluginTabClick)
+  document.addEventListener('click', handleDesktopCommunityMenuDocumentClick)
   window.addEventListener('resize', handleWindowResize)
   window.addEventListener('scroll', handleMobileHeaderScroll, { passive: true })
   syncTocScrollListener()
@@ -2281,6 +2432,7 @@ onBeforeUnmount(() => {
 
   document.removeEventListener('keydown', handleDocumentKeydown)
   document.removeEventListener('click', handleVitepressPluginTabClick)
+  document.removeEventListener('click', handleDesktopCommunityMenuDocumentClick)
   window.removeEventListener('resize', handleWindowResize)
   window.removeEventListener('scroll', handleMobileHeaderScroll)
   document.removeEventListener('touchstart', handleSwipeTouchStart)
@@ -2297,6 +2449,7 @@ watch(
   () => {
     searchQuery.value = ''
     closeMobileMenu()
+    closeCommunityMenus()
 
     closeInfoDialog()
     forceCloseLightbox()
@@ -2559,16 +2712,49 @@ watch(infoDialogVisible, async visible => {
           <div class="site-header-tools">
             <!-- 桌面端导航，仅 md 及以上可见 -->
             <nav class="site-nav site-nav--desktop">
-              <a
-                v-for="link in navLinks"
-                :key="link.href"
-                class="site-nav__link"
-                :class="{ active: isActiveLink(link) }"
-                :href="withBase(link.href)"
-                :aria-current="isActiveLink(link) ? 'page' : undefined"
-              >
-                {{ link.label }}
-              </a>
+              <template v-for="link in navLinks" :key="link.href || link.label">
+                <a
+                  v-if="!isNavDropdownLink(link)"
+                  class="site-nav__link"
+                  :class="{ active: isActiveLink(link) }"
+                  :href="getNavLinkHref(link)"
+                  :aria-current="isActiveLink(link) ? 'page' : undefined"
+                >
+                  {{ link.label }}
+                </a>
+                <div
+                  v-else
+                  class="site-nav__item site-nav__item--dropdown"
+                  :class="{ open: desktopCommunityMenuOpen }"
+                >
+                  <button
+                    type="button"
+                    class="site-nav__link site-nav__link--trigger"
+                    :aria-expanded="String(desktopCommunityMenuOpen)"
+                    aria-haspopup="true"
+                    @click.stop="toggleDesktopCommunityMenu"
+                  >
+                    <span>{{ link.label }}</span>
+                    <svg class="site-nav__chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m5 7 5 5 5-5" />
+                    </svg>
+                  </button>
+                  <div class="site-nav__dropdown" role="menu" aria-label="社区链接">
+                    <a
+                      v-for="child in link.children"
+                      :key="child.href"
+                      class="site-nav__dropdown-link"
+                      :href="getNavLinkHref(child)"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      role="menuitem"
+                      @click="handleCommunityLinkClick($event, child)"
+                    >
+                      {{ child.label }}
+                    </a>
+                  </div>
+                </div>
+              </template>
             </nav>
           </div>
 
@@ -2581,6 +2767,7 @@ watch(infoDialogVisible, async visible => {
                 rel="noopener noreferrer"
                 aria-label="打开 Github 仓库"
                 title="Github"
+                @click="handleGithubClick"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.426 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.866-.013-1.699-2.782.605-3.369-1.344-3.369-1.344-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.071 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.748-1.027 2.748-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.748 0 .269.18.58.688.481A10.019 10.019 0 0 0 22 12.017C22 6.484 17.523 2 12 2Z" />
@@ -2659,6 +2846,43 @@ watch(infoDialogVisible, async visible => {
           </div>
 
           <div class="mobile-header-search">
+            <div class="mobile-nav-actions mobile-nav-actions--header" aria-label="移动端快捷操作">
+              <a
+                class="site-header-icon-btn mobile-nav-action-btn"
+                :href="githubLink.href"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="打开 Github 仓库"
+                title="Github"
+                @click="handleGithubClick"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.426 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.866-.013-1.699-2.782.605-3.369-1.344-3.369-1.344-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.071 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.748-1.027 2.748-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.748 0 .269.18.58.688.481A10.019 10.019 0 0 0 22 12.017C22 6.484 17.523 2 12 2Z" />
+                </svg>
+              </a>
+              <button
+                type="button"
+                class="site-header-icon-btn mobile-nav-action-btn"
+                :aria-label="isDarkMode ? '切换到日间模式' : '切换到夜间模式'"
+                :title="isDarkMode ? '切换到日间模式' : '切换到夜间模式'"
+                @click="toggleColorMode"
+              >
+                <svg v-if="isDarkMode" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="4.5"></circle>
+                  <path d="M12 2.5v2.25"></path>
+                  <path d="M12 19.25v2.25"></path>
+                  <path d="M4.93 4.93l1.59 1.59"></path>
+                  <path d="M17.48 17.48l1.59 1.59"></path>
+                  <path d="M2.5 12h2.25"></path>
+                  <path d="M19.25 12h2.25"></path>
+                  <path d="M4.93 19.07l1.59-1.59"></path>
+                  <path d="M17.48 6.52l1.59-1.59"></path>
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M20.742 13.045A8.088 8.088 0 0 1 10.955 3.258a.75.75 0 0 0-.822-.984A9.5 9.5 0 1 0 21.726 13.867a.75.75 0 0 0-.984-.822Z" />
+                </svg>
+              </button>
+            </div>
             <button
               class="mobile-nav-menu-btn"
               :class="{ open: menuOpen }"
@@ -2688,26 +2912,69 @@ watch(infoDialogVisible, async visible => {
             <div class="mobile-nav-search" role="search">
               <div class="mobile-search-box">
                 <input
-                  ref="mobileSearchInputRef"
                   v-model="searchQuery"
                   type="text"
-                  placeholder="搜索文档..."
+                  :placeholder="desktopSearchPlaceholder"
                   aria-label="搜索内容"
                 />
+                <span
+                  v-show="!searchQuery"
+                  class="site-header-search__placeholder mobile-search-box__placeholder"
+                  :class="{ 'site-header-search__placeholder--animating': desktopSearchPlaceholderAnimating }"
+                  :style="desktopSearchPlaceholderAnimationStyle"
+                  aria-hidden="true"
+                >
+                  {{ desktopSearchPlaceholder }}
+                </span>
                 <svg class="mobile-search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               </div>
             </div>
             <nav id="mobile-site-nav" class="site-nav mobile-nav-links" aria-label="移动端站点导航">
-              <a
-                v-for="link in navLinks"
-                :key="link.href"
-                class="site-nav__link"
-                :class="{ active: isActiveLink(link) }"
-                :href="withBase(link.href)"
-                :aria-current="isActiveLink(link) ? 'page' : undefined"
-              >
-                {{ link.label }}
-              </a>
+              <template v-for="link in navLinks" :key="link.href || link.label">
+                <a
+                  v-if="!isNavDropdownLink(link)"
+                  class="site-nav__link"
+                  :class="{ active: isActiveLink(link) }"
+                  :href="getNavLinkHref(link)"
+                  :aria-current="isActiveLink(link) ? 'page' : undefined"
+                >
+                  {{ link.label }}
+                </a>
+                <div
+                  v-else
+                  class="mobile-nav__section"
+                  :class="{ open: mobileCommunityMenuOpen }"
+                >
+                  <button
+                    type="button"
+                    class="site-nav__link mobile-nav__submenu-trigger"
+                    :aria-expanded="String(mobileCommunityMenuOpen)"
+                    aria-controls="mobile-community-submenu"
+                    @click="toggleMobileCommunityMenu"
+                  >
+                    <span>{{ link.label }}</span>
+                  </button>
+                  <div
+                    id="mobile-community-submenu"
+                    class="site-nav__dropdown mobile-nav__popup"
+                    :class="{ open: mobileCommunityMenuOpen }"
+                  >
+                    <div class="mobile-nav__popup-inner">
+                      <a
+                        v-for="child in link.children"
+                        :key="child.href"
+                        class="site-nav__dropdown-link mobile-nav__popup-link"
+                        :href="getNavLinkHref(child)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        @click="handleCommunityLinkClick($event, child)"
+                      >
+                        {{ child.label }}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </template>
             </nav>
           </div>
         </div>
@@ -2752,7 +3019,7 @@ watch(infoDialogVisible, async visible => {
       v-if="shouldShowDesktopSidebar"
       class="desktop-doc-sidebar"
       :class="{ 'mobile-open': mobileSidebarOpen, 'desktop-collapsed': !isMobileView && desktopSidebarCollapsed }"
-      aria-label="文档快捷入口"
+      aria-label="页面快捷入口"
     >
       <nav class="desktop-doc-sidebar__panel">
         <div class="sidebar-search-header">
@@ -2766,7 +3033,7 @@ watch(infoDialogVisible, async visible => {
         <hr class="desktop-doc-sidebar__divider" />
         <div class="desktop-doc-sidebar__body">
           <SidebarNavItem
-            :items="desktopSidebarLinks"
+            :items="currentSidebarLinks"
             :page-relative-path="page.relativePath"
           />
         </div>
@@ -2888,7 +3155,7 @@ watch(infoDialogVisible, async visible => {
               class="hm-dialog__confirm"
               @click="handleInfoDialogConfirm"
             >
-              确定
+              {{ infoDialogConfirmLabel }}
             </button>
             <button
               v-if="infoDialogShowCancel"
