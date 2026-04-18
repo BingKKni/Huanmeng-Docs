@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { useData, useRouter, withBase, onContentUpdated } from 'vitepress'
 import { computed, onBeforeUnmount, onMounted, nextTick, ref, watch } from 'vue'
 import SidebarNavItem from './components/SidebarNavItem.vue'
@@ -3002,7 +3002,10 @@ watch(infoDialogVisible, async visible => {
       aria-label="展开侧边栏"
       @click="openSidebar"
     >
-      &gt;&gt;
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m6 17 5-5-5-5"/>
+        <path d="m13 17 5-5-5-5"/>
+      </svg>
     </button>
 
     <!-- 侧边栏遮罩 -->
