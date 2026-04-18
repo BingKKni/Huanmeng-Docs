@@ -538,19 +538,19 @@ const desktopSidebarLinks = [
         hasAnyActive: relativePath => relativePath.startsWith('docs/entertainment/daily_wife/'),
         children: [
           {
-            href: '/docs/entertainment/daily_wife/huanmeng_Love',
+            href: '/docs/entertainment/daily_wife/preference',
             label: '喜欢/不喜欢',
-            isActive: relativePath => relativePath === 'docs/entertainment/daily_wife/huanmeng_Love.md'
+            isActive: relativePath => relativePath === 'docs/entertainment/daily_wife/preference.md'
           },
           {
-            href: '/docs/entertainment/daily_wife/wife_today_points',
+            href: '/docs/entertainment/daily_wife/item_definite_integral_usage',
             label: '定积分券核销',
-            isActive: relativePath => relativePath === 'docs/entertainment/daily_wife/wife_today_points.md'
+            isActive: relativePath => relativePath === 'docs/entertainment/daily_wife/item_definite_integral_usage.md'
           },
           {
-            href: '/docs/entertainment/daily_wife/wife_today_indint',
+            href: '/docs/entertainment/daily_wife/item_indefinite_integral_usage',
             label: '不定积分券核销',
-            isActive: relativePath => relativePath === 'docs/entertainment/daily_wife/wife_today_indint.md'
+            isActive: relativePath => relativePath === 'docs/entertainment/daily_wife/item_indefinite_integral_usage.md'
           }
         ]
       },
