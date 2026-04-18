@@ -27,7 +27,7 @@
 
 ## 多语言设置{green}（内邀）{}
 小人类可以为英语单词接龙的玩法单独设置别的语言！
-目前多语言功能还在内部评估中，仅开放给部分优质群体验。{#8f8f8f}（申请开通请加幻梦官方群~）{}
+目前多语言功能还在内部评估中，仅开放给部分优质群体验。{gray}（申请开通请加幻梦官方群~）{}
     	  	 	 	 
 ![语言设置入口](/img/word_chain/language_settings_main.png) ![语言设置主菜单](/img/word_chain/language_settings_entrance.png) ![语言设置成功示例](/img/word_chain/language_settings_set_success.png) ![语言设置效果示例](/img/word_chain/language_settings_after_switch.png) 
 

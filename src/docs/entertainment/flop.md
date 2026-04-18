@@ -1,86 +1,66 @@
 # 翻牌
 
 ### 前期剧情
-> 你来到了一家 神秘酒馆 参与小布丁新出的翻牌活动，听说翻牌翻到金色布丁会给予大量额度哦！当然，这可不是赌博，首先翻牌它的计算概率是不固定的，是随着你的每日运势，各种加成而变化的，其次翻牌并不只是看表面上的概率，也是有攻略的，最后翻牌娱乐活动终究只是以娱乐为主的娱乐玩法哦！
+> 你来到了一家 **神秘酒馆** 参与小布丁新出的翻牌活动，听说翻牌翻到金色布丁会给予大量额度哦！当然，这可不是赌博，首先翻牌它的计算概率是不固定的，是随着你的每日运势，各种加成而变化的，其次翻牌并不只是看表面上的概率，也是有攻略的，最后翻牌娱乐活动终究只是以娱乐为主的娱乐玩法哦！
 
 ### 玩法规则
 > 你可以通过翻牌来为自己今天的打卡获得不同的额外加成，或是获得额外的额度。
-> 翻牌时你可以翻到{#00e000}绿色{}，{#4040ff}蓝色{}，{#00ffff}青色{}，{#e00000}红色{}，{#ff60ff}紫色{}和{#ffd700}金色{}这些颜色牌。
-- 若翻到红色、紫色牌，将判定{#e00000}翻牌失败{}，反之没有翻到那两个颜色的牌时，判定{#ffd700}翻牌成功{}，记一次翻牌次数。
+> 翻牌时你可以翻到{green}绿色{}，{blue}蓝色{}，{aqua}青色{}，{red}红色{}，{purple}紫色{}和{gold}金色{}这些颜色牌。
+- 若翻到红色、紫色牌，将判定{red}翻牌失败{}，反之没有翻到那两个颜色的牌时，判定{green}翻牌成功{}，记一次翻牌次数。
 
-<div style="column-count: 2; column-gap: 20px; padding-left: 20px;">
-    <ul>
-        <li>
-            <p>第一次翻牌固定有 <code>10%</code> 的概率失败，第二次翻牌开始，每次翻牌失败概率不固定<font color="#606060">（随今日运势、各种加成变化）</font>，具体每次翻牌布丁会提前告诉你下一次翻牌失败的概率。</p>
-        </li>
-        <li>
-            <p>第一次翻牌不受任何局内或局外加成影响，失败概率固定。</p>
-        </li>
-    </ul>
-    <img src="/img/flop/failrate.png">
+<div style="column-count: 2; column-gap: 20px;">
+
+第一次翻牌固定有 `10%` 的概率失败，从第二次翻牌开始，每次翻牌失败概率不固定{gray}（随今日运势、各种加成变化）{}，具体每次翻牌布丁会提前告诉你下一次翻牌失败的概率。第一次翻牌不受任何局内或局外加成影响，失败概率固定。
+
+![](/img/flop/failrate.png){.hm-center-img width="300"}
+
+</div>
+
+<div style="column-count: 2; column-gap: 20px;">
+
+- 每次翻牌成功都会给予打卡额度加成；
+
+![](/img/flop/signin_buff.png){.hm-center-img width="300"}
+
 </div>
 <div style="column-count: 2; column-gap: 20px;">
-    <ul>
-        <li>
-            <p>每次翻牌成功都会给予打卡额度加成；</p>
-        </li>
-    </ul>
-    <img src="/img/flop/signin_buff.png">
+
+- 第 `2` 次及以上翻牌成功，将额外获得额度奖励。
+
+![](/img/flop/edu_reward.png){.hm-center-img width="300"}
+
 </div>
 <div style="column-count: 2; column-gap: 20px;">
-    <ul>
-        <li>
-            <p>第 <code>2</code> 次及以上翻牌成功，将额外获得额度奖励。</p>
-        </li>
-    </ul>
-    <img src="/img/flop/edu_reward.png">
+
+- 单次翻牌成功上限 `8` 次。第八次翻牌{green}若成功{}，将翻到{gold}金色牌{}，给予大量打卡加成和额度奖励。
+
+![](/img/flop/golden_card.png){.hm-center-img width="300"}
+
 </div>
-<div style="column-count: 2; column-gap: 20px;">
-    <ul>
-        <li>
-            <p>单次翻牌成功上限 <code>8</code> 次。第八次翻牌<font color="#ffd700">若成功</font>，将翻到<font color="#ffd700">金色牌</font>，给予大量打卡加成和额度奖励。</p>
-        </li>
-    </ul>
-    <img src="/img/flop/golden_card.png">
+<div style="column-count: 2;">
+
+- 若翻到{red}红色{}、{purple}紫色{}牌，将会{red}失去一定的额度和所有打卡额度加成{}，且根据失去的额度数，小人类将{blue}获得一定的好感度数作为失败补偿{}。翻牌结束。
+
+![](/img/flop/purple.png){.hm-right-img}![](/img/flop/red.png){.hm-left-img}
+
 </div>
-<div style="column-count: 2; column-gap: 20px;">
-    <ul>
-        <li>
-            <p>若翻到<font color="#e00000">红色</font>、<font color="#ff60ff">紫色</font>牌，将会<font color="#e00000">失去一定的额度和所有打卡额度加成</font>，且根据失去的额度数，小人类将<font color="#4040ff">获得一定的好感度数作为失败补偿</font>。翻牌结束。</p>
-        </li>
-    </ul>
-    <div style="column-count: 2; column-gap: 20px;">
-        <img src="/img/flop/purple.png">
-        <img src="/img/flop/red.png">
-    </div>
+<div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center;">
+
+<div style="flex: 1; min-width: 300px;">
+
+- 当然，你可以消耗 `25~650` 点体力来向布丁请求再来一次。
+- 每天重置翻牌所需体力初始值为{blue}25点{}，当天{blue}每翻牌一次{}，重置翻牌次数所需体力{blue}+25点{}，最多不超过650点。{blue}若当天翻到了金色牌{}，无论今天翻了多少次牌，下一次重置翻牌次数都需要消耗{red}🟥650点体力{}。
+    1. 比如A玩家当天翻牌翻了3次失败了想要重置次数，那么TA需要消耗25 + 25\*3 = {blue}🟦100点体力{}向布丁请求重置翻牌次数。
+    2. B玩家当天第一轮翻牌翻了5次失败了想要重置次数，那么TA需要消耗25 + 25\*5 = {blue}🟦150点体力{}重置次数，这位玩家第二轮翻牌又翻了3次牌结果又失败了想要重置，则需要消耗150 + 25\*3 = {green}🟩225点体力{}来重置次数。
+    3. C玩家当天第一轮翻牌翻了8次出金了！TA想要重置次数再翻一次，小人类认为他重置需要花 `25 + 25*8 = 225` 点体力吗？不！TA因为翻到了金色牌，所以下一次重置，无论前面翻了多少次牌，都需要消耗{red}🟥650点体力{}。
+
 </div>
-<div style="column-count: 2; column-gap: 20px;">
-    <ul>
-        <li>
-            <p>当然，你可以消耗 <code>25~650</code> 点体力来向布丁请求再来一次。</p>
-        </li>
-        <ul>
-            <li>
-                <p>每天重置翻牌所需体力初始值为<font color="#ff60ff">25点</font>，当天<font color="#ff60ff">每翻牌一次</font>，重置翻牌次数所需体力<font color="#ff60ff">+25点</font>，最多不超过650点。<font color="#ffd700">若当天翻到了金色牌</font>，无论今天翻了多少次牌，下一次重置翻牌次数都需要消耗<font color="#e00000">🟥650点体力</font>。</p>
-            </li>
-        </ul>
-        <ol start="1">
-            <li>
-                <p>比如A玩家当天翻牌翻了3次失败了想要重置次数，那么TA需要消耗25 + 25*3 = <font color="#4040ff">🟦100点体力</font>向布丁请求重置翻牌次数。</p>
-            </li>
-        </ol>
-        <ol start="2">
-            <li>
-                <p>B玩家当天第一轮翻牌翻了5次失败了想要重置次数，那么TA需要消耗25 + 25*5 = <font color="#4040ff">🟦150点体力</font>重置次数，这位玩家第二轮翻牌又翻了3次牌结果又失败了想要重置，则需要消耗150 + 25*3 = <font color="#00b000">🟩225点体力</font>来重置次数。</p>
-            </li>
-        </ol>
-        <ol start="3">
-            <li>
-                <p>C玩家当天第一轮翻牌翻了8次出金了！TA想要重置次数再翻一次，小人类认为他重置需要花 <code>25 + 25*8 = 225</code> 点体力吗？不！TA因为翻到了金色牌，所以下一次重置，无论前面翻了多少次牌，都需要消耗<font color="#e00000">🟥650点体力</font>。</p>
-            </li>
-        </ol>
-    </ul>
-    <img src="/img/flop/reset.png" style="position: auto;">
+<div>
+
+![](/img/flop/reset.png){.hm-center-img width="300"}
+
+</div>
+
 </div>
 
 ::: info
@@ -146,24 +126,19 @@
 
 ### 如何减少翻到红色牌的概率？
 <div style="column-count: 2; column-gap: 20px;">
-    <div>
-        <ul>
-            <li>
-                <p>游玩 人设生成 玩法。创建一个新的人设，在设定【颜值、智商、情商】时，如图，提高颜值属性可以降低翻牌失败的概率。</p>
-            </li>
-        </ul>
-        <blockquote>
-            <p>人设需要审核通过后，属性才会生效！</p>
-        </blockquote>
-    </div>
-    <img src="/img/flop/personality.png">
+
+
+- 游玩 人设生成 玩法。创建一个新的人设，在设定 **颜值、智商、情商** 时，如图，提高颜值属性可以降低翻牌失败的概率。
+> 人设需要审核通过后，属性才会生效！
+
+![](/img/flop/personality.png){.hm-center-img width="300"}
+
 </div>
 
 <div style="column-count: 2; column-gap: 20px;">
-    <ul>
-        <li>
-            <p>抽取 <strong>每日运势加成</strong> ，有概率抽到翻牌加成，这将有助于小人类更好的翻到金色牌~</p>
-        </li>
-    </ul>
-    <img src="/img/flop/fortune.png">
+
+- 抽取 **每日运势加成** ，有概率抽到翻牌加成，这将有助于小人类更好的翻到金色牌~
+
+![](/img/flop/fortune.png){.hm-center-img width="300"}
+
 </div>

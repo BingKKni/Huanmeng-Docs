@@ -16,7 +16,7 @@
 
 const PRESET_COLORS = new Set([
   'auto', 'darkred', 'red', 'yellow', 'orange',
-  'green', 'darkgreen', 'pink', 'purple', 'cyan', 'blue', 'gray'
+  'green', 'darkgreen', 'pink', 'purple', 'cyan', 'blue', 'gray', 'gold', 'aqua'
 ])
 
 // 匹配 {colorOrHex} 开头部分

@@ -1,4 +1,4 @@
-::selection {
+﻿::selection {
   background-color: var(--hm-selection-bg);
 }
 
@@ -819,7 +819,7 @@ a:hover {
   border: 1px solid transparent;
   background: transparent;
   cursor: pointer;
-}不是
+}
 
 .site-nav__chevron {
   width: 14px;
@@ -2677,61 +2677,60 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
   }
 }
 
-/* Group entry card */
-.group-card {
+/* App entry card */
+.app-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 20px;
-  margin-top: 1.5rem;
   background: #ffffff;
   border: 1px solid #e9ecef;
-  border-radius: 12px;
+  border-radius: 8px;
   color: inherit;
 }
 
-.group-card-left {
+.app-card-left {
   display: flex;
   align-items: center;
   flex: 1;
   min-width: 0;
 }
 
-.group-card-avatar {
+.app-card-avatar {
   width: 72px;
   height: 72px;
-  border-radius: 12px;
+  border-radius: 8px;
   object-fit: cover;
   flex-shrink: 0;
 }
 
-.group-card-info {
+.app-card-info {
   margin-left: 20px;
   flex: 1;
   min-width: 0;
 }
 
-.group-card-title {
+.app-card-title {
   font-size: 1.05rem;
   font-weight: 700;
   color: #212529;
   margin-bottom: 6px;
 }
 
-.group-card-desc {
+.app-card-desc {
   font-size: 0.85rem;
   line-height: 1.65;
   color: #6c757d;
   margin: 0;
 }
 
-.group-join-btn {
+.app-action-btn {
   flex-shrink: 0;
   margin-left: 20px;
   padding: 10px 22px;
   background-color: #007bff;
   color: #fff !important;
-  border-radius: 12px;
+  border-radius: 8px;
   text-decoration: none !important;
   font-size: 1rem;
   font-weight: 400;
@@ -2743,36 +2742,37 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
 }
 
 @media (hover: hover) {
-  .group-join-btn:hover {
+  .app-action-btn:hover {
     background-color: #0069d9;
     color: #fff !important;
   }
 }
 
 @media (max-width: 575.98px) {
-  .group-card {
+  .app-card {
     flex-direction: column;
     align-items: stretch;
     padding: 16px;
   }
 
-  .group-card-left {
+  .app-card-left {
     align-items: center;
   }
 
-  .group-card-avatar {
+  .app-card-avatar {
     width: 56px;
     height: 56px;
-    border-radius: 12px;
+    border-radius: 8px;
   }
 
-  .group-card-info {
+  .app-card-info {
     margin-left: 14px;
   }
 
-  .group-join-btn {
+  .app-action-btn {
     margin-left: 0;
     margin-top: 14px;
+    border-radius: 6px;
     width: 96%;
     align-self: center;
     text-align: center;
@@ -2962,7 +2962,7 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
   align-items: center;
 }
 
-.mobile-nav-links > .site-nav__link,
+.mobile-nav-links>.site-nav__link,
 .mobile-nav__submenu-trigger {
   justify-content: center;
 }
@@ -3626,7 +3626,6 @@ html.dark .hm-search-modal__close {
 /* 鼠标悬浮 */
 .toc-link:hover,
 .toc-link:active {
-  color: #212529;
   text-decoration: none;
   transition: none;
 }
@@ -3707,7 +3706,7 @@ body,
 .site-branding-link,
 .site-branding-link:hover,
 .home-title,
-.group-card-title,
+.app-card-title,
 .search-results-article .search-result-title,
 .doc-article h1,
 .doc-article h2,
@@ -3729,7 +3728,7 @@ body,
 .site-footer-inner,
 .home-subtitle,
 .home-feature-item p,
-.group-card-desc,
+.app-card-desc,
 .search-results-empty,
 .search-results-article .search-result-context,
 .search-results-article .search-result-snippet,
@@ -3746,7 +3745,7 @@ body,
 .doc-home .jumbotron,
 .doc-home .card,
 .doc-home .alert,
-.group-card,
+.app-card,
 .search-result-item,
 .desktop-doc-sidebar__panel,
 .sidebar-compact-mode .desktop-doc-sidebar__panel,
@@ -3998,4 +3997,78 @@ html.dark .custom-block.details {
 .doc-article ol:has(+ ul),
 .doc-article ul:has(+ ol) {
   margin-bottom: 0.1rem;
+}
+
+/* ── 应用卡片网格系统 ── */
+.app-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 1.5rem;
+}
+
+.app-card-grid>.app-card:only-child {
+  grid-column: span 2;
+}
+
+.emoji-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  background-color: #f1f3f5;
+}
+
+html.dark .emoji-avatar {
+  background-color: #2c2e33;
+}
+
+@media (max-width: 575.98px) {
+  .app-card-grid {
+    gap: 12px;
+  }
+
+  .app-card-grid .app-card {
+    padding: 12px;
+  }
+
+  .app-card-grid .app-card-left {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .app-card-grid .app-card-info {
+    margin-left: 0;
+    margin-top: 8px;
+  }
+
+  .app-card-grid .app-card-title {
+    font-size: 0.95rem;
+  }
+
+  .app-card-grid .app-card-desc {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .app-card-grid .app-action-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 6px 0;
+    font-size: 0.9rem;
+  }
+
+  .app-card-grid .app-card-avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .app-card-grid .emoji-avatar {
+    font-size: 28px;
+  }
 }
