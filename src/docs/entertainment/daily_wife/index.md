@@ -1,7 +1,8 @@
 # 今日老婆
+***
 
-![今日老婆玩法示例图](/img/wife_today/wife_today1-1.png){.hm-center-img width="400"}
-{gray}(今日老婆玩法示例图){}
+![今日老婆玩法示例图](/img/daily_wife/command_example.png){.hm-center-img height="500"}
+<div class="hm-center ct-gray">(今日老婆玩法示例图)</div>
 
 ## 主要玩法
 
@@ -38,20 +39,20 @@
 
 ## 偏向和排除
 
-![今日老婆玩法示例图](/img/wife_today/wife_today1-2.png){.hm-center-img width="400"}
+![今日老婆玩法示例图](/img/daily_wife/choose_game_global_example.png){.hm-center-img width="400"}
 {gray}(今日老婆玩法示例图){}
 
 你可以设置✅**偏向**来让幻梦每天*尽可能*的抽到你偏向游戏里面的角色，最多可以对**6**个游戏设置偏向。
 
-![偏向设置示例](/img/wife_today/wife_today1-3.png){.hm-center-img width="400"}
+![偏向设置示例](/img/daily_wife/prefer_game_global_example.png){.hm-center-img width="400"}
 
 你也可以设置 ❌**排除** 来让幻梦每天不抽到你排除游戏里面的角色，最多可以对**4**个游戏排除。
 
-![排除设置示例](/img/wife_today/wife_today1-4.png){.hm-center-img width="400"}
+![排除设置示例](/img/daily_wife/disable_game_example.png){.hm-center-img width="400"}
 
 若想取消对某个游戏的偏向或排除设置，对它们再设置一遍即可。
 
-![取消设置示例](/img/wife_today/wife_today1-5.png){.hm-center-img width="400"}
+![取消设置示例](/img/daily_wife/cancel_preference_example.png){.hm-center-img width="400"}
 
 
 偏向的游戏越多，每个游戏提高的权重值越低，如：

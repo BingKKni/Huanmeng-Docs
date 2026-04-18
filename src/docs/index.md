@@ -215,7 +215,7 @@
                 <div class="app-card-desc">圈住它，别让它跑了!</div>
             </div>
         </div>
-        <a href="/docs/entertainment/ctc/" class="app-action-btn">前往</a>
+        <a href="/docs/entertainment/catch_the_cat/" class="app-action-btn">前往</a>
     </div>
     <!-- 二十四点 -->
     <div class="app-card">

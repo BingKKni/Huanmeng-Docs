@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { useData, useRouter, withBase, onContentUpdated } from 'vitepress'
 import { computed, onBeforeUnmount, onMounted, nextTick, ref, watch } from 'vue'
 import SidebarNavItem from './components/SidebarNavItem.vue'
@@ -538,19 +538,19 @@ const desktopSidebarLinks = [
         hasAnyActive: relativePath => relativePath.startsWith('docs/entertainment/daily_wife/'),
         children: [
           {
-            href: '/docs/entertainment/daily_wife/huanmeng_Love',
+            href: '/docs/entertainment/daily_wife/preference',
             label: '喜欢/不喜欢',
-            isActive: relativePath => relativePath === 'docs/entertainment/daily_wife/huanmeng_Love.md'
+            isActive: relativePath => relativePath === 'docs/entertainment/daily_wife/preference.md'
           },
           {
-            href: '/docs/entertainment/daily_wife/wife_today_points',
+            href: '/docs/entertainment/daily_wife/item_definite_integral_usage',
             label: '定积分券核销',
-            isActive: relativePath => relativePath === 'docs/entertainment/daily_wife/wife_today_points.md'
+            isActive: relativePath => relativePath === 'docs/entertainment/daily_wife/item_definite_integral_usage.md'
           },
           {
-            href: '/docs/entertainment/daily_wife/wife_today_indint',
+            href: '/docs/entertainment/daily_wife/item_indefinite_integral_usage',
             label: '不定积分券核销',
-            isActive: relativePath => relativePath === 'docs/entertainment/daily_wife/wife_today_indint.md'
+            isActive: relativePath => relativePath === 'docs/entertainment/daily_wife/item_indefinite_integral_usage.md'
           }
         ]
       },
@@ -3002,7 +3002,10 @@ watch(infoDialogVisible, async visible => {
       aria-label="展开侧边栏"
       @click="openSidebar"
     >
-      &gt;&gt;
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m6 17 5-5-5-5"/>
+        <path d="m13 17 5-5-5-5"/>
+      </svg>
     </button>
 
     <!-- 侧边栏遮罩 -->
