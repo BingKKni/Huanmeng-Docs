@@ -104,7 +104,7 @@ svg {
   --ct-auto: #212529;
   --ct-darkred: #991b1b;
   --ct-red: #ff0000;
-  --ct-yellow: #edf51a;
+  --ct-yellow: #eccd1c;
   --ct-orange: #e29810;
   --ct-green: #16a34a;
   --ct-darkgreen: #166534;
@@ -113,6 +113,8 @@ svg {
   --ct-cyan: #18a7ca;
   --ct-blue: #3c75f0;
   --ct-gray: #7d7d7d;
+  --ct-gold: #fdb10f;
+  --ct-aqua: #00bcd4;
   /* 文档正文宽度：随屏幕放大，但保留上限，避免 2K/4K 行长失控 */
   --hm-content-max-width: clamp(960px, 68vw, 1080px);
   /* Markdown <hr>（***）*/
@@ -190,6 +192,8 @@ html.dark {
   --ct-cyan: #22d3ee;
   --ct-blue: #60a5fa;
   --ct-gray: #94a3b8;
+  --ct-gold: #f5c842;
+  --ct-aqua: #00e5ff;
   --hm-doc-hr-color: rgba(235, 239, 245, 0.16);
 }
 
@@ -240,6 +244,14 @@ html.dark {
 
 .ct-gray {
   color: var(--ct-gray);
+}
+
+.ct-gold {
+  color: var(--ct-gold);
+}
+
+.ct-aqua {
+  color: var(--ct-aqua);
 }
 
 body {
@@ -1199,6 +1211,7 @@ a:hover {
     0% {
       transform: translateX(-100%);
     }
+
     100% {
       transform: translateX(0);
     }
