@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { useData, useRouter, withBase, onContentUpdated } from 'vitepress'
 import { computed, onBeforeUnmount, onMounted, nextTick, ref, watch } from 'vue'
 import SidebarNavItem from './components/SidebarNavItem.vue'
@@ -556,15 +556,15 @@ const desktopSidebarLinks = [
       },
       { href: '/docs/entertainment/sence', label: '好感度', isActive: relativePath => relativePath === 'docs/entertainment/sence.md' },
       {
-        href: '/docs/entertainment/ctc/',
+        href: '/docs/entertainment/catch_the_cat/',
         label: '圈小猫',
-        isActive: relativePath => relativePath === 'docs/entertainment/ctc/index.md',
-        hasAnyActive: relativePath => relativePath.startsWith('docs/entertainment/ctc/'),
+        isActive: relativePath => relativePath === 'docs/entertainment/catch_the_cat/index.md',
+        hasAnyActive: relativePath => relativePath.startsWith('docs/entertainment/catch_the_cat/'),
         children: [
           {
-            href: '/docs/entertainment/ctc/multiplayer',
+            href: '/docs/entertainment/catch_the_cat/multiplayer',
             label: '多人模式',
-            isActive: relativePath => relativePath === 'docs/entertainment/ctc/multiplayer.md'
+            isActive: relativePath => relativePath === 'docs/entertainment/catch_the_cat/multiplayer.md'
           }
         ]
       },

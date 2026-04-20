@@ -6,7 +6,10 @@
 
 ## 前提剧情
 **口牙！这个白色的小猫偷走了小布丁的一只鞋子！小人类，快帮我抓住它，别让它跑啦~！**
-小人类此时开始追那只白色的小猫... 一段时间后，你和小猫都跑到了一个特殊的场地里，在这片特殊的场地里，小人类![](/img/catch_the_cat/title.png){.hm-center-img width="400"}
+小人类此时开始追那只白色的小猫... 一段时间后，你和小猫都跑到了一个特殊的场地里，在这片特殊的场地里，小人类获得了放置墙壁的能力：只有小人类操作了一步，小猫才能移动一步。快动用你的大脑防止小猫逃出这片区域吧！
+
+![游戏主界面](/img/catch_the_cat/title.png){.hm-center-img width="400"}
+
 <div class="hm-center ct-gray">(游戏主界面，不同的设备最终渲染效果可能不同)</div>
 
 **点击第一个按钮开始游戏：**
@@ -33,34 +36,13 @@
 
 小人类可点击 **🧱放置墙壁** 按钮来放置新的墙体，根据场地图片来思考你想要放置墙体的位置（觉得墙壁放哪个位置小猫最不容易逃出去就放哪里），_**在聊天框中输入坐标后点击发送，即可完成放置墙壁操作。**_
 
-![](/img/catch_the_cat/round0_input.png){.hm-right-img height="400"}![](/img/catch_the_cat/round0_output.png){.hm-left-img height="400"}
+![](/img/catch_the_cat/round0_input.png){.hm-right-img height="300"}![](/img/catch_the_cat/round0_output.png){.hm-left-img height="300"}
 
 此时小人类已经完成了放置墙体的操作，猫也从原来的坐标 **(5, 5)** 移动到了 **(5, 6)**。根据场地图片的信息，我们需要在 **39** 坐标{gray}（详见下面）{}上放置墙体，**因为小猫它是最喜欢往边界最近的地方走的**，我们需要针对小猫移动的轨迹来放置墙壁，话不多说，接着看下面的图吧。
 
-![](/img/catch_the_cat/round1_input.png){.hm-right-img height="400"}![](/img/catch_the_cat/round1_output.png){.hm-left-img height="400"}
+![](/img/catch_the_cat/round1_input.png){.hm-right-img height="300"}![](/img/catch_the_cat/round1_output.png){.hm-left-img height="300"}
 
-进一步在坐标 **(3, 9)** 放置墙体后，小猫移动到了坐标 **(4, 7)** 的位置，这个时候光看就知道小猫很可能还会往下面走，我们可以在 **59** 坐标上放置墙壁，让小猫误以为逃离到边界最快的办法就是走这条路，但实际上这是一个陷阱！小人类其实可以在游戏过程里巧妙设置陷阱然后故意让小猫进入，**小猫它是最喜欢往边界最近的地方走的**，当小猫意识到自己进入你的陷阱后会想办法逃出来，但逃出来也是需要时间的，这就给了小人类进一步围住小猫的机会。
-
-这段话可能听起来比较难理解，那么直接看下图吧~
-
-![](/img/catch_the_cat/round2_0.png){.hm-right-img height="400"}![](/img/catch_the_cat/round2_1.png){.hm-left-img height="400"}
-
-![](/img/catch_the_cat/round3.png){.hm-center-img height="500"}
-
-弄陷阱可以让小猫在原计划逃离边界的路线的多走几步。
-
-![](/img/catch_the_cat/round4.png)![](/img/catch_the_cat/round5.png)![](/img/catch_the_cat/round6.png)![](/img/catch_the_cat/round7.png)![](/img/catch_the_cat/round8.png)![](/img/catch_the_cat/round9.png)
-
-![](/img/catch_the_cat/round10.png){.hm-center-img height="500"}�位置（觉得墙壁放哪个位置小猫最不容易逃出去就放哪里），_**在聊天框中输入坐标后点击发送，即可完成放置墙壁操作。**_
-
-![](/img/catch_the_cat/round0_input.png){.hm-right-img height="400"}![](/img/catch_the_cat/round0_output.png){.hm-left-img height="400"}
-
-此时小人类已经完成了放置墙体的操作，猫也从原来的坐标 **(5, 5)** 移动到了 **(5, 6)**。根据场地图片的信息，我们需要在 **39** 坐标{gray}（详见下面）{}上放置墙体，**因为小猫它是最喜欢往边界最近的地方走的**，我们需要针对小猫移动的轨迹来放置墙壁，话不多说，接着看下面的图吧。
-
-![](/img/catch_the_cat/round1_input.png){.hm-right-img height="400"}![](/img/catch_the_cat/round1_output.png){.hm-left-img height="400"}
-
-进一步在坐标 **(3, 9)** 放置墙体后，小猫移动到了坐标 **(4, 7)** 的位置，这个时候光看就知道小猫很可能还会往下面走，我们可以在 **59** 坐标上放置墙壁，让小猫误以为逃离到边界最快的办法就是走这条路，但实际上这是一个陷阱！小人类其实可以在游戏过程里巧妙设置陷阱然后故意让小猫进入，**小猫它是最喜欢往边界最近的地方走的**，当小猫意识到自己进入你的陷阱后会想办法逃出来，但逃出来也是需要时间的，这就给了小人类进一步围住小猫的机会。
-
+进一步在坐标 **(3, 9)** 放置墙体后，小猫移动到了坐标 **(4, 7)** 的位置，这个时候光看就知道小猫很可能还会往下面走，我们可以在 **59** 坐标上放置墙壁，让小猫误以为逃离到边界最快的办法就是走这条路，但实际上这是一个陷阱！小人类其实可以在游戏过程里巧妙设置陷阱然后故意让小猫进入，小猫它是最喜欢往边界最近的地方走的，当小猫意识到自己进入你的陷阱后会想办法逃出来，但逃出来也是需要时间的，这就给了小人类进一步围住小猫的机会。
 这段话可能听起来比较难理解，那么直接看下图吧~
 
 ![](/img/catch_the_cat/round2_0.png){.hm-right-img height="400"}![](/img/catch_the_cat/round2_1.png){.hm-left-img height="400"}
