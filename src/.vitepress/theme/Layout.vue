@@ -284,7 +284,15 @@ const searchQuery = ref('')
 const searchInputRef = ref(null)
 const globalSearchModalActive = ref(false)
 const globalSearchInputRef = ref(null)
+const APPEARANCE_MODE_SEQUENCE = ['auto', 'light', 'dark']
+const APPEARANCE_MODE_LABELS = {
+  auto: '跟随设备',
+  light: '浅色模式',
+  dark: '深色模式'
+}
+
 const isDarkMode = ref(false)
+const appearanceMode = ref('auto')
 const searchIndex = ref([])
 const searchIndexLoaded = ref(false)
 const desktopSearchPlaceholders = [
@@ -469,6 +477,23 @@ function closeGlobalSearch() {
 
 
 const APPEARANCE_STORAGE_KEY = 'vitepress-theme-appearance'
+let appearanceSchemeMediaQuery = null
+
+function normalizeAppearanceMode(mode) {
+  return APPEARANCE_MODE_SEQUENCE.includes(mode) ? mode : 'auto'
+}
+
+const nextAppearanceMode = computed(() => {
+  const currentIndex = APPEARANCE_MODE_SEQUENCE.indexOf(appearanceMode.value)
+  const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % APPEARANCE_MODE_SEQUENCE.length
+  return APPEARANCE_MODE_SEQUENCE[nextIndex]
+})
+
+const appearanceButtonLabel = computed(() => {
+  const currentLabel = APPEARANCE_MODE_LABELS[appearanceMode.value]
+  const nextLabel = APPEARANCE_MODE_LABELS[nextAppearanceMode.value]
+  return `当前${currentLabel}，点击切换到${nextLabel}`
+})
 const githubLink = {
   href: 'https://github.com/BingKKni/Huanmeng-Docs',
   label: 'Github',
@@ -523,6 +548,7 @@ const navLinks = [
 /* 侧边栏定义 */
 const desktopSidebarLinks = [
   { href: '/docs/', label: '🏠 首页', isActive: relativePath => relativePath === 'docs/index.md' },
+  // 娱乐功能
   { 
     href: '/docs/entertainment/', 
     label: '✨ 娱乐功能', 
@@ -578,6 +604,7 @@ const desktopSidebarLinks = [
       { href: '/docs/entertainment/word_chain', label: '词汇接龙', isActive: relativePath => relativePath === 'docs/entertainment/word_chain.md' }
     ]
   },
+  // 三角洲
   { 
     href: '/docs/delta_force/', 
     label: '🗺️ 三角洲行动攻略', 
@@ -587,6 +614,7 @@ const desktopSidebarLinks = [
       { href: '/docs/delta_force/password', label: '每日密码门位置', isActive: relativePath => relativePath === 'docs/delta_force/password.md' }
     ]
   },
+  // FAQ
   { 
     href: '/docs/faq/', 
     label: '❓ 常见问题FAQ', 
@@ -599,11 +627,30 @@ const desktopSidebarLinks = [
   { href: '/docs/support', label: '🧋 支持幻梦', isActive: relativePath => relativePath === 'docs/support.md' },
 ]
 
+// 更多
 const aboutSidebarLinks = [
   {
     href: '/about/',
     label: '🏠 首页',
     isActive: relativePath => relativePath === 'about/index.md'
+  },
+  {
+    href: '/about/rule/',
+    label: '✅ 规则中心',
+    isActive: relativePath => relativePath === 'about/rule/index.md',
+    hasAnyActive: relativePath => relativePath.startsWith('about/rule/index.md'),
+    children: [
+      {
+        href: '/about/rule/user',
+        label: '用户准则',
+        isActive: relativePath => relativePath === 'about/rule/user.md'
+      },
+      {
+        href: '/about/rule/image',
+        label: '图片使用声明',
+        isActive: relativePath => relativePath === 'about/rule/image.md'
+      }
+    ]
   },
   {
     href: '/about/contribution/',
@@ -972,26 +1019,101 @@ function isMobileViewport() {
 
 function syncColorModeFromDocument() {
   if (typeof document === 'undefined') return
-  isDarkMode.value = document.documentElement.classList.contains('dark')
+  appearanceMode.value = normalizeAppearanceMode(getStoredAppearanceMode() ?? 'auto')
+  const dark = document.documentElement.classList.contains('dark')
+  isDarkMode.value = dark
+  document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
 }
 
-function setColorMode(mode) {
-  if (typeof document === 'undefined') return
+function getStoredAppearanceMode() {
+  if (typeof window === 'undefined') return null
+  try {
+    const stored = window.localStorage.getItem(APPEARANCE_STORAGE_KEY)
+    return stored == null ? null : normalizeAppearanceMode(stored)
+  } catch {
+    return null
+  }
+}
 
-  const shouldUseDark = mode === 'dark'
+/** 用户未在本地固定主题时，跟随系统浅色 / 深色。 */
+function shouldFollowSystemAppearance() {
+  return normalizeAppearanceMode(getStoredAppearanceMode() ?? 'auto') === 'auto'
+}
+
+function applyResolvedColorMode(shouldUseDark) {
+  if (typeof document === 'undefined') return
   document.documentElement.classList.toggle('dark', shouldUseDark)
   document.documentElement.style.colorScheme = shouldUseDark ? 'dark' : 'light'
   isDarkMode.value = shouldUseDark
+}
 
+function applySystemAppearanceToDocument() {
+  if (typeof document === 'undefined' || typeof window === 'undefined') return
+  if (!shouldFollowSystemAppearance()) return
+  appearanceMode.value = 'auto'
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  applyResolvedColorMode(prefersDark)
+}
+
+function handlePreferredColorSchemeChange() {
+  applySystemAppearanceToDocument()
+}
+
+function setColorMode(mode, { persist = true } = {}) {
+  if (typeof document === 'undefined') return
+
+  const normalizedMode = normalizeAppearanceMode(mode)
+  appearanceMode.value = normalizedMode
+
+  if (normalizedMode === 'auto') {
+    const prefersDark = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+      : false
+    applyResolvedColorMode(prefersDark)
+
+    if (!persist) return
+    try {
+      window.localStorage.setItem(APPEARANCE_STORAGE_KEY, normalizedMode)
+    } catch {
+      /* ignore storage failures */
+    }
+    return
+  }
+
+  applyResolvedColorMode(normalizedMode === 'dark')
+
+  if (!persist) return
   try {
-    window.localStorage.setItem(APPEARANCE_STORAGE_KEY, mode)
+    window.localStorage.setItem(APPEARANCE_STORAGE_KEY, normalizedMode)
   } catch {
     /* ignore storage failures */
   }
 }
 
 function toggleColorMode() {
-  setColorMode(isDarkMode.value ? 'light' : 'dark')
+  setColorMode(nextAppearanceMode.value)
+}
+
+function addAppearanceSchemeChangeListener(mediaQueryList, listener) {
+  if (!mediaQueryList) return
+  if (typeof mediaQueryList.addEventListener === 'function') {
+    mediaQueryList.addEventListener('change', listener)
+    return
+  }
+  if (typeof mediaQueryList.addListener === 'function') {
+    mediaQueryList.addListener(listener)
+  }
+}
+
+function removeAppearanceSchemeChangeListener(mediaQueryList, listener) {
+  if (!mediaQueryList) return
+  if (typeof mediaQueryList.removeEventListener === 'function') {
+    mediaQueryList.removeEventListener('change', listener)
+    return
+  }
+  if (typeof mediaQueryList.removeListener === 'function') {
+    mediaQueryList.removeListener(listener)
+  }
 }
 
 function syncViewportMode() {
@@ -2364,6 +2486,10 @@ function handleSwipeTouchCancel() {
 }
 onMounted(() => {
   syncColorModeFromDocument()
+  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+    appearanceSchemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    addAppearanceSchemeChangeListener(appearanceSchemeMediaQuery, handlePreferredColorSchemeChange)
+  }
   syncViewportMode()
   resetMobileHeaderState()
   nextTick(() => {
@@ -2404,6 +2530,10 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  if (appearanceSchemeMediaQuery) {
+    removeAppearanceSchemeChangeListener(appearanceSchemeMediaQuery, handlePreferredColorSchemeChange)
+    appearanceSchemeMediaQuery = null
+  }
   if (typeof document !== 'undefined') {
     document.documentElement.style.removeProperty('--hm-desktop-sidebar-left')
     document.documentElement.style.removeProperty('--hm-desktop-sidebar-top')
@@ -2773,11 +2903,15 @@ watch(infoDialogVisible, async visible => {
               <button
                 type="button"
                 class="site-header-icon-btn"
-                :aria-label="isDarkMode ? '切换到日间模式' : '切换到夜间模式'"
-                :title="isDarkMode ? '切换到日间模式' : '切换到夜间模式'"
+                :aria-label="appearanceButtonLabel"
+                :title="appearanceButtonLabel"
                 @click="toggleColorMode"
               >
-                <svg v-if="isDarkMode" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <svg v-if="appearanceMode === 'auto'" class="appearance-auto-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="8.25"></circle>
+                  <path d="M12 3.75A8.25 8.25 0 0 1 12 20.25Z" fill="currentColor" stroke="none"></path>
+                </svg>
+                <svg v-else-if="isDarkMode" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <circle cx="12" cy="12" r="4.5"></circle>
                   <path d="M12 2.5v2.25"></path>
                   <path d="M12 19.25v2.25"></path>
@@ -2860,11 +2994,15 @@ watch(infoDialogVisible, async visible => {
               <button
                 type="button"
                 class="site-header-icon-btn mobile-nav-action-btn"
-                :aria-label="isDarkMode ? '切换到日间模式' : '切换到夜间模式'"
-                :title="isDarkMode ? '切换到日间模式' : '切换到夜间模式'"
+                :aria-label="appearanceButtonLabel"
+                :title="appearanceButtonLabel"
                 @click="toggleColorMode"
               >
-                <svg v-if="isDarkMode" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <svg v-if="appearanceMode === 'auto'" class="appearance-auto-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="8.25"></circle>
+                  <path d="M12 3.75A8.25 8.25 0 0 1 12 20.25Z" fill="currentColor" stroke="none"></path>
+                </svg>
+                <svg v-else-if="isDarkMode" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <circle cx="12" cy="12" r="4.5"></circle>
                   <path d="M12 2.5v2.25"></path>
                   <path d="M12 19.25v2.25"></path>

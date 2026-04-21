@@ -12,6 +12,8 @@ const imageThumbnailManifest = loadImageThumbnailManifest()
 export default defineConfig({
   title: "幻梦Bot",
   cleanUrls: true,
+  /** 首屏按系统偏好切换深色/浅色，并注入 check-dark-mode 避免闪烁；用户手动切换后会写入 localStorage 固定偏好。 */
+  appearance: true,
   description: "QQ幻梦机器人的说明文档",
   head: [
     ['meta', { name: 'viewport', content: 'width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no' }],

@@ -391,6 +391,11 @@ a:hover {
   height: 20px;
 }
 
+.site-header-icon-btn .appearance-auto-icon {
+  transform: scale(1.1);
+  transform-origin: center;
+}
+
 .site-header-icon-btn:focus {
   outline: none;
 }
