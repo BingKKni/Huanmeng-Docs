@@ -23,6 +23,20 @@ textarea {
   font: inherit;
 }
 
+/* 优先让浏览器把快速连点解释为控件点击，而不是双击缩放页面。 */
+button,
+[type='button'],
+[type='submit'],
+[type='reset'],
+a[href],
+summary,
+label[for],
+[role='button'],
+.VPButton,
+.plugin-tabs--tab {
+  touch-action: manipulation;
+}
+
 img,
 svg {
   vertical-align: middle;

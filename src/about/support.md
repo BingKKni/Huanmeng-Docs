@@ -1,6 +1,6 @@
 # 支持幻梦
 
-![](/img/donate_main.png){height="400"}
+![支持](/img/donate_main.png){.hm-center-img height="400"}
 
 (图片作者: 悠tacC)
 

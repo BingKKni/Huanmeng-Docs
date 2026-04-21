@@ -2,6 +2,7 @@
 import { useData, useRouter, withBase, onContentUpdated } from 'vitepress'
 import { computed, onBeforeUnmount, onMounted, nextTick, ref, watch } from 'vue'
 import SidebarNavItem from './components/SidebarNavItem.vue'
+import { changelogSidebarLinks } from '../generated/changelog-sidebar.mjs'
 
 
 const { site, frontmatter, page } = useData()
@@ -277,7 +278,7 @@ function scrollToToc(id) {
   scrollToHeading(id, { updateHash: true })
 }
 
-const shouldShowTOC = computed(() => !isMobileView.value && shouldShowDesktopSidebar.value && tocHeaders.value.length > 0)
+const shouldShowTOC = computed(() => !isMobileView.value && supportsTocSidebar.value && tocHeaders.value.length > 0)
 // --- Search Logic ---
 const SEARCH_INDEX_PATH = '/search-index.json'
 const searchQuery = ref('')
@@ -509,6 +510,11 @@ const navLinks = [
     isActive: relativePath => relativePath === 'docs/index.md' || relativePath.startsWith('docs/')
   },
   {
+    href: '/changelog/',
+    label: '更新日志',
+    isActive: relativePath => relativePath === 'changelog/index.md' || relativePath.startsWith('changelog/')
+  },
+  {
     href: '/about/',
     label: '更多',
     isActive: relativePath => relativePath === 'about/index.md' || relativePath.startsWith('about/')
@@ -613,18 +619,7 @@ const desktopSidebarLinks = [
     children: [
       { href: '/docs/delta_force/password', label: '每日密码门位置', isActive: relativePath => relativePath === 'docs/delta_force/password.md' }
     ]
-  },
-  // FAQ
-  { 
-    href: '/docs/faq/', 
-    label: '❓ 常见问题FAQ', 
-    isActive: relativePath => relativePath === 'docs/faq/index.md',
-    hasAnyActive: relativePath => relativePath === 'docs/faq/index.md' || relativePath.startsWith('docs/faq/'),
-    children: [
-      { href: '/docs/faq/appeal', label: '封禁申诉', isActive: relativePath => relativePath === 'docs/faq/appeal.md' }
-    ]
-  },
-  { href: '/docs/support', label: '🧋 支持幻梦', isActive: relativePath => relativePath === 'docs/support.md' },
+  }
 ]
 
 // 更多
@@ -669,7 +664,18 @@ const aboutSidebarLinks = [
         isActive: relativePath => relativePath === 'about/contribution/markdown_systax.md'
       }
     ]
-  }
+  },
+  // FAQ
+  { 
+    href: '/about/faq/', 
+    label: '❓ 常见问题FAQ', 
+    isActive: relativePath => relativePath === 'about/faq/index.md',
+    hasAnyActive: relativePath => relativePath === 'about/faq/index.md' || relativePath.startsWith('about/faq/'),
+    children: [
+      { href: '/about/faq/appeal', label: '封禁申诉', isActive: relativePath => relativePath === 'about/faq/appeal.md' }
+    ]
+  },
+  { href: '/about/support', label: '🧋 支持幻梦', isActive: relativePath => relativePath === 'about/support.md' },
 ]
 
 const currentYear = new Date().getFullYear()
@@ -684,10 +690,13 @@ const currentPageLabel = computed(() => {
 })
 const isDocsSection = computed(() => page.value.relativePath.startsWith('docs/'))
 const isAboutSection = computed(() => page.value.relativePath.startsWith('about/'))
-const shouldShowDesktopSidebar = computed(() => isDocsSection.value || isAboutSection.value)
+const isChangelogSection = computed(() => page.value.relativePath.startsWith('changelog/'))
+const shouldShowDesktopSidebar = computed(() => isDocsSection.value || isAboutSection.value || isChangelogSection.value)
+const supportsTocSidebar = computed(() => isDocsSection.value || isAboutSection.value || isChangelogSection.value)
 const currentSidebarLinks = computed(() => {
   if (isDocsSection.value) return desktopSidebarLinks
   if (isAboutSection.value) return aboutSidebarLinks
+  if (isChangelogSection.value) return changelogSidebarLinks
   return []
 })
 
@@ -792,6 +801,17 @@ const DOC_PAGE_FAST_SWITCH_DISABLE_ANIM_MS = 420
 const DESKTOP_SEARCH_PLACEHOLDER_IDLE_MS = 4000
 const DESKTOP_SEARCH_PLACEHOLDER_ANIM_MS = 1200
 const DESKTOP_SEARCH_PLACEHOLDER_SWAP_MS = DESKTOP_SEARCH_PLACEHOLDER_ANIM_MS / 2
+const FAST_TAP_ZOOM_GUARD_WINDOW_MS = 320
+const FAST_TAP_ZOOM_GUARD_MOVE_PX = 24
+const FAST_TAP_ZOOM_GUARD_SELECTOR = [
+  'button',
+  '[role="button"]',
+  'a[href]',
+  'summary',
+  'label[for]',
+  '.VPButton',
+  '.plugin-tabs--tab'
+].join(', ')
 const desktopSearchPlaceholderAnimationStyle = {
   '--hm-search-placeholder-anim-ms': `${DESKTOP_SEARCH_PLACEHOLDER_ANIM_MS}ms`
 }
@@ -831,6 +851,10 @@ let swipeVerticalLocked = false
 const SWIPE_AXIS_LOCK_THRESHOLD = 8
 /** 侧边栏手势确认所需的最小水平位移（px） */
 const SWIPE_SIDEBAR_THRESHOLD = 48
+let lastFastTapZoomGuardAt = 0
+let lastFastTapZoomGuardX = 0
+let lastFastTapZoomGuardY = 0
+let lastFastTapZoomGuardControl = null
 const copyButtonResetTimers = new Map()
 
 /** 移动端文档切换顶部进度条（不占文档流） */
@@ -1015,6 +1039,24 @@ function handleCommunityLinkClick(event, link) {
 
 function isMobileViewport() {
   return isMobileView.value
+}
+
+function isIOSWebKitZoomSurface() {
+  if (typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent
+  return /iP(ad|hone|od)/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+}
+
+function findFastTapZoomGuardControl(target) {
+  if (!(target instanceof Element)) return null
+  const control = target.closest(FAST_TAP_ZOOM_GUARD_SELECTOR)
+  if (!(control instanceof HTMLElement)) return null
+  if (control.matches(':disabled, [aria-disabled="true"]')) return null
+  return control
+}
+
+function shouldPreventBrowserGestureZoom(target) {
+  return !(target instanceof Element && target.closest('.hm-lightbox__content'))
 }
 
 function syncColorModeFromDocument() {
@@ -2484,6 +2526,38 @@ function handleSwipeTouchEnd(e) {
 function handleSwipeTouchCancel() {
   swipeTracking = false
 }
+
+function handleFastTapZoomGuardTouchEnd(e) {
+  if (!isIOSWebKitZoomSurface()) return
+  if (e.touches.length > 0 || e.changedTouches.length !== 1) return
+
+  const control = findFastTapZoomGuardControl(e.target)
+  if (!control) return
+
+  const touch = e.changedTouches[0]
+  const now = e.timeStamp || performance.now()
+  const repeatedQuickly = now - lastFastTapZoomGuardAt <= FAST_TAP_ZOOM_GUARD_WINDOW_MS
+  const tappedSameControl = control === lastFastTapZoomGuardControl
+  const tappedNearby = Math.abs(touch.clientX - lastFastTapZoomGuardX) <= FAST_TAP_ZOOM_GUARD_MOVE_PX
+    && Math.abs(touch.clientY - lastFastTapZoomGuardY) <= FAST_TAP_ZOOM_GUARD_MOVE_PX
+
+  if (repeatedQuickly && (tappedSameControl || tappedNearby)) {
+    e.preventDefault()
+    control.click()
+  }
+
+  lastFastTapZoomGuardAt = now
+  lastFastTapZoomGuardX = touch.clientX
+  lastFastTapZoomGuardY = touch.clientY
+  lastFastTapZoomGuardControl = control
+}
+
+function handleBrowserGestureZoomGuard(e) {
+  if (!isIOSWebKitZoomSurface()) return
+  if (!shouldPreventBrowserGestureZoom(e.target)) return
+  e.preventDefault()
+}
+
 onMounted(() => {
   syncColorModeFromDocument()
   if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
@@ -2510,6 +2584,10 @@ onMounted(() => {
   document.addEventListener('touchmove', handleSwipeTouchMove, { passive: true })
   document.addEventListener('touchend', handleSwipeTouchEnd, { passive: true })
   document.addEventListener('touchcancel', handleSwipeTouchCancel, { passive: true })
+  document.addEventListener('touchend', handleFastTapZoomGuardTouchEnd, { passive: false })
+  document.addEventListener('gesturestart', handleBrowserGestureZoomGuard, { passive: false })
+  document.addEventListener('gesturechange', handleBrowserGestureZoomGuard, { passive: false })
+  document.addEventListener('gestureend', handleBrowserGestureZoomGuard, { passive: false })
 
   routerProgressPrevBefore = router.onBeforeRouteChange
   routerProgressPrevAfter = router.onAfterRouteChange ?? router.onAfterRouteChanged
@@ -2566,6 +2644,10 @@ onBeforeUnmount(() => {
   document.removeEventListener('touchmove', handleSwipeTouchMove)
   document.removeEventListener('touchend', handleSwipeTouchEnd)
   document.removeEventListener('touchcancel', handleSwipeTouchCancel)
+  document.removeEventListener('touchend', handleFastTapZoomGuardTouchEnd)
+  document.removeEventListener('gesturestart', handleBrowserGestureZoomGuard)
+  document.removeEventListener('gesturechange', handleBrowserGestureZoomGuard)
+  document.removeEventListener('gestureend', handleBrowserGestureZoomGuard)
   if (bodyScrollLocked) {
     document.body.style.overflow = previousBodyOverflow
   }
@@ -3226,7 +3308,7 @@ watch(infoDialogVisible, async visible => {
             class="doc-article doc-article--padded"
             :class="{
               'docs-index-article': page.relativePath === 'docs/index.md',
-              'docs-support-article': page.relativePath === 'docs/support.md'
+              'docs-support-article': page.relativePath === 'about/support.md'
             }"
           >
             <Content />

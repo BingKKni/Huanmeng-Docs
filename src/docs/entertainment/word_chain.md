@@ -32,6 +32,6 @@
 ![语言设置入口](/img/word_chain/language_settings_main.png) ![语言设置主菜单](/img/word_chain/language_settings_entrance.png) ![语言设置成功示例](/img/word_chain/language_settings_set_success.png) ![语言设置效果示例](/img/word_chain/language_settings_after_switch.png) 
 
 ## 设置接龙时间
-小人类可以设置接龙时间哦。[投喂用户](/docs/support)可自定义设置接龙时间~
+小人类可以设置接龙时间哦。[投喂用户](/about/support)可自定义设置接龙时间~
 
 ![](/img/word_chain/set_time.png){.hm-center-img width="300"} 

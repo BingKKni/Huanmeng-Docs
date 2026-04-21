@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "docs:dev": "node src/.vitepress/generate-image-thumbnails.mjs && node src/.vitepress/generate-search-index.mjs && vitepress dev src --host 0.0.0.0 --port 23333",
-    "docs:build": "node src/.vitepress/generate-image-thumbnails.mjs && node src/.vitepress/generate-search-index.mjs && vitepress build src",
+    "docs:dev": "node src/.vitepress/generate-image-thumbnails.mjs && node src/.vitepress/generate-search-index.mjs && node src/.vitepress/generate-changelog.mjs && vitepress dev src --host 0.0.0.0 --port 23333",
+    "docs:build": "node src/.vitepress/generate-image-thumbnails.mjs && node src/.vitepress/generate-search-index.mjs && node src/.vitepress/generate-changelog.mjs && vitepress build src",
     "docs:preview": "vitepress preview src",
     "dev": "npm run docs:dev"
   },
