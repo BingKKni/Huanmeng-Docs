@@ -31,6 +31,7 @@ Desktop.ini
 # AGENT
 AGENTS.md
 page**
+.opencode
 
 # 本机专用 npm 源
 # .npmrc

@@ -269,11 +269,6 @@ function groupEntriesByDay(entries) {
     grouped.get(entry.day)[entry.type].push(entry.text)
   }
 
-  const todayDay = getTodayDay()
-  if (!grouped.has(todayDay)) {
-    grouped.set(todayDay, createEmptySections())
-  }
-
   return [...grouped.entries()].sort((left, right) => right[0].localeCompare(left[0]))
 }
 
@@ -317,11 +312,11 @@ function renderDayMarkdown(day, sections) {
 }
 
 function renderSidebarModule(days) {
-  const todayDay = getTodayDay()
+  const latestDay = days[0] ?? null
   const changelogRelativePaths = ['changelog/latest.md', ...days.map(day => `changelog/${day}.md`)]
   const children = days.map(day => {
     const conditions = [`relativePath === 'changelog/${day}.md'`]
-    if (day === todayDay) {
+    if (day === latestDay) {
       conditions.push(`relativePath === 'changelog/latest.md'`)
     }
 
@@ -398,7 +393,8 @@ async function writeCache(entries) {
 async function writeGeneratedArtifacts(daysWithSections) {
   const days = daysWithSections.map(([day]) => day)
   const todayDay = getTodayDay()
-  const todaySections = daysWithSections.find(([day]) => day === todayDay)?.[1] ?? createEmptySections()
+  const latestDay = days[0] ?? todayDay
+  const latestSections = daysWithSections[0]?.[1] ?? createEmptySections()
 
   await mkdir(changelogDir, { recursive: true })
   await mkdir(generatedDir, { recursive: true })
@@ -409,7 +405,7 @@ async function writeGeneratedArtifacts(daysWithSections) {
     return writeFile(path.join(changelogDir, `${day}.md`), markdown, 'utf8')
   }))
 
-  await writeFile(latestPagePath, renderDayMarkdown(todayDay, todaySections), 'utf8')
+  await writeFile(latestPagePath, renderDayMarkdown(latestDay, latestSections), 'utf8')
   await writeFile(sidebarModulePath, renderSidebarModule(days), 'utf8')
 }
 

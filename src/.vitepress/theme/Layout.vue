@@ -229,7 +229,7 @@ function flashHeading(el) {
   }, 1200)
 }
 
-function scrollToHeading(id, { updateHash = false, fallbackTitle = '', instant = false } = {}) {
+function scrollToHeading(id, { updateHash = false, fallbackTitle = '', instant = false, flash = true } = {}) {
   const el = findHeadingElement(id, fallbackTitle)
   if (!el) return false
 
@@ -251,7 +251,9 @@ function scrollToHeading(id, { updateHash = false, fallbackTitle = '', instant =
       url.hash = targetId
       window.history.replaceState(null, '', url)
     }
-    flashHeading(el)
+    if (flash) {
+      flashHeading(el)
+    }
     tocScrollTimeout = setTimeout(() => {
       tocScrollTimeout = null
     }, 50)
@@ -264,7 +266,9 @@ function scrollToHeading(id, { updateHash = false, fallbackTitle = '', instant =
       url.hash = targetId
       window.history.replaceState(null, '', url)
     }
-    flashHeading(el)
+    if (flash) {
+      flashHeading(el)
+    }
   })
 
   tocScrollTimeout = setTimeout(() => {
@@ -281,8 +285,11 @@ function scrollToToc(id) {
 const shouldShowTOC = computed(() => !isMobileView.value && supportsTocSidebar.value && tocHeaders.value.length > 0)
 // --- Search Logic ---
 const SEARCH_INDEX_PATH = '/search-index.json'
+const SEARCH_HISTORY_STORAGE_KEY = 'hm-search-history'
+const MAX_SEARCH_HISTORY_ITEMS = 5
 const searchQuery = ref('')
 const searchInputRef = ref(null)
+const searchPageInputRef = ref(null)
 const globalSearchModalActive = ref(false)
 const globalSearchInputRef = ref(null)
 const APPEARANCE_MODE_SEQUENCE = ['auto', 'light', 'dark']
@@ -296,6 +303,9 @@ const isDarkMode = ref(false)
 const appearanceMode = ref('auto')
 const searchIndex = ref([])
 const searchIndexLoaded = ref(false)
+const searchHistoryItems = ref([])
+const desktopSearchHistoryOpen = ref(false)
+const desktopSearchHistoryForceOpen = ref(false)
 const desktopSearchPlaceholders = [
   '搜索内容...',
   '搜索关键词...',
@@ -311,8 +321,12 @@ let desktopSearchPlaceholderSwapTimer = null
 let desktopSearchPlaceholderResetTimer = null
 let pendingSearchHeadingId = ''
 let pendingSearchHeadingTitle = ''
+let pendingSearchHeadingFlash = true
 let pendingSearchHeadingFrame = null
 let searchIndexPromise = null
+let searchPageFocusPending = false
+
+const isSearchPage = computed(() => page.value.relativePath === 'search/index.md')
 
 async function ensureSearchIndexLoaded() {
   if (searchIndexLoaded.value) return searchIndex.value
@@ -342,8 +356,20 @@ async function ensureSearchIndexLoaded() {
   return searchIndexPromise
 }
 
+const shouldShowSearchResults = computed(() => {
+  const hasQuery = searchQuery.value.trim().length > 0
+  if (!hasQuery) return false
+  if (!isMobileView.value) return true
+  return isSearchPage.value
+})
+
+const shouldShowDesktopSearchHistory = computed(() => {
+  if (!desktopSearchHistoryOpen.value || searchHistoryItems.value.length === 0) return false
+  return !searchQuery.value.trim() || desktopSearchHistoryForceOpen.value
+})
+
 const searchResults = computed(() => {
-  if (!searchQuery.value.trim()) return []
+  if (!shouldShowSearchResults.value) return []
   const query = searchQuery.value.toLowerCase()
   const results = []
   const docs = searchIndex.value
@@ -385,9 +411,106 @@ const searchResults = computed(() => {
 })
 
 watch(searchQuery, query => {
+  desktopSearchHistoryForceOpen.value = false
+
   if (!query.trim()) return
+
   void ensureSearchIndexLoaded()
 })
+
+function normalizeSearchKeyword(query) {
+  return String(query || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+}
+
+function parseStoredSearchHistory(raw) {
+  if (!Array.isArray(raw)) return []
+
+  const seen = new Set()
+
+  return raw
+    .map(item => ({
+      query: normalizeSearchKeyword(item?.query),
+      updatedAt: Number(item?.updatedAt) || 0
+    }))
+    .filter(item => item.query)
+    .sort((left, right) => right.updatedAt - left.updatedAt)
+    .filter(item => {
+      const key = item.query.toLocaleLowerCase()
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+    .slice(0, MAX_SEARCH_HISTORY_ITEMS)
+}
+
+function syncSearchHistoryFromStorage() {
+  if (typeof window === 'undefined') return
+
+  try {
+    const raw = JSON.parse(window.localStorage.getItem(SEARCH_HISTORY_STORAGE_KEY) || '[]')
+    searchHistoryItems.value = parseStoredSearchHistory(raw)
+  } catch {
+    searchHistoryItems.value = []
+  }
+}
+
+function persistSearchHistory(items) {
+  searchHistoryItems.value = items
+  if (typeof window === 'undefined') return
+
+  try {
+    window.localStorage.setItem(SEARCH_HISTORY_STORAGE_KEY, JSON.stringify(items))
+  } catch {
+    /* ignore storage failures */
+  }
+}
+
+function recordSearchHistory(query) {
+  const normalizedQuery = normalizeSearchKeyword(query)
+  if (!normalizedQuery) return
+
+  const queryKey = normalizedQuery.toLocaleLowerCase()
+  const nextItems = [
+    {
+      query: normalizedQuery,
+      updatedAt: Date.now()
+    },
+    ...searchHistoryItems.value.filter(item => normalizeSearchKeyword(item.query).toLocaleLowerCase() !== queryKey)
+  ].slice(0, MAX_SEARCH_HISTORY_ITEMS)
+
+  persistSearchHistory(nextItems)
+}
+
+function removeSearchHistory(query) {
+  const normalizedQuery = normalizeSearchKeyword(query)
+  if (!normalizedQuery) return
+
+  const queryKey = normalizedQuery.toLocaleLowerCase()
+  const nextItems = searchHistoryItems.value.filter(item => normalizeSearchKeyword(item.query).toLocaleLowerCase() !== queryKey)
+  persistSearchHistory(nextItems)
+}
+
+function reuseSearchHistory(query) {
+  const normalizedQuery = normalizeSearchKeyword(query)
+  if (!normalizedQuery) return
+
+  searchQuery.value = normalizedQuery
+
+  if (isSearchPage.value) {
+    focusSearchPageInput()
+    return
+  }
+
+  focusDesktopSearch()
+}
+
+function clearPendingSearchHeading() {
+  pendingSearchHeadingId = ''
+  pendingSearchHeadingTitle = ''
+  pendingSearchHeadingFlash = true
+}
 
 function clearPendingSearchHeadingFrame() {
   if (pendingSearchHeadingFrame != null) {
@@ -396,9 +519,14 @@ function clearPendingSearchHeadingFrame() {
   }
 }
 
-function setPendingSearchHeading(id, title = '') {
+function normalizeConfiguredHeading(text) {
+  return normalizeHeadingText(String(text || '').replace(/^#+\s*/, ''))
+}
+
+function setPendingSearchHeading(id, title = '', flash = true) {
   pendingSearchHeadingId = normalizeHashTarget(id)
-  pendingSearchHeadingTitle = normalizeHeadingText(title)
+  pendingSearchHeadingTitle = normalizeConfiguredHeading(title)
+  pendingSearchHeadingFlash = flash
 }
 
 async function applyPendingSearchHeading(retries = 60) {
@@ -407,8 +535,7 @@ async function applyPendingSearchHeading(retries = 60) {
 
   if (docPageEnterInProgress || !getActiveDocArticle()) {
     if (retries <= 0) {
-      pendingSearchHeadingId = ''
-      pendingSearchHeadingTitle = ''
+      clearPendingSearchHeading()
       return
     }
 
@@ -420,17 +547,16 @@ async function applyPendingSearchHeading(retries = 60) {
 
   const targetId = pendingSearchHeadingId
   const targetTitle = pendingSearchHeadingTitle
+  const shouldFlash = pendingSearchHeadingFlash
   await nextTick()
 
-  if (scrollToHeading(targetId, { updateHash: true, fallbackTitle: targetTitle, instant: true })) {
-    pendingSearchHeadingId = ''
-    pendingSearchHeadingTitle = ''
+  if (scrollToHeading(targetId, { updateHash: true, fallbackTitle: targetTitle, instant: true, flash: shouldFlash })) {
+    clearPendingSearchHeading()
     return
   }
 
   if (retries <= 0) {
-    pendingSearchHeadingId = ''
-    pendingSearchHeadingTitle = ''
+    clearPendingSearchHeading()
     return
   }
 
@@ -439,25 +565,64 @@ async function applyPendingSearchHeading(retries = 60) {
   })
 }
 
-function handleResultClick(result, event) {
-  searchQuery.value = ''
+function focusSearchPageInput() {
+  nextTick(() => {
+    searchPageInputRef.value?.focus()
+  })
+}
+
+async function navigateToInternalPage(href) {
+  if (typeof router.go === 'function') {
+    await router.go(href)
+    return
+  }
+
+  window.location.href = href
+}
+
+async function handleMobileSearchClick(event = null) {
+  searchPageFocusPending = true
   closeMobileMenu()
+  closeCommunityMenus()
   mobileSidebarOpen.value = false
+  globalSearchModalActive.value = false
+
+  if (isSearchPage.value) {
+    event?.preventDefault?.()
+    focusSearchPageInput()
+    return
+  }
+
+  if (event) return
+  await navigateToInternalPage(withBase('/search/'))
+}
+
+function handleSearchNavigation(target, event) {
+  closeMobileMenu()
+  closeCommunityMenus()
+  mobileSidebarOpen.value = false
+  globalSearchModalActive.value = false
 
   if (typeof window === 'undefined') return
 
-  const targetHref = withBase(result.link)
+  const targetHref = withBase(target.href)
   const currentRouteKey = routeNavComparableKey(window.location.href)
   const targetRouteKey = routeNavComparableKey(targetHref)
+  const headingId = normalizeHashTarget(target.headingId || getHashTargetFromHref(targetHref))
+  const headingTitle = normalizeConfiguredHeading(target.headingTitle)
 
-  setPendingSearchHeading(result.headingId, result.headingTitle)
+  if (headingId || headingTitle) {
+    setPendingSearchHeading(headingId, headingTitle, target.flashHeading !== false)
+  } else {
+    clearPendingSearchHeading()
+  }
 
   if (currentRouteKey !== targetRouteKey) return
 
-  event.preventDefault()
+  event?.preventDefault?.()
   window.history.pushState(null, '', targetHref)
 
-  if (result.headingId || result.headingTitle) {
+  if (headingId || headingTitle) {
     void applyPendingSearchHeading()
     return
   }
@@ -465,10 +630,50 @@ function handleResultClick(result, event) {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
+function handleResultClick(result, event) {
+  recordSearchHistory(searchQuery.value)
+  searchQuery.value = ''
+  handleSearchNavigation(
+    {
+      href: result.link,
+      headingId: result.headingId,
+      headingTitle: result.headingTitle,
+      flashHeading: true
+    },
+    event
+  )
+}
+
 function focusDesktopSearch() {
+  desktopSearchHistoryOpen.value = true
+  desktopSearchHistoryForceOpen.value = false
   nextTick(() => {
     searchInputRef.value?.focus()
   })
+}
+
+function handleDesktopSearchInputClick() {
+  if (
+    document.activeElement !== searchInputRef.value
+    || !searchQuery.value.trim()
+    || searchHistoryItems.value.length === 0
+  ) {
+    return
+  }
+
+  desktopSearchHistoryOpen.value = true
+  desktopSearchHistoryForceOpen.value = true
+}
+
+function handleDesktopSearchHistoryRemovePointerDown(event) {
+  event.preventDefault()
+}
+
+function handleDesktopSearchFieldFocusOut(event) {
+  const nextFocused = event.relatedTarget
+  if (nextFocused instanceof Element && nextFocused.closest('.site-header-search__field')) return
+  desktopSearchHistoryOpen.value = false
+  desktopSearchHistoryForceOpen.value = false
 }
 
 function closeGlobalSearch() {
@@ -1015,10 +1220,15 @@ function handleDesktopCommunityMenuDocumentClick(event) {
   const target = event.target
   if (!(target instanceof Element)) {
     closeDesktopCommunityMenu()
+    desktopSearchHistoryOpen.value = false
+    desktopSearchHistoryForceOpen.value = false
     return
   }
   if (target.closest('.site-nav__item--dropdown')) return
+  if (target.closest('.site-header-search__field')) return
   closeDesktopCommunityMenu()
+  desktopSearchHistoryOpen.value = false
+  desktopSearchHistoryForceOpen.value = false
 }
 
 function handleCommunityLinkClick(event, link) {
@@ -2560,6 +2770,7 @@ function handleBrowserGestureZoomGuard(e) {
 
 onMounted(() => {
   syncColorModeFromDocument()
+  syncSearchHistoryFromStorage()
   if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
     appearanceSchemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
     addAppearanceSchemeChangeListener(appearanceSchemeMediaQuery, handlePreferredColorSchemeChange)
@@ -2572,6 +2783,10 @@ onMounted(() => {
     processImageRows({ force: true })
     setPendingSearchHeading(window.location.hash)
     void applyPendingSearchHeading()
+
+    if (isSearchPage.value) {
+      focusSearchPageInput()
+    }
   })
   document.addEventListener('keydown', handleDocumentKeydown)
   document.addEventListener('click', handleVitepressPluginTabClick)
@@ -2599,7 +2814,7 @@ onMounted(() => {
   }
 
   router.onAfterRouteChange = async href => {
-    setPendingSearchHeading(getHashTargetFromHref(href), pendingSearchHeadingTitle)
+    setPendingSearchHeading(getHashTargetFromHref(href), pendingSearchHeadingTitle, pendingSearchHeadingFlash)
     await routerProgressPrevAfter?.(href)
     requestAnimationFrame(() => {
       completeRouteNavProgressByKey(routeNavComparableKey(href))
@@ -2657,6 +2872,7 @@ watch(
   () => page.value.relativePath,
   () => {
     searchQuery.value = ''
+    desktopSearchHistoryOpen.value = false
     closeMobileMenu()
     closeCommunityMenus()
 
@@ -2667,6 +2883,11 @@ watch(
       processContentActions()
       syncDesktopSidebarLayout()
       void applyPendingSearchHeading()
+
+      if (searchPageFocusPending && isSearchPage.value) {
+        searchPageFocusPending = false
+        focusSearchPageInput()
+      }
     })
   },
   { flush: 'post' }
@@ -3009,13 +3230,19 @@ watch(infoDialogVisible, async visible => {
                 </svg>
               </button>
             </div>
-            <div class="site-header-search__field">
+            <div
+              class="site-header-search__field"
+              :class="{ 'site-header-search__field--history-open': shouldShowDesktopSearchHistory }"
+              @focusin="desktopSearchHistoryOpen = true"
+              @focusout="handleDesktopSearchFieldFocusOut"
+            >
               <input
                 ref="searchInputRef"
                 v-model="searchQuery"
                 type="text"
                 :placeholder="desktopSearchPlaceholder"
                 aria-label="搜索内容"
+                @click="handleDesktopSearchInputClick"
               />
               <span
                 v-show="!searchQuery"
@@ -3029,6 +3256,21 @@ watch(infoDialogVisible, async visible => {
               <button type="button" class="site-header-search__icon" aria-label="聚焦搜索框" @click="focusDesktopSearch">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               </button>
+              <div v-if="shouldShowDesktopSearchHistory" class="desktop-search-tip-dropdown" aria-label="搜索历史记录">
+                <!-- <div class="desktop-search-tip-dropdown__title">搜索历史记录</div> -->
+                <div
+                  v-for="item in searchHistoryItems"
+                  :key="item.query"
+                  class="desktop-search-history-item"
+                >
+                  <button type="button" class="desktop-search-history-item__query" @click="reuseSearchHistory(item.query)">
+                    {{ item.query }}
+                  </button>
+                  <button type="button" class="desktop-search-history-item__remove" aria-label="删除搜索历史记录" @mousedown="handleDesktopSearchHistoryRemovePointerDown" @click.stop="removeSearchHistory(item.query)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -3126,26 +3368,6 @@ watch(infoDialogVisible, async visible => {
           @transitionend.self="onMobileNavTransitionEnd"
         >
           <div class="mobile-nav-inner">
-            <div class="mobile-nav-search" role="search">
-              <div class="mobile-search-box">
-                <input
-                  v-model="searchQuery"
-                  type="text"
-                  :placeholder="desktopSearchPlaceholder"
-                  aria-label="搜索内容"
-                />
-                <span
-                  v-show="!searchQuery"
-                  class="site-header-search__placeholder mobile-search-box__placeholder"
-                  :class="{ 'site-header-search__placeholder--animating': desktopSearchPlaceholderAnimating }"
-                  :style="desktopSearchPlaceholderAnimationStyle"
-                  aria-hidden="true"
-                >
-                  {{ desktopSearchPlaceholder }}
-                </span>
-                <svg class="mobile-search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              </div>
-            </div>
             <nav id="mobile-site-nav" class="site-nav mobile-nav-links" aria-label="移动端站点导航">
               <template v-for="link in navLinks" :key="link.href || link.label">
                 <a
@@ -3192,6 +3414,16 @@ watch(infoDialogVisible, async visible => {
                   </div>
                 </div>
               </template>
+              <a
+                class="site-nav__link mobile-nav__search-link"
+                :class="{ active: isSearchPage }"
+                :href="withBase('/search/')"
+                :aria-current="isSearchPage ? 'page' : undefined"
+                @click="handleMobileSearchClick($event)"
+              >
+                <span>搜索</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              </a>
             </nav>
           </div>
         </div>
@@ -3214,7 +3446,7 @@ watch(infoDialogVisible, async visible => {
 
     <!-- 点击遮罩关闭移动端菜单 -->
     <Transition name="mobile-nav-backdrop-fade">
-      <div v-if="menuOpen && !searchQuery.trim()" class="mobile-nav-backdrop" @click="closeMobileMenu"></div>
+      <div v-if="menuOpen" class="mobile-nav-backdrop" @click="closeMobileMenu"></div>
     </Transition>
 
     <button
@@ -3298,11 +3530,78 @@ watch(infoDialogVisible, async visible => {
           @enter="onDocPageEnter"
           @leave="onDocPageLeave"
         >
-          <div v-if="frontmatter.home && !searchQuery.trim()" key="vp-route-home">
+          <div v-if="frontmatter.home && !shouldShowSearchResults" key="vp-route-home">
             <Content />
           </div>
           <article
-            v-else-if="!searchQuery.trim()"
+            v-else-if="isSearchPage"
+            ref="docArticleRef"
+            key="vp-route-search-page"
+            class="doc-article search-page-article doc-article--padded"
+          >
+            <div class="search-page-search">
+              <h1 class="search-page-heading">搜索</h1>
+              <div class="search-page-search__box">
+                <div class="search-page-search__field">
+                  <input
+                    ref="searchPageInputRef"
+                    v-model="searchQuery"
+                    type="text"
+                    :placeholder="desktopSearchPlaceholder"
+                    aria-label="搜索内容"
+                  />
+                  <span
+                    v-show="!searchQuery"
+                    class="site-header-search__placeholder search-page-search__placeholder"
+                    :class="{ 'site-header-search__placeholder--animating': desktopSearchPlaceholderAnimating }"
+                    :style="desktopSearchPlaceholderAnimationStyle"
+                    aria-hidden="true"
+                  >
+                    {{ desktopSearchPlaceholder }}
+                  </span>
+                </div>
+                <button type="button" class="search-page-search__icon" aria-label="聚焦搜索框" @click="focusSearchPageInput">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
+              </div>
+            </div>
+
+            <section v-if="!searchQuery.trim()" class="search-page-tips">
+              <p class="search-page-tips__title">搜索历史记录</p>
+              <ol v-if="searchHistoryItems.length" class="search-page-tips__list">
+                <li v-for="item in searchHistoryItems" :key="item.query" class="search-page-tips__item">
+                  <button type="button" class="search-page-tips__link" @click="reuseSearchHistory(item.query)">
+                    {{ item.query }}
+                  </button>
+                </li>
+              </ol>
+              <p v-else class="search-results-empty">还没有搜索历史记录。</p>
+            </section>
+
+            <section v-else>
+              <h2 class="search-results-title">搜索结果（共{{ searchResults.length }}条）</h2>
+              <div class="search-results-list">
+                <a
+                  v-for="(res, index) in searchResults"
+                  :key="index"
+                  :href="withBase(res.link)"
+                  class="search-result-item"
+                  @click="handleResultClick(res, $event)"
+                >
+                  <p v-if="res.docTitle !== res.title" class="search-result-context">{{ res.docTitle }}</p>
+                  <h3 class="search-result-title">{{ res.title }}</h3>
+                  <p class="search-result-snippet">
+                    {{ res.snippetBefore }}<span class="search-highlight">{{ res.match }}</span>{{ res.snippetAfter }}
+                  </p>
+                </a>
+                <div v-if="searchResults.length === 0" class="search-results-empty">
+                  未找到包含 "{{ searchQuery }}" 的结果。
+                </div>
+              </div>
+            </section>
+          </article>
+          <article
+            v-else-if="!shouldShowSearchResults"
             ref="docArticleRef"
             :key="page.relativePath"
             class="doc-article doc-article--padded"
