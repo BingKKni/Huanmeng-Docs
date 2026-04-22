@@ -3,6 +3,7 @@ import { useData, useRouter, withBase, onContentUpdated } from 'vitepress'
 import { computed, onBeforeUnmount, onMounted, nextTick, ref, watch } from 'vue'
 import SidebarNavItem from './components/SidebarNavItem.vue'
 import { changelogSidebarLinks } from '../generated/changelog-sidebar.mjs'
+import { supportsDesktopSidebar, supportsTocSidebar } from './page-capabilities.js'
 
 
 const { site, frontmatter, page } = useData()
@@ -282,7 +283,7 @@ function scrollToToc(id) {
   scrollToHeading(id, { updateHash: true })
 }
 
-const shouldShowTOC = computed(() => !isMobileView.value && supportsTocSidebar.value && tocHeaders.value.length > 0)
+const shouldShowTOC = computed(() => !isMobileView.value && supportsCurrentPageTocSidebar.value && tocHeaders.value.length > 0)
 // --- Search Logic ---
 const SEARCH_INDEX_PATH = '/search-index.json'
 const SEARCH_HISTORY_STORAGE_KEY = 'hm-search-history'
@@ -896,8 +897,8 @@ const currentPageLabel = computed(() => {
 const isDocsSection = computed(() => page.value.relativePath.startsWith('docs/'))
 const isAboutSection = computed(() => page.value.relativePath.startsWith('about/'))
 const isChangelogSection = computed(() => page.value.relativePath.startsWith('changelog/'))
-const shouldShowDesktopSidebar = computed(() => isDocsSection.value || isAboutSection.value || isChangelogSection.value)
-const supportsTocSidebar = computed(() => isDocsSection.value || isAboutSection.value || isChangelogSection.value)
+const shouldShowDesktopSidebar = computed(() => supportsDesktopSidebar(page.value.relativePath))
+const supportsCurrentPageTocSidebar = computed(() => supportsTocSidebar(page.value.relativePath))
 const currentSidebarLinks = computed(() => {
   if (isDocsSection.value) return desktopSidebarLinks
   if (isAboutSection.value) return aboutSidebarLinks
