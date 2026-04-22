@@ -3263,7 +3263,7 @@ watch(infoDialogVisible, async visible => {
                   :key="item.query"
                   class="desktop-search-history-item"
                 >
-                  <button type="button" class="desktop-search-history-item__query" @click="reuseSearchHistory(item.query)">
+                  <button type="button" class="site-nav__dropdown-link desktop-search-history-item__query" @click="reuseSearchHistory(item.query)">
                     {{ item.query }}
                   </button>
                   <button type="button" class="desktop-search-history-item__remove" aria-label="删除搜索历史记录" @mousedown="handleDesktopSearchHistoryRemovePointerDown" @click.stop="removeSearchHistory(item.query)">

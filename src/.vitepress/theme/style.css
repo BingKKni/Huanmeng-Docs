@@ -2721,17 +2721,11 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
   min-width: 0;
   padding: 0.65rem 0.75rem;
   border: 0;
-  border-radius: 10px;
   background: var(--hm-bg-inset);
   color: var(--hm-text-1);
   font: inherit;
   text-align: left;
   cursor: pointer;
-}
-
-.desktop-search-history-item__query:hover {
-  background: var(--hm-accent-soft);
-  color: var(--hm-interactive-hover-text);
 }
 
 .desktop-search-history-item__query:focus {
