@@ -2,6 +2,7 @@ import { defineConfig } from 'vitepress'
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs'
 import colorTextPlugin from './plugins/colorText.js'
 import imageThumbnailPlugin from './plugins/imageThumbnail.mjs'
+import preserveBlankLinesPlugin from './plugins/preserveBlankLines.js'
 import tableEnhancePlugin from './plugins/tableEnhance.js'
 import markdownItAttrs from 'markdown-it-attrs'
 import { loadImageThumbnailManifest } from './image-thumbnail-utils.mjs'
@@ -37,6 +38,7 @@ export default defineConfig({
       md.set({ breaks: true })
       md.use(tabsMarkdownPlugin)
       md.use(colorTextPlugin)
+      md.use(preserveBlankLinesPlugin)
       md.use(tableEnhancePlugin)
       md.use(markdownItAttrs)
       md.use(imageThumbnailPlugin, { manifest: imageThumbnailManifest })

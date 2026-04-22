@@ -329,11 +329,6 @@ function renderSidebarModule(days) {
 
   return `export const changelogSidebarLinks = [
   {
-    href: '/changelog/',
-    label: '🏠 首页',
-    isActive: relativePath => relativePath === 'changelog/index.md'
-  },
-  {
     href: '/changelog/logs/',
     label: '🗓️ 日志',
     navigable: false,

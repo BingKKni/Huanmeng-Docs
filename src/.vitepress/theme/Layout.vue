@@ -715,7 +715,7 @@ const navLinks = [
     isActive: relativePath => relativePath === 'docs/index.md' || relativePath.startsWith('docs/')
   },
   {
-    href: '/changelog/',
+    href: '/changelog/latest',
     label: '更新日志',
     isActive: relativePath => relativePath === 'changelog/index.md' || relativePath.startsWith('changelog/')
   },

@@ -1499,6 +1499,7 @@ a:hover {
 
 .doc-article,
 .search-results-article {
+  --hm-doc-block-gap: 0.9rem;
   border-radius: 0;
   border: none;
   box-shadow: none;
@@ -1550,9 +1551,47 @@ a:hover {
   line-height: 1.75;
 }
 
+.doc-article p {
+  margin: var(--hm-doc-block-gap) 0;
+}
+
 .doc-article ol,
 .doc-article ul {
+  margin: var(--hm-doc-block-gap) 0;
   padding-left: 1.25rem;
+}
+
+.doc-article ol {
+  padding-left: 0;
+  list-style-position: inside;
+}
+
+.doc-article li+li {
+  margin-top: 0;
+}
+
+.doc-article li>p {
+  margin: calc(var(--hm-doc-block-gap) * 0.5) 0;
+}
+
+.doc-article li>p:first-child {
+  margin-top: 0;
+}
+
+.doc-article li>p:last-child {
+  margin-bottom: 0;
+}
+
+.doc-article li>ol,
+.doc-article li>ul {
+  margin: 0 0 0 1.25rem;
+}
+
+.doc-article .hm-extra-break,
+.search-results-article .hm-extra-break {
+  display: block;
+  height: calc(var(--hm-extra-break-lines, 1) * var(--hm-doc-block-gap));
+  margin: 0;
 }
 
 .doc-article a {
@@ -4325,9 +4364,20 @@ html.dark .custom-block.details {
    用 :has() 精确匹配"后面跟着列表"的元素，更改其底部 margin。 */
 .doc-article p:has(+ ul),
 .doc-article p:has(+ ol),
+.doc-article ul:has(+ p),
+.doc-article ol:has(+ p),
 .doc-article ol:has(+ ul),
 .doc-article ul:has(+ ol) {
   margin-bottom: 0.1rem;
+}
+
+.doc-article p+ul,
+.doc-article p+ol,
+.doc-article ul+p,
+.doc-article ol+p,
+.doc-article ol+ul,
+.doc-article ul+ol {
+  margin-top: 0.1rem;
 }
 
 /* ── 应用卡片网格系统 ── */
@@ -4340,6 +4390,51 @@ html.dark .custom-block.details {
 
 .app-card-grid>.app-card:only-child {
   grid-column: span 2;
+}
+
+.doc-next-btn {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 28px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background-color: #f1f3f5;
+  color: #495057 !important;
+  text-decoration: none !important;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.doc-next-btn__icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.doc-next-btn__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+@media (hover: hover) {
+  .doc-next-btn:hover {
+    background-color: #dee2e6;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .doc-next-btn {
+    max-width: none;
+  }
 }
 
 .emoji-avatar {
