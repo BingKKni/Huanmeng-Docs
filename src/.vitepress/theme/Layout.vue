@@ -1,289 +1,19 @@
 ﻿<script setup>
-import { useData, useRouter, withBase, onContentUpdated } from 'vitepress'
+import { useData, useRouter, withBase } from 'vitepress'
 import { computed, onBeforeUnmount, onMounted, nextTick, ref, watch } from 'vue'
 import SidebarNavItem from './components/SidebarNavItem.vue'
-import { changelogSidebarLinks } from '../generated/changelog-sidebar.mjs'
+import InfoDialog from './components/InfoDialog.vue'
+import LightboxOverlay from './components/LightboxOverlay.vue'
 import { supportsDesktopSidebar, supportsTocSidebar } from './page-capabilities.js'
+import { githubLink, getCurrentSidebarLinks, navLinks } from './navigation.js'
+import { useAppearance } from './composables/useAppearance.js'
+import { useDocContentEnhancements } from './composables/useDocContentEnhancements.js'
+import { useDocToc } from './composables/useDocToc.js'
+import { useInfoDialog } from './composables/useInfoDialog.js'
+import { useLightbox } from './composables/useLightbox.js'
 
-
-const { site, frontmatter, page } = useData()
+const { frontmatter, page } = useData()
 const router = useRouter()
-
-const tocHeaders = ref([])
-const activeTocId = ref('')
-const tocIndicatorStyle = ref({ transform: 'translateY(0)', height: '0', opacity: '0' })
-
-watch(activeTocId, async (newId) => {
-  if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767.98px)').matches) {
-    tocIndicatorStyle.value.opacity = '0'
-    return
-  }
-  if (!newId) {
-    tocIndicatorStyle.value.opacity = '0'
-    return
-  }
-  await nextTick()
-  try {
-    const idSelector = CSS.escape(newId)
-    const linkEl = document.querySelector(`.toc-nav .toc-link[href="#${idSelector}"]`) || document.querySelector(`.toc-nav .toc-link[href="#${newId}"]`)
-    if (linkEl) {
-      const pillHeight = 16
-      const pillVisualOffset = 0.5
-      const topOffset = Math.round(linkEl.offsetTop + (linkEl.offsetHeight - pillHeight) / 2 + pillVisualOffset)
-      tocIndicatorStyle.value = {
-        transform: `translateY(${topOffset}px)`,
-        height: `${pillHeight}px`,
-        opacity: '1'
-      }
-    } else {
-      tocIndicatorStyle.value.opacity = '0'
-    }
-  } catch(e) {
-    tocIndicatorStyle.value.opacity = '0'
-  }
-}, { immediate: true })
-
-function updateActiveToc() {
-  if (isMobileViewport()) {
-    activeTocId.value = ''
-    return
-  }
-
-  const headers = tocHeaders.value
-  if (headers.length === 0) {
-    activeTocId.value = ''
-    return
-  }
-  
-  // 增加触底检测：如果滚动到了页面底部，则直接选中最后一个标题
-  const scrollHeight = document.documentElement.scrollHeight
-  const scrollTop = window.scrollY
-  const clientHeight = document.documentElement.clientHeight
-  if (scrollTop + clientHeight >= scrollHeight - 30) {
-    activeTocId.value = headers[headers.length - 1].id
-    return
-  }
-
-  let currentId = ''
-  for (let i = 0; i < headers.length; i++) {
-    const el = document.getElementById(headers[i].id)
-    if (el) {
-      const top = el.getBoundingClientRect().top
-      if (top <= 120) { // 阈值调整，避开可能存在的加厚顶栏
-        currentId = headers[i].id
-      } else {
-        break
-      }
-    }
-  }
-  activeTocId.value = currentId
-}
-
-let tocScrollTimeout = null
-let tocScrollListening = false
-function handleTocScroll() {
-  if (isMobileViewport()) return
-  if (tocScrollTimeout) return
-  updateActiveToc()
-}
-
-function startTocScrollListener() {
-  if (typeof window === 'undefined' || tocScrollListening || isMobileViewport()) return
-  window.addEventListener('scroll', handleTocScroll, { passive: true })
-  tocScrollListening = true
-}
-
-function stopTocScrollListener() {
-  if (typeof window === 'undefined' || !tocScrollListening) return
-  window.removeEventListener('scroll', handleTocScroll)
-  tocScrollListening = false
-}
-
-function syncTocScrollListener() {
-  if (isMobileViewport()) {
-    stopTocScrollListener()
-    activeTocId.value = ''
-    tocIndicatorStyle.value.opacity = '0'
-    return
-  }
-
-  startTocScrollListener()
-  updateActiveToc()
-}
-
-onContentUpdated(() => {
-  if (!docArticleRef.value) {
-    tocHeaders.value = []
-    activeTocId.value = ''
-    return
-  }
-  const headings = Array.from(docArticleRef.value.querySelectorAll('h1, h2, h3, h4'))
-  if (headings.length === 0) {
-    tocHeaders.value = []
-    activeTocId.value = ''
-    return
-  }
-  tocHeaders.value = headings.map(h => {
-    let title = h.textContent.trim()
-    if (title.endsWith('#')) title = title.substring(0, title.length - 1).trim()
-    return {
-      id: h.id,
-      level: parseInt(h.tagName.charAt(1)),
-      title: title
-    }
-  })
-  nextTick(() => {
-    syncTocScrollListener()
-    void applyPendingSearchHeading()
-  })
-})
-
-function easeInOutQuint(t) {
-  return t < 0.5 ? 16 * t * t * t * t * t : 1 - Math.pow(-2 * t + 2, 5) / 2;
-}
-
-function smoothScrollTo(endY, duration, callback) {
-  const startY = window.scrollY;
-  const distanceY = endY - startY;
-  const startTime = performance.now();
-
-  function step(time) {
-    const elapsed = time - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    const ease = easeInOutQuint(progress);
-    
-    window.scrollTo(0, startY + distanceY * ease);
-
-    if (progress < 1) {
-      requestAnimationFrame(step);
-    } else {
-      if (callback) callback();
-    }
-  }
-  requestAnimationFrame(step);
-}
-
-function normalizeHashTarget(hash) {
-  if (!hash) return ''
-  const raw = hash.startsWith('#') ? hash.slice(1) : hash
-  try {
-    return decodeURIComponent(raw)
-  } catch {
-    return raw
-  }
-}
-
-function getHashTargetFromHref(href) {
-  try {
-    return normalizeHashTarget(new URL(href, window.location.href).hash)
-  } catch {
-    return normalizeHashTarget(href.split('#')[1] || '')
-  }
-}
-
-function getActiveDocArticle() {
-  const article = docArticleRef.value
-  if (article && !article.classList.contains('search-results-article')) {
-    return article
-  }
-
-  return document.querySelector('article.doc-article:not(.search-results-article)')
-}
-
-function normalizeHeadingText(text) {
-  return String(text || '')
-    .replace(/\s+#$/, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-function findHeadingElement(id, title = '') {
-  const normalizedId = normalizeHashTarget(id)
-  const article = getActiveDocArticle()
-  if (!article) return null
-
-  if (normalizedId) {
-    const byId = article.querySelector(`#${CSS.escape(normalizedId)}`) || document.getElementById(normalizedId)
-    if (byId && article.contains(byId)) return byId
-  }
-
-  const normalizedTitle = normalizeHeadingText(title)
-  if (!normalizedTitle) return null
-
-  const headings = article.querySelectorAll('h1, h2, h3, h4, h5, h6')
-
-  for (const heading of headings) {
-    if (normalizeHeadingText(heading.textContent) === normalizedTitle) {
-      return heading
-    }
-  }
-
-  return null
-}
-
-function flashHeading(el) {
-  el.classList.remove('heading-flash')
-  void el.offsetWidth
-  el.classList.add('heading-flash')
-  setTimeout(() => {
-    el.classList.remove('heading-flash')
-  }, 1200)
-}
-
-function scrollToHeading(id, { updateHash = false, fallbackTitle = '', instant = false, flash = true } = {}) {
-  const el = findHeadingElement(id, fallbackTitle)
-  if (!el) return false
-
-  const targetId = el.id || normalizeHashTarget(id)
-
-  if (tocScrollTimeout) clearTimeout(tocScrollTimeout)
-  if (targetId && tocHeaders.value.some(header => header.id === targetId)) {
-    activeTocId.value = targetId
-  }
-
-  const top = el.getBoundingClientRect().top + window.scrollY - 120
-  const distance = Math.abs(top - window.scrollY)
-  const duration = Math.min(Math.max(distance * 0.25, 300), 650)
-
-  if (instant) {
-    window.scrollTo(0, top)
-    if (updateHash) {
-      const url = new URL(window.location.href)
-      url.hash = targetId
-      window.history.replaceState(null, '', url)
-    }
-    if (flash) {
-      flashHeading(el)
-    }
-    tocScrollTimeout = setTimeout(() => {
-      tocScrollTimeout = null
-    }, 50)
-    return true
-  }
-
-  smoothScrollTo(top, duration, () => {
-    if (updateHash) {
-      const url = new URL(window.location.href)
-      url.hash = targetId
-      window.history.replaceState(null, '', url)
-    }
-    if (flash) {
-      flashHeading(el)
-    }
-  })
-
-  tocScrollTimeout = setTimeout(() => {
-    tocScrollTimeout = null
-  }, duration + 50)
-
-  return true
-}
-
-function scrollToToc(id) {
-  scrollToHeading(id, { updateHash: true })
-}
-
-const shouldShowTOC = computed(() => !isMobileView.value && supportsCurrentPageTocSidebar.value && tocHeaders.value.length > 0)
 // --- Search Logic ---
 const SEARCH_INDEX_PATH = '/search-index.json'
 const SEARCH_HISTORY_STORAGE_KEY = 'hm-search-history'
@@ -292,16 +22,7 @@ const searchQuery = ref('')
 const searchInputRef = ref(null)
 const searchPageInputRef = ref(null)
 const globalSearchModalActive = ref(false)
-const globalSearchInputRef = ref(null)
-const APPEARANCE_MODE_SEQUENCE = ['auto', 'light', 'dark']
-const APPEARANCE_MODE_LABELS = {
-  auto: '跟随设备',
-  light: '浅色模式',
-  dark: '深色模式'
-}
-
-const isDarkMode = ref(false)
-const appearanceMode = ref('auto')
+const { isDarkMode, appearanceMode, appearanceButtonLabel, toggleColorMode } = useAppearance()
 const searchIndex = ref([])
 const searchIndexLoaded = ref(false)
 const searchHistoryItems = ref([])
@@ -681,230 +402,10 @@ function closeGlobalSearch() {
   globalSearchModalActive.value = false
   searchQuery.value = ''
 }
-
-
-const APPEARANCE_STORAGE_KEY = 'vitepress-theme-appearance'
-let appearanceSchemeMediaQuery = null
-
-function normalizeAppearanceMode(mode) {
-  return APPEARANCE_MODE_SEQUENCE.includes(mode) ? mode : 'auto'
-}
-
-const nextAppearanceMode = computed(() => {
-  const currentIndex = APPEARANCE_MODE_SEQUENCE.indexOf(appearanceMode.value)
-  const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % APPEARANCE_MODE_SEQUENCE.length
-  return APPEARANCE_MODE_SEQUENCE[nextIndex]
-})
-
-const appearanceButtonLabel = computed(() => {
-  const currentLabel = APPEARANCE_MODE_LABELS[appearanceMode.value]
-  const nextLabel = APPEARANCE_MODE_LABELS[nextAppearanceMode.value]
-  return `当前${currentLabel}，点击切换到${nextLabel}`
-})
-const githubLink = {
-  href: 'https://github.com/BingKKni/Huanmeng-Docs',
-  label: 'Github',
-  isExternal: true,
-  isActive: () => false
-}
-
-const navLinks = [
-  { href: '/', label: '首页', isActive: relativePath => relativePath === 'index.md' },
-  {
-    href: '/docs/',
-    label: '使用文档',
-    isActive: relativePath => relativePath === 'docs/index.md' || relativePath.startsWith('docs/')
-  },
-  {
-    href: '/changelog/latest',
-    label: '更新日志',
-    isActive: relativePath => relativePath === 'changelog/index.md' || relativePath.startsWith('changelog/')
-  },
-  {
-    href: '/about/',
-    label: '更多',
-    isActive: relativePath => relativePath === 'about/index.md' || relativePath.startsWith('about/')
-  },
-  {
-    label: '社区',
-    isActive: () => false,
-    children: [
-      {
-        href: 'https://qm.qq.com/q/6lmTZCS0SY',
-        label: 'QQ群',
-        isExternal: true,
-        confirmTitle: '二次确认',
-        confirmMessage: '即将跳转到QQ幻梦官方群，是否继续？',
-        confirmLabel: '确认'
-      },
-      {
-        href: 'https://pd.qq.com/s/13nxjzopi',
-        label: 'QQ频道',
-        isExternal: true,
-        confirmTitle: '二次确认',
-        confirmMessage: '即将跳转到QQ幻梦官方频道，是否继续？',
-        confirmLabel: '确认'
-      },
-      {
-        href: 'https://space.bilibili.com/454289878',
-        label: 'BiliBili',
-        isExternal: true,
-        confirmTitle: '二次确认',
-        confirmMessage: '即将跳转到QQ布丁开发者B站空间，是否继续？',
-        confirmLabel: '确认'
-      }
-    ]
-  }
-]
-
-/* 侧边栏定义 */
-const desktopSidebarLinks = [
-  { href: '/docs/', label: '🏠 首页', isActive: relativePath => relativePath === 'docs/index.md' },
-  // 娱乐功能
-  { 
-    href: '/docs/entertainment/', 
-    label: '✨ 娱乐功能', 
-    isActive: relativePath => relativePath === 'docs/entertainment/index.md',
-    hasAnyActive: relativePath => relativePath === 'docs/entertainment/index.md' || relativePath.startsWith('docs/entertainment/'),
-    children: [
-      { href: '/docs/entertainment/signin', label: '打卡', isActive: relativePath => relativePath === 'docs/entertainment/signin.md' },
-      { href: '/docs/entertainment/fortune', label: '今日运势', isActive: relativePath => relativePath === 'docs/entertainment/fortune.md' },
-      {
-        href: '/docs/entertainment/daily_wife/',
-        label: '今日老婆',
-        isActive: relativePath => relativePath === 'docs/entertainment/daily_wife/index.md',
-        hasAnyActive: relativePath => relativePath.startsWith('docs/entertainment/daily_wife/'),
-        children: [
-          {
-            href: '/docs/entertainment/daily_wife/preference',
-            label: '喜欢/不喜欢',
-            isActive: relativePath => relativePath === 'docs/entertainment/daily_wife/preference.md'
-          },
-          {
-            href: '/docs/entertainment/daily_wife/item_definite_integral_usage',
-            label: '定积分券核销',
-            isActive: relativePath => relativePath === 'docs/entertainment/daily_wife/item_definite_integral_usage.md'
-          },
-          {
-            href: '/docs/entertainment/daily_wife/item_indefinite_integral_usage',
-            label: '不定积分券核销',
-            isActive: relativePath => relativePath === 'docs/entertainment/daily_wife/item_indefinite_integral_usage.md'
-          }
-        ]
-      },
-      { href: '/docs/entertainment/sence', label: '好感度', isActive: relativePath => relativePath === 'docs/entertainment/sence.md' },
-      {
-        href: '/docs/entertainment/catch_the_cat/',
-        label: '圈小猫',
-        isActive: relativePath => relativePath === 'docs/entertainment/catch_the_cat/index.md',
-        hasAnyActive: relativePath => relativePath.startsWith('docs/entertainment/catch_the_cat/'),
-        children: [
-          {
-            href: '/docs/entertainment/catch_the_cat/multiplayer',
-            label: '多人模式',
-            isActive: relativePath => relativePath === 'docs/entertainment/catch_the_cat/multiplayer.md'
-          }
-        ]
-      },
-      { href: '/docs/entertainment/random_image', label: '随机图', isActive: relativePath => relativePath === 'docs/entertainment/random_image.md' },
-      { href: '/docs/entertainment/flop', label: '翻牌', isActive: relativePath => relativePath === 'docs/entertainment/flop.md' },
-      { href: '/docs/entertainment/fastmath', label: '速算', isActive: relativePath => relativePath === 'docs/entertainment/fastmath.md' },
-      { href: '/docs/entertainment/minesweeper', label: '扫雷', isActive: relativePath => relativePath === 'docs/entertainment/minesweeper.md' },
-      { href: '/docs/entertainment/password_cracker', label: '破译', isActive: relativePath => relativePath === 'docs/entertainment/password_cracker.md' },
-      { href: '/docs/entertainment/twenty_four_points', label: '二十四点', isActive: relativePath => relativePath === 'docs/entertainment/twenty_four_points.md' },
-      { href: '/docs/entertainment/paint_bomb', label: '油漆炸弹', isActive: relativePath => relativePath === 'docs/entertainment/paint_bomb.md' },
-      { href: '/docs/entertainment/word_chain', label: '词汇接龙', isActive: relativePath => relativePath === 'docs/entertainment/word_chain.md' }
-    ]
-  },
-  // 三角洲
-  { 
-    href: '/docs/delta_force/', 
-    label: '🗺️ 三角洲行动攻略', 
-    isActive: relativePath => relativePath === 'docs/delta_force/index.md',
-    hasAnyActive: relativePath => relativePath === 'docs/delta_force/index.md' || relativePath.startsWith('docs/delta_force/'),
-    children: [
-      { href: '/docs/delta_force/password', label: '每日密码门位置', isActive: relativePath => relativePath === 'docs/delta_force/password.md' }
-    ]
-  }
-]
-
-// 更多
-const aboutSidebarLinks = [
-  {
-    href: '/about/',
-    label: '🏠 首页',
-    isActive: relativePath => relativePath === 'about/index.md'
-  },
-  {
-    href: '/about/rule/',
-    label: '✅ 规则中心',
-    isActive: relativePath => relativePath === 'about/rule/index.md',
-    hasAnyActive: relativePath => relativePath.startsWith('about/rule/index.md'),
-    children: [
-      {
-        href: '/about/rule/user',
-        label: '用户准则',
-        isActive: relativePath => relativePath === 'about/rule/user.md'
-      },
-      {
-        href: '/about/rule/image',
-        label: '图片使用声明',
-        isActive: relativePath => relativePath === 'about/rule/image.md'
-      }
-    ]
-  },
-  {
-    href: '/about/contribution/',
-    label: '📝 贡献指南',
-    isActive: relativePath => relativePath === 'about/contribution/index.md',
-    hasAnyActive: relativePath => relativePath.startsWith('about/contribution/'),
-    children: [
-      {
-        href: '/about/contribution/custom_systax',
-        label: '自定义语法',
-        isActive: relativePath => relativePath === 'about/contribution/custom_systax.md'
-      },
-      {
-        href: '/about/contribution/markdown_systax',
-        label: 'Markdown语法',
-        isActive: relativePath => relativePath === 'about/contribution/markdown_systax.md'
-      }
-    ]
-  },
-  // FAQ
-  { 
-    href: '/about/faq/', 
-    label: '❓ 常见问题FAQ', 
-    isActive: relativePath => relativePath === 'about/faq/index.md',
-    hasAnyActive: relativePath => relativePath === 'about/faq/index.md' || relativePath.startsWith('about/faq/'),
-    children: [
-      { href: '/about/faq/appeal', label: '封禁申诉', isActive: relativePath => relativePath === 'about/faq/appeal.md' }
-    ]
-  },
-  { href: '/about/support', label: '🧋 支持幻梦', isActive: relativePath => relativePath === 'about/support.md' },
-]
-
 const currentYear = new Date().getFullYear()
-/** 文档/首页切换时驱动淡入淡出（与导航切换同一套 key） */
-const docContentTransitionKey = computed(() =>
-  frontmatter.value.home ? 'vp-route-home' : page.value.relativePath
-)
-
-const currentPageLabel = computed(() => {
-  const activeLink = navLinks.find(link => link.isActive(page.value.relativePath))
-  return activeLink?.label || page.value.title || site.value.title
-})
-const isDocsSection = computed(() => page.value.relativePath.startsWith('docs/'))
-const isAboutSection = computed(() => page.value.relativePath.startsWith('about/'))
-const isChangelogSection = computed(() => page.value.relativePath.startsWith('changelog/'))
 const shouldShowDesktopSidebar = computed(() => supportsDesktopSidebar(page.value.relativePath))
 const supportsCurrentPageTocSidebar = computed(() => supportsTocSidebar(page.value.relativePath))
-const currentSidebarLinks = computed(() => {
-  if (isDocsSection.value) return desktopSidebarLinks
-  if (isAboutSection.value) return aboutSidebarLinks
-  if (isChangelogSection.value) return changelogSidebarLinks
-  return []
-})
+const currentSidebarLinks = computed(() => getCurrentSidebarLinks(page.value.relativePath))
 
 const mobileSidebarOpen = ref(false)
 const desktopSidebarCollapsed = ref(false)
@@ -919,83 +420,57 @@ const mobileHeaderElevated = ref(false)
 const isMobileView = ref(false)
 const sidebarSpaceEnough = ref(true)
 
-const lightboxSrc = ref('')
-const lightboxVisible = ref(false)
-const lightboxScale = ref(1)
-const lightboxOffsetX = ref(0)
-const lightboxOffsetY = ref(0)
-const lightboxImageTransition = ref('transform 0.18s ease')
-const lightboxPhase = ref('closed')
-const lightboxBackdropOpacity = ref(0)
-const lightboxRootRef = ref(null)
-const lightboxFlipRef = ref(null)
-const lightboxImgRef = ref(null)
 /** 文档页 `<article class="doc-article">`，避免 `querySelector` 命中过渡中错误的节点 */
 const docArticleRef = ref(null)
 const siteHeaderRef = ref(null)
 const mainContainerRef = ref(null)
-const infoDialogVisible = ref(false)
-const infoDialogTitle = ref('信息')
-const infoDialogMessage = ref('')
-const infoDialogShowCancel = ref(false)
-const infoDialogConfirmLabel = ref('确定')
-let infoDialogOnConfirm = null
-const infoDialogConfirmButton = ref(null)
+const infoDialogRef = ref(null)
+const {
+  infoDialogVisible,
+  infoDialogTitle,
+  infoDialogMessage,
+  infoDialogShowCancel,
+  infoDialogConfirmLabel,
+  openInfoDialog,
+  closeInfoDialog,
+  handleInfoDialogConfirm
+} = useInfoDialog()
+
+function isMobileViewport() {
+  return isMobileView.value
+}
+
+const {
+  lightboxSrc,
+  lightboxVisible,
+  lightboxScale,
+  lightboxOffsetX,
+  lightboxOffsetY,
+  lightboxImageTransition,
+  lightboxPhase,
+  lightboxBackdropOpacity,
+  lightboxRootRef,
+  lightboxFlipRef,
+  lightboxImgRef,
+  syncLightboxScale,
+  openLightbox,
+  forceCloseLightbox,
+  startLightboxCloseAnimation,
+  handleLightboxClick,
+  handleDesktopLightboxWheel,
+  handleLightboxTouchStart,
+  handleLightboxTouchMove,
+  handleLightboxTouchEnd,
+  handleLightboxTouchCancel
+} = useLightbox({ isMobileViewport })
 const MOBILE_MEDIA_QUERY = '(max-width: 767.98px)'
 /** 与 style.css 中桌面侧栏媒体查询一致 */
 const DESKTOP_SIDEBAR_MEDIA_QUERY = '(min-width: 992px)'
 const DESKTOP_SIDEBAR_WIDTH_PX = 256
-const DESKTOP_SIDEBAR_SHIFT_X = -30 // Not used anymore but kept to avoid breaking other things if any
-const DESKTOP_SIDEBAR_GAP = 40
-const DESKTOP_SIDEBAR_SHIFT_Y = 0
 /** 与 style.css 中 .mobile-nav 的 grid-template-rows 时长一致 */
 const MOBILE_NAV_PANEL_MS = 300
 const MOBILE_NAV_CLOSE_FALLBACK_MS = MOBILE_NAV_PANEL_MS + 100
 const MOBILE_HEADER_SCROLL_DELTA = 8
-const LIGHTBOX_SCALE_MIN = 1
-const MOBILE_LIGHTBOX_SCALE_MAX = 4
-const MOBILE_LIGHTBOX_DOUBLE_TAP_SCALE = 2.5
-const DESKTOP_LIGHTBOX_SCALE_MAX = 4
-const DESKTOP_LIGHTBOX_SCALE_STEP = 0.2
-const LIGHTBOX_DOUBLE_TAP_DELAY_MS = 280
-const LIGHTBOX_GESTURE_CLICK_SUPPRESS_MS = 360
-const LIGHTBOX_DRAG_START_THRESHOLD_PX = 4
-/** 遮罩最深约 50% 黑 */
-const LIGHTBOX_OVERLAY_MAX = 0.5
-/** 灯箱打开：位移 + 遮罩淡入 */
-const LIGHTBOX_OPEN_ANIM_MS = 300
-/** 灯箱关闭：位移 + 遮罩淡出（可单独比打开更短） */
-const LIGHTBOX_CLOSE_ANIM_MS = 150
-/** 打开：略先快后慢，落地柔和 */
-const LIGHTBOX_ANIM_EASE = 'cubic-bezier(0.22, 0.82, 0.24, 1)'
-/**
- * 关闭：先快后更快（ease-in）。cubic-bezier(x1,y1,x2,y2)；
- */
-const LIGHTBOX_CLOSE_ANIM_EASE = 'cubic-bezier(0.18, 0, 1, 1)'
-
-/** flip 同时 transform + opacity，打开/关闭各自用各自的 ms 和 ease */
-function lightboxOpenFlipTransition() {
-  const d = LIGHTBOX_OPEN_ANIM_MS
-  const e = LIGHTBOX_ANIM_EASE
-  return `transform ${d}ms ${e}, opacity ${d}ms ${e}`
-}
-
-function lightboxCloseFlipTransition() {
-  const d = LIGHTBOX_CLOSE_ANIM_MS
-  const e = LIGHTBOX_CLOSE_ANIM_EASE
-  return `transform ${d}ms ${e}, opacity ${d}ms ${e}`
-}
-
-/** 非 FLIP 时仅淡入/淡出，仍共用对应 ms、ease */
-function lightboxOpenOpacityOnlyTransition() {
-  return `opacity ${LIGHTBOX_OPEN_ANIM_MS}ms ${LIGHTBOX_ANIM_EASE}`
-}
-
-function lightboxCloseOpacityOnlyTransition() {
-  return `opacity ${LIGHTBOX_CLOSE_ANIM_MS}ms ${LIGHTBOX_CLOSE_ANIM_EASE}`
-}
-
-const COPY_BUTTON_RESET_DELAY = 4000
 const NAV_ROUTE_PROGRESS_START_MS = 0
 const NAV_ROUTE_PROGRESS_PER_SECOND = 60
 const NAV_ROUTE_PROGRESS_CAP = 90
@@ -1023,26 +498,43 @@ const desktopSearchPlaceholderAnimationStyle = {
 }
 let lastScrollY = 0
 let bodyScrollLocked = false
-/** 点击打开时的文档内图片，关闭时优先用其最新 getBoundingClientRect */
-let lightboxOriginImg = null
-/** 打开瞬间的缩略图矩形，源节点已不在 DOM 时作为退路 */
-let thumbRectSnapshot = { left: 0, top: 0, width: 0, height: 0 }
-let lightboxPinching = false
-let lightboxPinchLastDistance = 0
-let lightboxPinchLastMidpoint = null
-let lightboxLastTapAt = 0
-let lightboxSuppressClickUntil = 0
-let lightboxDragging = false
-let lightboxDragMoved = false
-let lightboxDragFromPinch = false
-let lightboxDragStartX = 0
-let lightboxDragStartY = 0
-let lightboxDragStartOffsetX = 0
-let lightboxDragStartOffsetY = 0
 let previousBodyOverflow = ''
-let imageRowProcessFrame = 0
-let imageRowForceProcess = false
 let docPageEnterInProgress = false
+const {
+  processContentActions,
+  bindLightboxTriggers,
+  scheduleImageRowProcessing,
+  handleVitepressPluginTabClick,
+  prepareImageRows,
+  processImageRows,
+  processImageRowsAsync,
+  cleanupDocContentEnhancements
+} = useDocContentEnhancements({
+  docArticleRef,
+  openLightbox,
+  openInfoDialog
+})
+
+const {
+  tocHeaders,
+  activeTocId,
+  tocIndicatorStyle,
+  shouldShowTOC,
+  syncTocScrollListener,
+  stopTocScrollListener,
+  cleanupToc,
+  scrollToHeading,
+  scrollToToc,
+  normalizeHashTarget,
+  getHashTargetFromHref,
+  normalizeHeadingText
+} = useDocToc({
+  docArticleRef,
+  isMobileView,
+  supportsCurrentPageTocSidebar,
+  onContentReady: () => applyPendingSearchHeading()
+})
+
 // -- 手势状态（侧边栏滑动 + 顶部过滑触发菜单）--------------------------
 /** 手势触点起始位置 */
 let swipeTouchStartX = 0
@@ -1061,7 +553,6 @@ let lastFastTapZoomGuardAt = 0
 let lastFastTapZoomGuardX = 0
 let lastFastTapZoomGuardY = 0
 let lastFastTapZoomGuardControl = null
-const copyButtonResetTimers = new Map()
 
 /** 移动端文档切换顶部进度条（不占文档流） */
 const navRouteProgress = ref(0)
@@ -1248,10 +739,6 @@ function handleCommunityLinkClick(event, link) {
   )
 }
 
-function isMobileViewport() {
-  return isMobileView.value
-}
-
 function isIOSWebKitZoomSurface() {
   if (typeof navigator === 'undefined') return false
   const ua = navigator.userAgent
@@ -1268,105 +755,6 @@ function findFastTapZoomGuardControl(target) {
 
 function shouldPreventBrowserGestureZoom(target) {
   return !(target instanceof Element && target.closest('.hm-lightbox__content'))
-}
-
-function syncColorModeFromDocument() {
-  if (typeof document === 'undefined') return
-  appearanceMode.value = normalizeAppearanceMode(getStoredAppearanceMode() ?? 'auto')
-  const dark = document.documentElement.classList.contains('dark')
-  isDarkMode.value = dark
-  document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
-}
-
-function getStoredAppearanceMode() {
-  if (typeof window === 'undefined') return null
-  try {
-    const stored = window.localStorage.getItem(APPEARANCE_STORAGE_KEY)
-    return stored == null ? null : normalizeAppearanceMode(stored)
-  } catch {
-    return null
-  }
-}
-
-/** 用户未在本地固定主题时，跟随系统浅色 / 深色。 */
-function shouldFollowSystemAppearance() {
-  return normalizeAppearanceMode(getStoredAppearanceMode() ?? 'auto') === 'auto'
-}
-
-function applyResolvedColorMode(shouldUseDark) {
-  if (typeof document === 'undefined') return
-  document.documentElement.classList.toggle('dark', shouldUseDark)
-  document.documentElement.style.colorScheme = shouldUseDark ? 'dark' : 'light'
-  isDarkMode.value = shouldUseDark
-}
-
-function applySystemAppearanceToDocument() {
-  if (typeof document === 'undefined' || typeof window === 'undefined') return
-  if (!shouldFollowSystemAppearance()) return
-  appearanceMode.value = 'auto'
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-  applyResolvedColorMode(prefersDark)
-}
-
-function handlePreferredColorSchemeChange() {
-  applySystemAppearanceToDocument()
-}
-
-function setColorMode(mode, { persist = true } = {}) {
-  if (typeof document === 'undefined') return
-
-  const normalizedMode = normalizeAppearanceMode(mode)
-  appearanceMode.value = normalizedMode
-
-  if (normalizedMode === 'auto') {
-    const prefersDark = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
-      ? window.matchMedia('(prefers-color-scheme: dark)').matches
-      : false
-    applyResolvedColorMode(prefersDark)
-
-    if (!persist) return
-    try {
-      window.localStorage.setItem(APPEARANCE_STORAGE_KEY, normalizedMode)
-    } catch {
-      /* ignore storage failures */
-    }
-    return
-  }
-
-  applyResolvedColorMode(normalizedMode === 'dark')
-
-  if (!persist) return
-  try {
-    window.localStorage.setItem(APPEARANCE_STORAGE_KEY, normalizedMode)
-  } catch {
-    /* ignore storage failures */
-  }
-}
-
-function toggleColorMode() {
-  setColorMode(nextAppearanceMode.value)
-}
-
-function addAppearanceSchemeChangeListener(mediaQueryList, listener) {
-  if (!mediaQueryList) return
-  if (typeof mediaQueryList.addEventListener === 'function') {
-    mediaQueryList.addEventListener('change', listener)
-    return
-  }
-  if (typeof mediaQueryList.addListener === 'function') {
-    mediaQueryList.addListener(listener)
-  }
-}
-
-function removeAppearanceSchemeChangeListener(mediaQueryList, listener) {
-  if (!mediaQueryList) return
-  if (typeof mediaQueryList.removeEventListener === 'function') {
-    mediaQueryList.removeEventListener('change', listener)
-    return
-  }
-  if (typeof mediaQueryList.removeListener === 'function') {
-    mediaQueryList.removeListener(listener)
-  }
 }
 
 function syncViewportMode() {
@@ -1477,148 +865,6 @@ function closeSidebar() {
   desktopSidebarCollapsed.value = true
 }
 
-function clampLightboxScale(scale) {
-  const maxScale = isMobileViewport()
-    ? MOBILE_LIGHTBOX_SCALE_MAX
-    : DESKTOP_LIGHTBOX_SCALE_MAX
-
-  return Math.min(Math.max(scale, LIGHTBOX_SCALE_MIN), maxScale)
-}
-
-function resetLightboxGestureState() {
-  lightboxImageTransition.value = 'transform 0.18s ease'
-  lightboxOffsetX.value = 0
-  lightboxOffsetY.value = 0
-  lightboxPinching = false
-  lightboxPinchLastDistance = 0
-  lightboxPinchLastMidpoint = null
-  lightboxLastTapAt = 0
-  lightboxSuppressClickUntil = 0
-  lightboxDragging = false
-  lightboxDragMoved = false
-  lightboxDragFromPinch = false
-  lightboxDragStartX = 0
-  lightboxDragStartY = 0
-  lightboxDragStartOffsetX = 0
-  lightboxDragStartOffsetY = 0
-}
-
-function suppressLightboxClick() {
-  lightboxSuppressClickUntil = Date.now() + LIGHTBOX_GESTURE_CLICK_SUPPRESS_MS
-}
-
-function getLightboxViewportSize() {
-  const root = lightboxRootRef.value
-  if (!root) {
-    return {
-      width: window.innerWidth,
-      height: window.innerHeight
-    }
-  }
-
-  const rect = root.getBoundingClientRect()
-  const style = window.getComputedStyle(root)
-  const horizontalPadding = (Number.parseFloat(style.paddingLeft) || 0) + (Number.parseFloat(style.paddingRight) || 0)
-  const verticalPadding = (Number.parseFloat(style.paddingTop) || 0) + (Number.parseFloat(style.paddingBottom) || 0)
-
-  return {
-    width: Math.max(rect.width - horizontalPadding, 0),
-    height: Math.max(rect.height - verticalPadding, 0)
-  }
-}
-
-function clampLightboxOffset(x, y, scale = lightboxScale.value) {
-  const img = lightboxImgRef.value
-  if (!img || scale <= LIGHTBOX_SCALE_MIN) {
-    return { x: 0, y: 0 }
-  }
-
-  const baseWidth = img.offsetWidth || img.clientWidth
-  const baseHeight = img.offsetHeight || img.clientHeight
-  if (baseWidth < 2 || baseHeight < 2) {
-    return { x, y }
-  }
-
-  const viewport = getLightboxViewportSize()
-  const maxOffsetX = Math.max((baseWidth * scale - viewport.width) / 2, 0)
-  const maxOffsetY = Math.max((baseHeight * scale - viewport.height) / 2, 0)
-
-  return {
-    x: Math.min(Math.max(x, -maxOffsetX), maxOffsetX),
-    y: Math.min(Math.max(y, -maxOffsetY), maxOffsetY)
-  }
-}
-
-function setLightboxOffset(x, y, scale = lightboxScale.value) {
-  const next = clampLightboxOffset(x, y, scale)
-  lightboxOffsetX.value = Number(next.x.toFixed(2))
-  lightboxOffsetY.value = Number(next.y.toFixed(2))
-}
-
-function zoomLightboxAroundPoint(nextScale, clientX, clientY) {
-  const previousScale = lightboxScale.value
-  const clampedScale = clampLightboxScale(nextScale)
-
-  if (Math.abs(clampedScale - previousScale) < 0.001) {
-    if (clampedScale <= LIGHTBOX_SCALE_MIN) {
-      setLightboxOffset(0, 0, LIGHTBOX_SCALE_MIN)
-    }
-    return
-  }
-
-  if (clampedScale <= LIGHTBOX_SCALE_MIN) {
-    lightboxScale.value = LIGHTBOX_SCALE_MIN
-    setLightboxOffset(0, 0, LIGHTBOX_SCALE_MIN)
-    return
-  }
-
-  const img = lightboxImgRef.value
-  if (!img) {
-    lightboxScale.value = clampedScale
-    return
-  }
-
-  const rect = img.getBoundingClientRect()
-  const centerX = rect.left + rect.width / 2
-  const centerY = rect.top + rect.height / 2
-  const ratio = clampedScale / previousScale
-  const nextOffsetX = lightboxOffsetX.value + (1 - ratio) * (clientX - centerX)
-  const nextOffsetY = lightboxOffsetY.value + (1 - ratio) * (clientY - centerY)
-
-  lightboxScale.value = clampedScale
-  setLightboxOffset(nextOffsetX, nextOffsetY, clampedScale)
-}
-
-function getTouchDistance(touches) {
-  if (touches.length < 2) return 0
-
-  const first = touches[0]
-  const second = touches[1]
-  return Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY)
-}
-
-function getTouchesMidpoint(touches) {
-  if (touches.length < 2) return null
-
-  const first = touches[0]
-  const second = touches[1]
-  return {
-    x: (first.clientX + second.clientX) / 2,
-    y: (first.clientY + second.clientY) / 2
-  }
-}
-
-function syncLightboxScale() {
-  if (!lightboxVisible.value) return
-  const nextScale = clampLightboxScale(lightboxScale.value)
-  lightboxScale.value = nextScale
-  if (nextScale <= LIGHTBOX_SCALE_MIN) {
-    setLightboxOffset(0, 0, LIGHTBOX_SCALE_MIN)
-    return
-  }
-  setLightboxOffset(lightboxOffsetX.value, lightboxOffsetY.value, nextScale)
-}
-
 function clearMobileNavCloseFallback() {
   if (mobileNavCloseFallbackTimer != null) {
     clearTimeout(mobileNavCloseFallbackTimer)
@@ -1690,285 +936,6 @@ function toggleMobileMenu() {
   menuOpen.value = !menuOpen.value
 }
 
-function snapshotRect(r) {
-  return { left: r.left, top: r.top, width: r.width, height: r.height }
-}
-
-function getRectCenter(rect) {
-  return {
-    x: rect.left + rect.width / 2,
-    y: rect.top + rect.height / 2
-  }
-}
-
-function computeUniformFlipTransform(fromRect, toRect) {
-  if (
-    fromRect.width < 2 ||
-    fromRect.height < 2 ||
-    toRect.width < 2 ||
-    toRect.height < 2
-  ) {
-    return null
-  }
-
-  const fromCenter = getRectCenter(fromRect)
-  const toCenter = getRectCenter(toRect)
-  const widthRatio = fromRect.width / toRect.width
-  const heightRatio = fromRect.height / toRect.height
-  const scale = Number((((widthRatio + heightRatio) / 2)).toFixed(6))
-
-  return {
-    x: fromCenter.x - toCenter.x,
-    y: fromCenter.y - toCenter.y,
-    scale
-  }
-}
-
-function openLightboxWithoutFlyAnimation(src) {
-  if (!src) return
-  lightboxOriginImg = null
-  thumbRectSnapshot = { left: 0, top: 0, width: 0, height: 0 }
-  lightboxSrc.value = src
-  lightboxScale.value = 1
-  resetLightboxGestureState()
-  lightboxPhase.value = 'open'
-  lightboxBackdropOpacity.value = LIGHTBOX_OVERLAY_MAX
-  lightboxVisible.value = true
-  syncBodyScrollLock()
-}
-
-async function openLightbox(src, originEl) {
-  if (!src) return
-  if (!(originEl instanceof HTMLImageElement)) {
-    openLightboxWithoutFlyAnimation(src)
-    return
-  }
-
-  lightboxOriginImg = originEl
-  thumbRectSnapshot = snapshotRect(originEl.getBoundingClientRect())
-
-  lightboxSrc.value = src
-  lightboxScale.value = 1
-  resetLightboxGestureState()
-  lightboxPhase.value = 'opening'
-  lightboxBackdropOpacity.value = 0
-  lightboxVisible.value = true
-  syncBodyScrollLock()
-
-  await nextTick()
-
-  const root = lightboxRootRef.value
-  const flip = lightboxFlipRef.value
-  const img = lightboxImgRef.value
-
-  if (!root || !flip || !img) {
-    lightboxPhase.value = 'open'
-    lightboxBackdropOpacity.value = LIGHTBOX_OVERLAY_MAX
-    return
-  }
-
-  /* 在 load/decode 完成前即隐藏根节点，避免异步间隙内闪一帧全尺寸图 */
-  root.style.visibility = 'hidden'
-
-  if (!img.complete) {
-    await new Promise(resolve => {
-      img.addEventListener('load', resolve, { once: true })
-      img.addEventListener('error', resolve, { once: true })
-    })
-  }
-  try {
-    await img.decode()
-  } catch {
-    /* 解码失败仍尝试 FLIP */
-  }
-
-  await nextTick()
-
-  const last = img.getBoundingClientRect()
-  const first = thumbRectSnapshot
-
-  if (last.width < 2 || last.height < 2 || first.width < 2 || first.height < 2) {
-    root.style.visibility = ''
-    flip.style.transform = ''
-    flip.style.transition = 'none'
-    flip.style.opacity = '0'
-    void flip.offsetWidth
-    requestAnimationFrame(() => {
-      flip.style.transition = lightboxOpenOpacityOnlyTransition()
-      flip.style.opacity = '1'
-    })
-    lightboxPhase.value = 'open'
-    lightboxBackdropOpacity.value = LIGHTBOX_OVERLAY_MAX
-    return
-  }
-
-  const transform = computeUniformFlipTransform(first, last)
-  if (!transform) {
-    root.style.visibility = ''
-    flip.style.transform = ''
-    flip.style.transition = 'none'
-    flip.style.opacity = '0'
-    void flip.offsetWidth
-    requestAnimationFrame(() => {
-      flip.style.transition = lightboxOpenOpacityOnlyTransition()
-      flip.style.opacity = '1'
-    })
-    lightboxPhase.value = 'open'
-    lightboxBackdropOpacity.value = LIGHTBOX_OVERLAY_MAX
-    return
-  }
-
-  flip.style.transition = 'none'
-  flip.style.opacity = '0'
-  flip.style.transform = `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`
-  root.style.visibility = ''
-
-  let openingDone = false
-  const markOpen = () => {
-    if (openingDone) return
-    openingDone = true
-    flip.removeEventListener('transitionend', onOpenEnd)
-    lightboxPhase.value = 'open'
-    flip.style.transition = ''
-    flip.style.transform = ''
-    flip.style.opacity = ''
-  }
-  function onOpenEnd(e) {
-    if (e.target !== flip) return
-    if (e.propertyName !== 'transform' && e.propertyName !== 'opacity') return
-    markOpen()
-  }
-  flip.addEventListener('transitionend', onOpenEnd)
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      flip.style.transition = lightboxOpenFlipTransition()
-      flip.style.transform = 'translate(0, 0) scale(1)'
-      flip.style.opacity = '1'
-      lightboxBackdropOpacity.value = LIGHTBOX_OVERLAY_MAX
-    })
-  })
-
-  window.setTimeout(() => {
-    if (lightboxPhase.value === 'opening') markOpen()
-  }, LIGHTBOX_OPEN_ANIM_MS + 100)
-}
-
-function finishCloseLightbox() {
-  const flip = lightboxFlipRef.value
-  const root = lightboxRootRef.value
-  if (flip) {
-    flip.style.transition = ''
-    flip.style.transform = ''
-    flip.style.opacity = ''
-  }
-  if (root) root.style.visibility = ''
-
-  lightboxVisible.value = false
-  lightboxSrc.value = ''
-  lightboxScale.value = 1
-  resetLightboxGestureState()
-  lightboxPhase.value = 'closed'
-  lightboxBackdropOpacity.value = 0
-  lightboxOriginImg = null
-  syncBodyScrollLock()
-}
-
-function forceCloseLightbox() {
-  finishCloseLightbox()
-}
-
-function startLightboxCloseAnimation() {
-  if (lightboxPhase.value !== 'open') return
-
-  const flip = lightboxFlipRef.value
-  const img = lightboxImgRef.value
-
-  const dest = lightboxOriginImg?.isConnected
-    ? snapshotRect(lightboxOriginImg.getBoundingClientRect())
-    : thumbRectSnapshot
-
-  const destInvalid = dest.width < 2 || dest.height < 2
-
-  if (!flip || !img || destInvalid) {
-    lightboxPhase.value = 'closing'
-    if (flip) {
-      flip.style.transition = 'none'
-      flip.style.opacity = '1'
-      void flip.offsetWidth
-      requestAnimationFrame(() => {
-        flip.style.transition = lightboxCloseOpacityOnlyTransition()
-        flip.style.opacity = '0'
-      })
-    }
-    lightboxBackdropOpacity.value = 0
-    window.setTimeout(finishCloseLightbox, LIGHTBOX_CLOSE_ANIM_MS + 40)
-    return
-  }
-
-  lightboxPhase.value = 'closing'
-
-  const first = img.getBoundingClientRect()
-  if (first.width < 2 || first.height < 2) {
-    flip.style.transition = 'none'
-    flip.style.opacity = '1'
-    void flip.offsetWidth
-    requestAnimationFrame(() => {
-      flip.style.transition = lightboxCloseOpacityOnlyTransition()
-      flip.style.opacity = '0'
-    })
-    lightboxBackdropOpacity.value = 0
-    window.setTimeout(finishCloseLightbox, LIGHTBOX_CLOSE_ANIM_MS + 40)
-    return
-  }
-
-  const transform = computeUniformFlipTransform(dest, first)
-  if (!transform) {
-    flip.style.transition = 'none'
-    flip.style.opacity = '1'
-    void flip.offsetWidth
-    requestAnimationFrame(() => {
-      flip.style.transition = lightboxCloseOpacityOnlyTransition()
-      flip.style.opacity = '0'
-    })
-    lightboxBackdropOpacity.value = 0
-    window.setTimeout(finishCloseLightbox, LIGHTBOX_CLOSE_ANIM_MS + 40)
-    return
-  }
-
-  flip.style.transition = 'none'
-  flip.style.transform = 'translate(0, 0) scale(1)'
-  flip.style.opacity = '1'
-  void flip.offsetWidth
-
-  let closingDone = false
-  const done = () => {
-    if (closingDone) return
-    closingDone = true
-    flip.removeEventListener('transitionend', onCloseEnd)
-    finishCloseLightbox()
-  }
-  function onCloseEnd(e) {
-    if (e.target !== flip) return
-    if (e.propertyName !== 'transform' && e.propertyName !== 'opacity') return
-    done()
-  }
-  flip.addEventListener('transitionend', onCloseEnd)
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      flip.style.transition = lightboxCloseFlipTransition()
-      flip.style.transform = `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`
-      flip.style.opacity = '0'
-      lightboxBackdropOpacity.value = 0
-    })
-  })
-
-  window.setTimeout(() => {
-    if (lightboxPhase.value === 'closing') done()
-  }, LIGHTBOX_CLOSE_ANIM_MS + 100)
-}
-
 function handleDocumentKeydown(e) {
   // --- Intercept Ctrl+F and Ctrl+K ---
   const isSearchKey = (e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'f' || e.key.toLowerCase() === 'k')
@@ -2026,192 +993,6 @@ function handleDocumentKeydown(e) {
   }
 
   if (menuOpen.value) closeMobileMenu()
-}
-
-function handleLightboxClick(e) {
-  if (lightboxPhase.value !== 'open') return
-  if (Date.now() < lightboxSuppressClickUntil) return
-  if (!isMobileViewport() && e.target instanceof Element && e.target.closest('.hm-lightbox__content')) return
-  startLightboxCloseAnimation()
-}
-
-function handleDesktopLightboxWheel(e) {
-  if (isMobileViewport()) return
-  if (lightboxPhase.value !== 'open') return
-
-  const scaleDelta = e.deltaY < 0
-    ? DESKTOP_LIGHTBOX_SCALE_STEP
-    : -DESKTOP_LIGHTBOX_SCALE_STEP
-
-  zoomLightboxAroundPoint(
-    Number((lightboxScale.value + scaleDelta).toFixed(2)),
-    e.clientX,
-    e.clientY
-  )
-}
-
-function handleLightboxTouchStart(e) {
-  if (!isMobileViewport()) return
-  if (lightboxPhase.value !== 'open') return
-
-  if (e.touches.length === 2) {
-    const distance = getTouchDistance(e.touches)
-    const midpoint = getTouchesMidpoint(e.touches)
-    if (distance < 2 || !midpoint) return
-
-    lightboxDragging = false
-    lightboxDragMoved = false
-    lightboxPinching = true
-    lightboxPinchLastDistance = distance
-    lightboxPinchLastMidpoint = midpoint
-    lightboxImageTransition.value = 'none'
-    lightboxLastTapAt = 0
-    suppressLightboxClick()
-    e.preventDefault()
-    return
-  }
-
-  if (e.touches.length !== 1) return
-  if (lightboxScale.value <= LIGHTBOX_SCALE_MIN) return
-
-  const touch = e.touches[0]
-  lightboxDragging = true
-  lightboxDragMoved = false
-  lightboxDragFromPinch = false
-  lightboxDragStartX = touch.clientX
-  lightboxDragStartY = touch.clientY
-  lightboxDragStartOffsetX = lightboxOffsetX.value
-  lightboxDragStartOffsetY = lightboxOffsetY.value
-  lightboxImageTransition.value = 'none'
-  e.preventDefault()
-}
-
-function handleLightboxTouchMove(e) {
-  if (!isMobileViewport()) return
-  if (lightboxPhase.value !== 'open') return
-
-  if (lightboxPinching && e.touches.length === 2) {
-    const distance = getTouchDistance(e.touches)
-    const midpoint = getTouchesMidpoint(e.touches)
-    if (distance < 2 || !midpoint || lightboxPinchLastDistance < 2 || !lightboxPinchLastMidpoint) {
-      return
-    }
-
-    const panDeltaX = midpoint.x - lightboxPinchLastMidpoint.x
-    const panDeltaY = midpoint.y - lightboxPinchLastMidpoint.y
-    setLightboxOffset(
-      lightboxOffsetX.value + panDeltaX,
-      lightboxOffsetY.value + panDeltaY,
-      lightboxScale.value
-    )
-    zoomLightboxAroundPoint(
-      Number((lightboxScale.value * distance / lightboxPinchLastDistance).toFixed(3)),
-      midpoint.x,
-      midpoint.y
-    )
-    lightboxPinchLastDistance = distance
-    lightboxPinchLastMidpoint = midpoint
-    suppressLightboxClick()
-    e.preventDefault()
-    return
-  }
-
-  if (!lightboxDragging || e.touches.length !== 1) return
-
-  const touch = e.touches[0]
-  const deltaX = touch.clientX - lightboxDragStartX
-  const deltaY = touch.clientY - lightboxDragStartY
-  if (
-    !lightboxDragMoved &&
-    (Math.abs(deltaX) >= LIGHTBOX_DRAG_START_THRESHOLD_PX || Math.abs(deltaY) >= LIGHTBOX_DRAG_START_THRESHOLD_PX)
-  ) {
-    lightboxDragMoved = true
-  }
-
-  setLightboxOffset(
-    lightboxDragStartOffsetX + deltaX,
-    lightboxDragStartOffsetY + deltaY,
-    lightboxScale.value
-  )
-  if (lightboxDragMoved) suppressLightboxClick()
-  e.preventDefault()
-}
-
-function handleLightboxTouchEnd(e) {
-  if (!isMobileViewport()) return
-  if (lightboxPhase.value !== 'open') return
-
-  if (lightboxPinching) {
-    if (e.touches.length < 2) {
-      lightboxPinching = false
-      lightboxPinchLastDistance = 0
-      lightboxPinchLastMidpoint = null
-      lightboxImageTransition.value = 'transform 0.18s ease'
-      suppressLightboxClick()
-
-      if (e.touches.length === 1 && lightboxScale.value > LIGHTBOX_SCALE_MIN) {
-        const touch = e.touches[0]
-        lightboxDragging = true
-        lightboxDragMoved = false
-        lightboxDragFromPinch = true
-        lightboxDragStartX = touch.clientX
-        lightboxDragStartY = touch.clientY
-        lightboxDragStartOffsetX = lightboxOffsetX.value
-        lightboxDragStartOffsetY = lightboxOffsetY.value
-        lightboxImageTransition.value = 'none'
-      }
-    }
-    return
-  }
-
-  if (lightboxDragging) {
-    if (e.touches.length === 0) {
-      lightboxDragging = false
-      lightboxDragStartX = 0
-      lightboxDragStartY = 0
-      lightboxDragStartOffsetX = lightboxOffsetX.value
-      lightboxDragStartOffsetY = lightboxOffsetY.value
-      lightboxImageTransition.value = 'transform 0.18s ease'
-      if (lightboxDragMoved) {
-        suppressLightboxClick()
-      } else if (isMobileViewport() && !lightboxDragFromPinch) {
-        lightboxLastTapAt = 0
-        suppressLightboxClick()
-        startLightboxCloseAnimation()
-      }
-      lightboxDragFromPinch = false
-    }
-    return
-  }
-
-  if (e.touches.length !== 0 || e.changedTouches.length !== 1) return
-
-  const now = Date.now()
-  if (now - lightboxLastTapAt > 0 && now - lightboxLastTapAt <= LIGHTBOX_DOUBLE_TAP_DELAY_MS) {
-    const touch = e.changedTouches[0]
-    if (lightboxScale.value > LIGHTBOX_SCALE_MIN) {
-      zoomLightboxAroundPoint(LIGHTBOX_SCALE_MIN, touch.clientX, touch.clientY)
-    } else {
-      zoomLightboxAroundPoint(MOBILE_LIGHTBOX_DOUBLE_TAP_SCALE, touch.clientX, touch.clientY)
-    }
-    lightboxLastTapAt = 0
-    suppressLightboxClick()
-    e.preventDefault()
-    return
-  }
-
-  lightboxLastTapAt = now
-}
-
-function handleLightboxTouchCancel() {
-  lightboxPinching = false
-  lightboxPinchLastDistance = 0
-  lightboxPinchLastMidpoint = null
-  lightboxDragging = false
-  lightboxDragMoved = false
-  lightboxDragFromPinch = false
-  lightboxImageTransition.value = 'transform 0.18s ease'
-  lightboxLastTapAt = 0
 }
 
 function resetMobileHeaderState() {
@@ -2301,42 +1082,6 @@ function isImageOnlyParagraph(p) {
   })
 }
 
-function bindLightboxTrigger(img) {
-  if (img.dataset.hmLightboxBound === '1') return
-  img.dataset.hmLightboxBound = '1'
-  img.style.cursor = 'pointer'
-  img.addEventListener('click', () => {
-    const lightboxSrc = img.dataset.hmFullSrc || img.currentSrc || img.src
-    openLightbox(lightboxSrc, img)
-  })
-}
-
-function openInfoDialog(message, title = '信息', onConfirm = null, showCancel = false, confirmLabel = '确定') {
-  infoDialogTitle.value = title
-  infoDialogMessage.value = message
-  infoDialogOnConfirm = onConfirm
-  infoDialogShowCancel.value = !!(showCancel.value ?? showCancel)
-  infoDialogConfirmLabel.value = confirmLabel
-  infoDialogVisible.value = true
-  syncBodyScrollLock()
-}
-
-function handleInfoDialogConfirm() {
-  const onConfirm = infoDialogOnConfirm
-  if (typeof onConfirm === 'function') {
-    onConfirm()
-  }
-  closeInfoDialog()
-}
-
-function closeInfoDialog() {
-  infoDialogVisible.value = false
-  infoDialogOnConfirm = null
-  infoDialogShowCancel.value = false
-  infoDialogConfirmLabel.value = '确定'
-  syncBodyScrollLock()
-}
-
 function openExternalLinkInNewTab(href) {
   const link = document.createElement('a')
   link.href = href
@@ -2360,166 +1105,6 @@ function handleGithubClick(event) {
     true,
     '确认'
   )
-}
-
-function updateCopyButtonLabel(button, state) {
-  const labelMap = {
-    idle: '复制代码',
-    success: '复制成功',
-    error: '复制失败'
-  }
-  const label = labelMap[state] || labelMap.idle
-  button.setAttribute('aria-label', label)
-  button.setAttribute('title', label)
-}
-
-function setCopyButtonState(button, state) {
-  const existingTimer = copyButtonResetTimers.get(button)
-  if (existingTimer) {
-    clearTimeout(existingTimer)
-    copyButtonResetTimers.delete(button)
-  }
-
-  button.dataset.copyState = state
-  updateCopyButtonLabel(button, state)
-
-  if (state === 'idle') return
-
-  const resetTimer = window.setTimeout(() => {
-    if (document.body.contains(button)) {
-      button.dataset.copyState = 'idle'
-      updateCopyButtonLabel(button, 'idle')
-    }
-    copyButtonResetTimers.delete(button)
-  }, COPY_BUTTON_RESET_DELAY)
-
-  copyButtonResetTimers.set(button, resetTimer)
-}
-
-async function ensureClipboardWritable() {
-  if (!navigator.clipboard?.writeText) {
-    throw new Error('clipboard-unavailable')
-  }
-
-  if (!navigator.permissions?.query) return
-
-  try {
-    const permissionStatus = await navigator.permissions.query({ name: 'clipboard-write' })
-    if (permissionStatus.state === 'denied') {
-      throw new Error('clipboard-denied')
-    }
-  } catch (error) {
-    if (error?.message === 'clipboard-denied') throw error
-  }
-}
-
-function getCodeBlockText(block) {
-  const code = block.querySelector('pre code')
-  return code?.textContent?.replace(/\n$/, '') || ''
-}
-
-async function handleCopyButtonClick(block, button) {
-  const code = getCodeBlockText(block)
-
-  try {
-    await ensureClipboardWritable()
-    await navigator.clipboard.writeText(code)
-    setCopyButtonState(button, 'success')
-    openInfoDialog('复制成功!')
-  } catch (error) {
-    setCopyButtonState(button, 'error')
-    openInfoDialog('复制失败，请授予剪贴板写入权限!', '提示')
-  }
-}
-
-function bindCodeBlockCopy(block) {
-  let button = block.querySelector(':scope > .copy')
-  if (!button) {
-    button = document.createElement('button')
-    button.type = 'button'
-    button.className = 'copy'
-    block.appendChild(button)
-  }
-
-  if (button.dataset.hmCopyBound === '1') {
-    if (!button.dataset.copyState) setCopyButtonState(button, 'idle')
-    return
-  }
-
-  button.type = 'button'
-  button.dataset.hmCopyBound = '1'
-  setCopyButtonState(button, 'idle')
-  button.addEventListener('click', e => {
-    e.preventDefault()
-    e.stopPropagation()
-    handleCopyButtonClick(block, button)
-  })
-}
-
-function processCodeBlocks(root = null) {
-  const container = root ?? docArticleRef.value
-  if (!container) return
-  container.querySelectorAll("div[class*='language-']").forEach(bindCodeBlockCopy)
-}
-
-function bindJoinGroupButtons(root = null) {
-  const container = root ?? docArticleRef.value
-  if (!container) return
-  container.querySelectorAll('.group-join-btn').forEach(btn => {
-    if (btn.dataset.hmConfirmBound === '1') return
-    btn.dataset.hmConfirmBound = '1'
-    btn.addEventListener('click', e => {
-      e.preventDefault()
-      const href = btn.href
-      const target = btn.target || '_blank'
-      openInfoDialog(
-        '即将跳转到幻梦QQ群主页，是否确认？',
-        '提示',
-        () => {
-          window.open(href, target)
-        },
-        true
-      )
-    })
-  })
-}
-
-function processContentActions(root = null) {
-  processCodeBlocks(root)
-  bindJoinGroupButtons(root)
-}
-
-function bindLightboxTriggers(root = null) {
-  const article = root ?? docArticleRef.value
-  if (!article) return
-  article.querySelectorAll('img').forEach(bindLightboxTrigger)
-}
-
-function scheduleImageRowProcessing(force = false) {
-  imageRowForceProcess = imageRowForceProcess || force
-
-  if (imageRowProcessFrame) {
-    window.cancelAnimationFrame(imageRowProcessFrame)
-  }
-
-  imageRowProcessFrame = window.requestAnimationFrame(() => {
-    void processImageRowsAsync({ force: imageRowForceProcess })
-    imageRowForceProcess = false
-    imageRowProcessFrame = 0
-  })
-}
-
-/**
- * vitepress-plugin-tabs 非当前面板用 v-if 卸载，切换标签会挂载全新 DOM；
- * 须在激活后重新跑图片行布局逻辑，否则仅首屏标签会正确计算图片行高度。
- * 键盘切换见 handleDocumentKeydown（左右箭头）。
- */
-function handleVitepressPluginTabClick(ev) {
-  const article = docArticleRef.value
-  if (!article) return
-  const tab = ev.target?.closest?.('button.plugin-tabs--tab')
-  if (!tab || !article.contains(tab)) return
-  nextTick(() => scheduleImageRowProcessing(true))
 }
 
 function nextDoubleRaf() {
@@ -2546,127 +1131,6 @@ function finishDocPageTransitionNow(el) {
     docPageEnterInProgress = false
   }
   docPageTransitionState.delete(el)
-}
-
-function prepareImageRows({ force = false, root = null } = {}) {
-  const article = root ?? docArticleRef.value
-  if (!article) return []
-
-  bindLightboxTriggers(article)
-
-  const preparedRows = []
-  article.querySelectorAll('p').forEach(p => {
-    if (!force && p.dataset.hmProcessedRow) return
-
-    const imgs = Array.from(p.querySelectorAll('img'))
-    if (imgs.length <= 1 || !isImageOnlyParagraph(p)) return
-
-    p.dataset.hmProcessedRow = '1'
-    p.classList.add('hm-img-row')
-    preparedRows.push({ p, imgs })
-
-    if (imgs.every(img => img.complete && img.naturalWidth > 0)) {
-      applyMultiImageRowHeights(p, imgs)
-    }
-  })
-
-  return preparedRows
-}
-
-function imgHasExplicitHeight(img) {
-  const raw = img.getAttribute('height')
-  if (raw == null || String(raw).trim() === '') return false
-  const n = Number(raw)
-  return Number.isFinite(n) && n > 0
-}
-
-function applyMultiImageRowHeights(p, imgs) {
-  imgs.forEach(img => {
-    bindLightboxTrigger(img)
-  })
-
-  /* 仅两张并排时 flush：尊重 HTML height + 小间距。≥3 张仍 flush 会按自然宽度换行成多排 */
-  /* 带左/右对齐类时已明确布局意图，跳过 flush，走高度均衡裁剪逻辑 */
-  const hasAlignClass = imgs.some(img => img.classList.contains('hm-left-img') || img.classList.contains('hm-right-img'))
-  const allExplicitHeight = imgs.length > 0 && imgs.every(imgHasExplicitHeight)
-  const useFlush = allExplicitHeight && imgs.length === 2 && !hasAlignClass
-
-  if (useFlush) {
-    p.classList.add('hm-img-row--flush')
-    imgs.forEach(img => {
-      img.style.removeProperty('height')
-      img.style.removeProperty('object-fit')
-    })
-    return
-  }
-
-  p.classList.remove('hm-img-row--flush')
-
-  const IMG_ROW_GAP_PX = 12
-  const containerWidth = p.clientWidth
-  const availWidth = containerWidth - IMG_ROW_GAP_PX * (imgs.length - 1)
-  const eachWidth = availWidth / imgs.length
-  const heights = imgs.map(img => {
-    if (img.naturalWidth === 0) return Infinity
-    return eachWidth * (img.naturalHeight / img.naturalWidth)
-  })
-  const minHeight = Math.min(...heights.filter(h => h !== Infinity && h > 0))
-  const targetHeight = minHeight > 0 && isFinite(minHeight) ? Math.round(minHeight) : null
-
-  imgs.forEach(img => {
-    if (targetHeight) {
-      img.style.height = `${targetHeight}px`
-      img.style.objectFit = 'cover'
-      return
-    }
-
-    img.style.removeProperty('height')
-    img.style.removeProperty('object-fit')
-  })
-}
-
-/**
- * 应用文档内多图行等样式；多图会等 decode 后再算高。
- * @param {HTMLElement | null} [root] 过渡 enter 时传入当前 article，避免 ref 尚未同步。
- */
-async function processImageRowsAsync({ force = false, root = null } = {}) {
-  const article = root ?? docArticleRef.value
-  if (!article) return
-
-  // 1. 先同步准备多图行骨架，避免首帧布局跳动
-  const preparedRows = prepareImageRows({ force, root: article })
-
-  // 2. 然后处理「纯图片段落」的多图并排布局
-  const pending = []
-  preparedRows.forEach(({ p, imgs }) => {
-    const loadPromises = imgs.map(img => {
-      if (img.complete && img.naturalHeight > 0) return Promise.resolve()
-      return new Promise(r => {
-        img.addEventListener('load', r, { once: true })
-        img.addEventListener('error', r, { once: true })
-      })
-    })
-
-    pending.push(
-      Promise.all(loadPromises).then(async () => {
-        await Promise.all(
-          imgs.map(img => {
-            if (img.decode && img.naturalWidth > 0) {
-              return img.decode().catch(() => {})
-            }
-            return Promise.resolve()
-          })
-        )
-        applyMultiImageRowHeights(p, imgs)
-      })
-    )
-  })
-
-  await Promise.all(pending)
-}
-
-function processImageRows(opts) {
-  void processImageRowsAsync(opts)
 }
 
 function setDocPageTransitionState(el, patch = {}) {
@@ -2770,12 +1234,7 @@ function handleBrowserGestureZoomGuard(e) {
 }
 
 onMounted(() => {
-  syncColorModeFromDocument()
   syncSearchHistoryFromStorage()
-  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
-    appearanceSchemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    addAppearanceSchemeChangeListener(appearanceSchemeMediaQuery, handlePreferredColorSchemeChange)
-  }
   syncViewportMode()
   resetMobileHeaderState()
   nextTick(() => {
@@ -2824,10 +1283,6 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  if (appearanceSchemeMediaQuery) {
-    removeAppearanceSchemeChangeListener(appearanceSchemeMediaQuery, handlePreferredColorSchemeChange)
-    appearanceSchemeMediaQuery = null
-  }
   if (typeof document !== 'undefined') {
     document.documentElement.style.removeProperty('--hm-desktop-sidebar-left')
     document.documentElement.style.removeProperty('--hm-desktop-sidebar-top')
@@ -2837,11 +1292,9 @@ onBeforeUnmount(() => {
   stopDesktopSearchPlaceholderCycle()
   clearMobileNavCloseFallback()
   clearPendingSearchHeadingFrame()
-  if (imageRowProcessFrame) window.cancelAnimationFrame(imageRowProcessFrame)
-  copyButtonResetTimers.forEach(timer => clearTimeout(timer))
-  copyButtonResetTimers.clear()
+  cleanupDocContentEnhancements()
   clearNavRouteProgressTimers()
-  stopTocScrollListener()
+  cleanupToc()
   navRoutePendingKey = null
 
   try {
@@ -3110,7 +1563,7 @@ watch(infoDialogVisible, async visible => {
   syncBodyScrollLock()
   if (!visible) return
   await nextTick()
-  infoDialogConfirmButton.value?.focus()
+  infoDialogRef.value?.focusConfirmButton?.()
 })
 </script>
 
@@ -3651,80 +2104,36 @@ watch(infoDialogVisible, async visible => {
       </div>
     </footer>
 
-    <Transition name="hm-dialog">
-      <div v-if="infoDialogVisible" class="hm-dialog" role="presentation">
-        <div class="hm-dialog__backdrop" @click="closeInfoDialog"></div>
-        <div
-          class="hm-dialog__panel"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="hm-dialog-title"
-          aria-describedby="hm-dialog-message"
-        >
-          <button type="button" class="hm-dialog__close" aria-label="关闭" @click="closeInfoDialog">&times;</button>
-          <div class="hm-dialog__header">
-            <h2 id="hm-dialog-title" class="hm-dialog__title">{{ infoDialogTitle }}</h2>
-          </div>
-          <div class="hm-dialog__body">
-            <p id="hm-dialog-message" class="hm-dialog__message">{{ infoDialogMessage }}</p>
-          </div>
-          <div class="hm-dialog__footer">
-            <button
-              ref="infoDialogConfirmButton"
-              type="button"
-              class="hm-dialog__confirm"
-              @click="handleInfoDialogConfirm"
-            >
-              {{ infoDialogConfirmLabel }}
-            </button>
-            <button
-              v-if="infoDialogShowCancel"
-              type="button"
-              class="hm-dialog__cancel"
-              @click="closeInfoDialog"
-            >
-              取消
-            </button>
-          </div>
-        </div>
-      </div>
-    </Transition>
+    <InfoDialog
+      ref="infoDialogRef"
+      :visible="infoDialogVisible"
+      :title="infoDialogTitle"
+      :message="infoDialogMessage"
+      :show-cancel="infoDialogShowCancel"
+      :confirm-label="infoDialogConfirmLabel"
+      @close="closeInfoDialog"
+      @confirm="handleInfoDialogConfirm"
+    />
 
-    <div
-      v-show="lightboxVisible"
-      ref="lightboxRootRef"
-      class="hm-lightbox"
-      :class="{
-        'hm-lightbox--busy':
-          lightboxPhase === 'opening' || lightboxPhase === 'closing',
-        'hm-lightbox--opening': lightboxPhase === 'opening',
-        'hm-lightbox--closing': lightboxPhase === 'closing'
-      }"
+    <LightboxOverlay
+      v-model:lightbox-root-ref="lightboxRootRef"
+      v-model:lightbox-flip-ref="lightboxFlipRef"
+      v-model:lightbox-img-ref="lightboxImgRef"
+      :visible="lightboxVisible"
+      :phase="lightboxPhase"
+      :backdrop-opacity="lightboxBackdropOpacity"
+      :src="lightboxSrc"
+      :offset-x="lightboxOffsetX"
+      :offset-y="lightboxOffsetY"
+      :scale="lightboxScale"
+      :image-transition="lightboxImageTransition"
       @click="handleLightboxClick"
-    >
-      <div
-        class="hm-lightbox__backdrop"
-        :style="{ opacity: lightboxBackdropOpacity }"
-      />
-      <div class="hm-lightbox__content">
-        <div ref="lightboxFlipRef" class="hm-lightbox__flip">
-          <img
-            ref="lightboxImgRef"
-            :src="lightboxSrc"
-            alt=""
-            :style="{
-              transform: `translate3d(${lightboxOffsetX}px, ${lightboxOffsetY}px, 0) scale(${lightboxScale})`,
-              transition: lightboxImageTransition,
-            }"
-            @wheel.prevent="handleDesktopLightboxWheel"
-            @touchstart="handleLightboxTouchStart"
-            @touchmove="handleLightboxTouchMove"
-            @touchend="handleLightboxTouchEnd"
-            @touchcancel="handleLightboxTouchCancel"
-          >
-        </div>
-      </div>
-    </div>
+      @wheel="handleDesktopLightboxWheel"
+      @touchstart="handleLightboxTouchStart"
+      @touchmove="handleLightboxTouchMove"
+      @touchend="handleLightboxTouchEnd"
+      @touchcancel="handleLightboxTouchCancel"
+    />
 
     <!-- 全局搜索弹窗 (Fallback / Mobile) -->
     <Transition name="search-modal">
