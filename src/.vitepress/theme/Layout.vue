@@ -326,7 +326,20 @@ let pendingSearchHeadingFrame = null
 let searchIndexPromise = null
 let searchPageFocusPending = false
 
+const isNotFoundPage = computed(() => page.value.isNotFound === true)
 const isSearchPage = computed(() => page.value.relativePath === 'search/index.md')
+
+async function redirectNotFoundPage() {
+  if (typeof window === 'undefined' || !isNotFoundPage.value) return
+
+  const errorPath = withBase('/error')
+  const currentPath = window.location.pathname.replace(/\/$/, '')
+  const normalizedErrorPath = errorPath.replace(/\/$/, '')
+
+  if (currentPath === normalizedErrorPath) return
+
+  await navigateToInternalPage(errorPath)
+}
 
 async function ensureSearchIndexLoaded() {
   if (searchIndexLoaded.value) return searchIndex.value
@@ -417,6 +430,11 @@ watch(searchQuery, query => {
 
   void ensureSearchIndexLoaded()
 })
+
+watch(isNotFoundPage, value => {
+  if (!value) return
+  void redirectNotFoundPage()
+}, { immediate: true })
 
 function normalizeSearchKeyword(query) {
   return String(query || '')
