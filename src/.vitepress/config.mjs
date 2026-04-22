@@ -30,6 +30,15 @@ export default defineConfig({
     ['meta', { name: 'twitter:description', content: 'QQ幻梦机器人的说明文档' }],
     ['meta', { name: 'twitter:image', content: 'https://xbdqwq.com/img/hm_icon.png' }]
   ],
+  themeConfig: {
+    notFound: {
+      code: '404',
+      title: '未找到对应页面',
+      quote: '很抱歉，您访问的页面不存在。',
+      linkLabel: '返回首页',
+      linkText: '返回首页'
+    }
+  },
   markdown: {
     math: true,
     // 需要注册 vitepress-plugin-tabs 的 markdown-it 插件，以支持 ::: tabs 语法
