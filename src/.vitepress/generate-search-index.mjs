@@ -232,7 +232,7 @@ async function main() {
 
   await mkdir(path.dirname(outputPath), { recursive: true })
   await writeFile(outputPath, JSON.stringify(index), 'utf8')
-  console.log(`Generated search index with ${index.length} sections.`)
+  console.log(`搜索索引生成完成，共 ${index.length} 个条目。`)
 }
 
 main().catch(error => {

@@ -44,7 +44,19 @@
 
 感谢小人类对幻梦的支持，如果你要支持幻梦，请点击下方链接跳转查看说明~
 
-[支持幻梦](https://docs.qq.com/aio/p/sc7sp6juoyjk6t3?p=oJ0ZeQAb0F1v7KZ2aSJOgx&nlc=1)
+<div class="app-card-grid">
+    <!-- 支持幻梦 -->
+    <div class="app-card">
+        <div class="app-card-left">
+            <div class="app-card-avatar emoji-avatar">🧋</div>
+            <div class="app-card-info">
+                <div class="app-card-title">支持幻梦</div>
+                <div class="app-card-desc">支持幻梦开发者以让幻梦变得更加好用~</div>
+            </div>
+        </div>
+        <a href="/about/support" class="app-action-btn">前往</a>
+    </div>
+</div>
 
 
 ## 玩法帮助和攻略

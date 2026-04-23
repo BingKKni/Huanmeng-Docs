@@ -115,7 +115,7 @@ async function main() {
 
   for (const candidate of thumbnailCandidates) {
     if (!publicImageSet.has(candidate.sourceSrc)) {
-      warnings.push(`Missing source image: ${candidate.sourceSrc} (${candidate.sourceFiles[0]})`)
+      warnings.push(`找不到源图片：${candidate.sourceSrc}（来源文件：${candidate.sourceFiles[0]}）`)
       continue
     }
 
@@ -129,7 +129,7 @@ async function main() {
     }
 
     if (!metadata.width || !metadata.height) {
-      warnings.push(`Unreadable image size: ${candidate.sourceSrc} (${candidate.sourceFiles[0]})`)
+      warnings.push(`无法读取图片尺寸：${candidate.sourceSrc}（来源文件：${candidate.sourceFiles[0]}）`)
       continue
     }
 
@@ -199,7 +199,7 @@ async function main() {
 
   for (const responsiveCandidate of responsiveCandidates) {
     if (!publicImageSet.has(responsiveCandidate.sourceSrc)) {
-      warnings.push(`Missing source image: ${responsiveCandidate.sourceSrc} (${responsiveCandidate.sourceFiles[0]})`)
+      warnings.push(`找不到源图片：${responsiveCandidate.sourceSrc}（来源文件：${responsiveCandidate.sourceFiles[0]}）`)
       continue
     }
 
@@ -254,7 +254,7 @@ async function main() {
   )
 
   console.log(
-    `Generated ${Object.keys(thumbnails).length} thumbnails from ${thumbnailCandidates.length} markdown variants and ${Object.keys(responsiveImages).length} responsive image sets.`
+    `缩略图生成完成，共处理 ${thumbnailCandidates.length} 个 Markdown 变体，生成 ${Object.keys(thumbnails).length} 张缩略图，${Object.keys(responsiveImages).length} 组响应式图片。`
   )
   if (warnings.length > 0) {
     console.warn(warnings.join('\n'))

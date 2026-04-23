@@ -1,0 +1,1268 @@
+{
+  "version": 3,
+  "owner": "BingKKni",
+  "repo": "Huanmeng-Docs",
+  "updatedAt": "2026-04-23T02:18:05.835Z",
+  "entries": [
+    {
+      "day": "2026-04-09",
+      "commitId": "3471d4ab00459fe5b08a7dc62775c1ea9a1b44e5",
+      "committedAt": "2026-04-09T02:41:43Z",
+      "commitOrder": 0,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "init",
+      "removed": false
+    },
+    {
+      "day": "2026-04-09",
+      "commitId": "5737339d3e086123dc4195f13bf86866d8b2f849",
+      "committedAt": "2026-04-09T02:43:57Z",
+      "commitOrder": 1,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "add MIT License",
+      "removed": false
+    },
+    {
+      "day": "2026-04-09",
+      "commitId": "6285584d9d89d80fbe540dad06cf25204ba41aaf",
+      "committedAt": "2026-04-09T03:07:15Z",
+      "commitOrder": 2,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "changed LICENSE to CC BY-SA 4.0",
+      "removed": false
+    },
+    {
+      "day": "2026-04-09",
+      "commitId": "816e00569ccd16e0c6cb488698bfff8e721353ea",
+      "committedAt": "2026-04-09T03:29:58Z",
+      "commitOrder": 3,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "add README.md",
+      "removed": false
+    },
+    {
+      "day": "2026-04-09",
+      "commitId": "ca678328c40456c63802ee583e19e6fc56307d75",
+      "committedAt": "2026-04-09T04:53:58Z",
+      "commitOrder": 4,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "完善README.md，新增CONTRIBUTING.md",
+      "removed": false
+    },
+    {
+      "day": "2026-04-09",
+      "commitId": "2f7b52f328e87edc14d832186fd6e07217e18463",
+      "committedAt": "2026-04-09T04:56:49Z",
+      "commitOrder": 5,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "update README.md and CONTRIBUTING.md",
+      "removed": false
+    },
+    {
+      "day": "2026-04-09",
+      "commitId": "85ecf78a6ddee531dd96734f1fb340f87de4b643",
+      "committedAt": "2026-04-09T08:06:46Z",
+      "commitOrder": 6,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "index.md 表格暂时移除；新增打卡页面做侧边标签栏测试",
+      "removed": false
+    },
+    {
+      "day": "2026-04-09",
+      "commitId": "382b17f31d1e44dd3f74067857fc0a7828243588",
+      "committedAt": "2026-04-09T09:56:30Z",
+      "commitOrder": 7,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "默认运行dev服务器时不再向局域网开放；修复README.MD issue链接有误的问题",
+      "removed": false
+    },
+    {
+      "day": "2026-04-09",
+      "commitId": "3ea2e0f1cc59ce556f3677d34773480cc723963e",
+      "committedAt": "2026-04-09T19:26:18Z",
+      "commitOrder": 8,
+      "lineNumber": 1,
+      "type": "updates",
+      "text": "migrate Bootstrap to npm, add sidebar, expand content",
+      "removed": false
+    },
+    {
+      "day": "2026-04-09",
+      "commitId": "3ea2e0f1cc59ce556f3677d34773480cc723963e",
+      "committedAt": "2026-04-09T19:26:18Z",
+      "commitOrder": 8,
+      "lineNumber": 2,
+      "type": "others",
+      "text": "- Migrate Bootstrap from local files to npm dependency",
+      "removed": false
+    },
+    {
+      "day": "2026-04-09",
+      "commitId": "3ea2e0f1cc59ce556f3677d34773480cc723963e",
+      "committedAt": "2026-04-09T19:26:18Z",
+      "commitOrder": 8,
+      "lineNumber": 3,
+      "type": "others",
+      "text": "- Add responsive sidebar navigation (desktop only, mobile in progress)",
+      "removed": false
+    },
+    {
+      "day": "2026-04-09",
+      "commitId": "3ea2e0f1cc59ce556f3677d34773480cc723963e",
+      "committedAt": "2026-04-09T19:26:18Z",
+      "commitOrder": 8,
+      "lineNumber": 4,
+      "type": "others",
+      "text": "- Rename hmdoc to docs folder",
+      "removed": false
+    },
+    {
+      "day": "2026-04-09",
+      "commitId": "3ea2e0f1cc59ce556f3677d34773480cc723963e",
+      "committedAt": "2026-04-09T19:26:18Z",
+      "commitOrder": 8,
+      "lineNumber": 5,
+      "type": "others",
+      "text": "- Add FAQ, support, and daily checklist pages",
+      "removed": false
+    },
+    {
+      "day": "2026-04-09",
+      "commitId": "3ea2e0f1cc59ce556f3677d34773480cc723963e",
+      "committedAt": "2026-04-09T19:26:18Z",
+      "commitOrder": 8,
+      "lineNumber": 6,
+      "type": "others",
+      "text": "- Update theme configuration and styling",
+      "removed": false
+    },
+    {
+      "day": "2026-04-09",
+      "commitId": "3ea2e0f1cc59ce556f3677d34773480cc723963e",
+      "committedAt": "2026-04-09T19:26:18Z",
+      "commitOrder": 8,
+      "lineNumber": 7,
+      "type": "others",
+      "text": "- Include donation UI elements",
+      "removed": false
+    },
+    {
+      "day": "2026-04-09",
+      "commitId": "11a6ce5aa46d850abfc971ac3400bbec622f5a7d",
+      "committedAt": "2026-04-09T19:53:35Z",
+      "commitOrder": 9,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "现在复制代码块里面的文本时会弹窗提示了，同时，为加入官方群新增跳转前弹窗避免误触",
+      "removed": false
+    },
+    {
+      "day": "2026-04-10",
+      "commitId": "1cf895b343ccef13d3d2904c2efa4d23c0090e71",
+      "committedAt": "2026-04-10T02:42:42Z",
+      "commitOrder": 10,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "修复readme和contributing文档链接错误的问题",
+      "removed": false
+    },
+    {
+      "day": "2026-04-10",
+      "commitId": "732eda5a07a781b2fc7388baf19bbb73bfd5fa68",
+      "committedAt": "2026-04-10T02:43:55Z",
+      "commitOrder": 11,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "进一步修复readme描述错误的问题",
+      "removed": false
+    },
+    {
+      "day": "2026-04-10",
+      "commitId": "4fd89e8ba82f0befed4ce99b2dc4d0c176868c75",
+      "committedAt": "2026-04-10T08:44:18Z",
+      "commitOrder": 12,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "优化弹窗的取消按钮style",
+      "removed": false
+    },
+    {
+      "day": "2026-04-10",
+      "commitId": "5c897a14785a49627f2c02eeee5ab441485c195c",
+      "committedAt": "2026-04-10T08:44:41Z",
+      "commitOrder": 13,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "侧边栏新增搜索功能",
+      "removed": false
+    },
+    {
+      "day": "2026-04-10",
+      "commitId": "f4e8c1298adbdcb79181310878638b72c4fbb2e0",
+      "committedAt": "2026-04-10T13:53:19Z",
+      "commitOrder": 14,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "稍微调小搜索结果的矩形圆角",
+      "removed": false
+    },
+    {
+      "day": "2026-04-10",
+      "commitId": "9140549bd28668073a41d528855d4129d0e193a4",
+      "committedAt": "2026-04-10T17:41:41Z",
+      "commitOrder": 15,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "添加三角洲行动游戏文档与每日密码门位置文档",
+      "removed": false
+    },
+    {
+      "day": "2026-04-10",
+      "commitId": "fea8dc5c0cf3b0bce98dd86a736b102cb14b3438",
+      "committedAt": "2026-04-10T17:45:13Z",
+      "commitOrder": 16,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "修复了一点小问题",
+      "removed": false
+    },
+    {
+      "day": "2026-04-10",
+      "commitId": "862b3a141a0d5cb4897572abf8b48733e4cc8ead",
+      "committedAt": "2026-04-10T18:13:31Z",
+      "commitOrder": 17,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "Merge pull request #1 from Joon-paxn/main",
+      "removed": false
+    },
+    {
+      "day": "2026-04-10",
+      "commitId": "862b3a141a0d5cb4897572abf8b48733e4cc8ead",
+      "committedAt": "2026-04-10T18:13:31Z",
+      "commitOrder": 17,
+      "lineNumber": 2,
+      "type": "others",
+      "text": "添加三角洲行动的文档",
+      "removed": false
+    },
+    {
+      "day": "2026-04-10",
+      "commitId": "95bc6afc6e2927a085b205b9448098a3090fc71a",
+      "committedAt": "2026-04-10T18:37:52Z",
+      "commitOrder": 18,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "添加拉黑申诉文档，支持子页面",
+      "removed": false
+    },
+    {
+      "day": "2026-04-10",
+      "commitId": "761aa619241720cdecc19349f803a83dda8cbe96",
+      "committedAt": "2026-04-10T19:08:05Z",
+      "commitOrder": 19,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "新增三角洲文档板块，优化三角洲文档",
+      "removed": false
+    },
+    {
+      "day": "2026-04-10",
+      "commitId": "761aa619241720cdecc19349f803a83dda8cbe96",
+      "committedAt": "2026-04-10T19:08:05Z",
+      "commitOrder": 19,
+      "lineNumber": 2,
+      "type": "others",
+      "text": "将打卡移动到娱乐功能板块内",
+      "removed": false
+    },
+    {
+      "day": "2026-04-10",
+      "commitId": "b9193dbc411e187d4decf366825d9c47b8e855ed",
+      "committedAt": "2026-04-10T19:19:50Z",
+      "commitOrder": 20,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "优化导航栏",
+      "removed": false
+    },
+    {
+      "day": "2026-04-10",
+      "commitId": "5d48dca0b79455e3ff7d802c4c349c85a23a0d4f",
+      "committedAt": "2026-04-10T20:08:30Z",
+      "commitOrder": 21,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "手机端支持侧边栏显示",
+      "removed": false
+    },
+    {
+      "day": "2026-04-11",
+      "commitId": "bb75eb9d76b5e95ae6ba8b30a415179098d0840f",
+      "committedAt": "2026-04-11T10:12:33Z",
+      "commitOrder": 22,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "优化侧边栏在电脑端的显示效果",
+      "removed": false
+    },
+    {
+      "day": "2026-04-11",
+      "commitId": "bb75eb9d76b5e95ae6ba8b30a415179098d0840f",
+      "committedAt": "2026-04-11T10:12:33Z",
+      "commitOrder": 22,
+      "lineNumber": 2,
+      "type": "others",
+      "text": "优化侧边栏关闭逻辑",
+      "removed": false
+    },
+    {
+      "day": "2026-04-11",
+      "commitId": "bb75eb9d76b5e95ae6ba8b30a415179098d0840f",
+      "committedAt": "2026-04-11T10:12:33Z",
+      "commitOrder": 22,
+      "lineNumber": 3,
+      "type": "others",
+      "text": "补充网页标签，方便QQ等爬虫机器人自动获取",
+      "removed": false
+    },
+    {
+      "day": "2026-04-11",
+      "commitId": "0c255ce853c7479262298640fb499785985deb4d",
+      "committedAt": "2026-04-11T13:49:43Z",
+      "commitOrder": 23,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "新增娱乐功能文档和图片资源",
+      "removed": false
+    },
+    {
+      "day": "2026-04-11",
+      "commitId": "0c255ce853c7479262298640fb499785985deb4d",
+      "committedAt": "2026-04-11T13:49:43Z",
+      "commitOrder": 23,
+      "lineNumber": 2,
+      "type": "others",
+      "text": "添加今日运势、随机图、油漆炸弹和好感度四个娱乐功能的详细说明文档。",
+      "removed": false
+    },
+    {
+      "day": "2026-04-12",
+      "commitId": "734f25fbf91d19ae56b4d1156e45aa16b3676494",
+      "committedAt": "2026-04-12T03:29:09Z",
+      "commitOrder": 24,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "添加达尔文游戏介绍",
+      "removed": false
+    },
+    {
+      "day": "2026-04-12",
+      "commitId": "ca8ee0994af47a90203bab6f64c497fdb085b999",
+      "committedAt": "2026-04-12T03:29:09Z",
+      "commitOrder": 25,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "修改娱乐功能主文档",
+      "removed": false
+    },
+    {
+      "day": "2026-04-12",
+      "commitId": "be7d0cf86c46c922b420210b23b468a8438cba99",
+      "committedAt": "2026-04-12T03:29:09Z",
+      "commitOrder": 26,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "修复运势界面typo; 修复侧边栏",
+      "removed": false
+    },
+    {
+      "day": "2026-04-12",
+      "commitId": "aafd475edf4f3dcc6cfaf23092ff71e1dcf3bebf",
+      "committedAt": "2026-04-12T10:12:31Z",
+      "commitOrder": 27,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "优化部分文档名",
+      "removed": false
+    },
+    {
+      "day": "2026-04-12",
+      "commitId": "aafd475edf4f3dcc6cfaf23092ff71e1dcf3bebf",
+      "committedAt": "2026-04-12T10:12:31Z",
+      "commitOrder": 27,
+      "lineNumber": 2,
+      "type": "others",
+      "text": "新增自定义颜色语法",
+      "removed": false
+    },
+    {
+      "day": "2026-04-12",
+      "commitId": "49d949ce72917254550e994284941bf16266155a",
+      "committedAt": "2026-04-12T12:12:52Z",
+      "commitOrder": 28,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "优化文档UI",
+      "removed": false
+    },
+    {
+      "day": "2026-04-12",
+      "commitId": "5a33fd03c4d5e4d2ee9c535678fd9054d9abd4c1",
+      "committedAt": "2026-04-12T12:13:49Z",
+      "commitOrder": 29,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "Merge branch 'main' of https://github.com/BingKKni/Huanmeng-Docs",
+      "removed": false
+    },
+    {
+      "day": "2026-04-12",
+      "commitId": "947c87a68fb70bb96b26bd538ce882fc6feff454",
+      "committedAt": "2026-04-12T15:20:34Z",
+      "commitOrder": 30,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "整合最近更新",
+      "removed": false
+    },
+    {
+      "day": "2026-04-12",
+      "commitId": "f826fdc047853195c8681a6dc306c67ea638ae2b",
+      "committedAt": "2026-04-12T15:20:45Z",
+      "commitOrder": 31,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "Merge branches 'main' and 'main' of https://github.com/BingKKni/Huanmeng-Docs",
+      "removed": false
+    },
+    {
+      "day": "2026-04-12",
+      "commitId": "a25a95ee1a2c68dca3a06e265b014aef4568fadd",
+      "committedAt": "2026-04-12T19:13:41Z",
+      "commitOrder": 32,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "侧边栏优化，文档UI优化；",
+      "removed": false
+    },
+    {
+      "day": "2026-04-12",
+      "commitId": "a25a95ee1a2c68dca3a06e265b014aef4568fadd",
+      "committedAt": "2026-04-12T19:13:41Z",
+      "commitOrder": 32,
+      "lineNumber": 2,
+      "type": "others",
+      "text": "电脑端鼠标拖拽文本背景颜色优化；",
+      "removed": false
+    },
+    {
+      "day": "2026-04-12",
+      "commitId": "a25a95ee1a2c68dca3a06e265b014aef4568fadd",
+      "committedAt": "2026-04-12T19:13:41Z",
+      "commitOrder": 32,
+      "lineNumber": 3,
+      "type": "others",
+      "text": "url访问优化，允许后缀不带.html访问文档；",
+      "removed": false
+    },
+    {
+      "day": "2026-04-12",
+      "commitId": "a25a95ee1a2c68dca3a06e265b014aef4568fadd",
+      "committedAt": "2026-04-12T19:13:41Z",
+      "commitOrder": 32,
+      "lineNumber": 4,
+      "type": "others",
+      "text": "其他细节优化",
+      "removed": false
+    },
+    {
+      "day": "2026-04-13",
+      "commitId": "efe21ff63a8a2eba8b28b74be28319302d56c96c",
+      "committedAt": "2026-04-13T02:02:23Z",
+      "commitOrder": 33,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "修复 package.json 和 package-lock.json 缺失字体依赖的问题",
+      "removed": false
+    },
+    {
+      "day": "2026-04-13",
+      "commitId": "c8acffdc7dcdefa1c778c8c2e0e083dd3f757b40",
+      "committedAt": "2026-04-13T05:08:51Z",
+      "commitOrder": 34,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "新增TOC，进度条颜色优化",
+      "removed": false
+    },
+    {
+      "day": "2026-04-13",
+      "commitId": "d7f83b96bd80b9577aa9d5d3309ea52081673c2f",
+      "committedAt": "2026-04-13T07:32:59Z",
+      "commitOrder": 35,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "优化TOC",
+      "removed": false
+    },
+    {
+      "day": "2026-04-13",
+      "commitId": "e660f5637c3d60e6634da51dbc95226030a20a5e",
+      "committedAt": "2026-04-13T08:39:58Z",
+      "commitOrder": 36,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "优化TOC",
+      "removed": false
+    },
+    {
+      "day": "2026-04-14",
+      "commitId": "5503a7bdef9633b1e4fc82bdfaeae4910f46c1f4",
+      "committedAt": "2026-04-14T13:23:51Z",
+      "commitOrder": 37,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "新增部分文档",
+      "removed": false
+    },
+    {
+      "day": "2026-04-14",
+      "commitId": "510149666336c66a4a775d0f789c63e404812f6e",
+      "committedAt": "2026-04-14T13:23:51Z",
+      "commitOrder": 38,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "新增并补充部分文档",
+      "removed": false
+    },
+    {
+      "day": "2026-04-14",
+      "commitId": "c2dd73515af360907ec50522b2e6ee293846ac90",
+      "committedAt": "2026-04-14T13:23:51Z",
+      "commitOrder": 39,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "添加了部分文档",
+      "removed": false
+    },
+    {
+      "day": "2026-04-14",
+      "commitId": "aae9e25f43755802cc10f8a871b02523a06c54de",
+      "committedAt": "2026-04-14T19:09:28Z",
+      "commitOrder": 40,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "速算、二十四点、接龙文件名更正；",
+      "removed": false
+    },
+    {
+      "day": "2026-04-14",
+      "commitId": "aae9e25f43755802cc10f8a871b02523a06c54de",
+      "committedAt": "2026-04-14T19:09:28Z",
+      "commitOrder": 40,
+      "lineNumber": 2,
+      "type": "others",
+      "text": "现在网页会优先调用系统字体；",
+      "removed": false
+    },
+    {
+      "day": "2026-04-14",
+      "commitId": "aae9e25f43755802cc10f8a871b02523a06c54de",
+      "committedAt": "2026-04-14T19:09:28Z",
+      "commitOrder": 40,
+      "lineNumber": 3,
+      "type": "others",
+      "text": "移动了三角洲的图片文件位置；",
+      "removed": false
+    },
+    {
+      "day": "2026-04-14",
+      "commitId": "aae9e25f43755802cc10f8a871b02523a06c54de",
+      "committedAt": "2026-04-14T19:09:28Z",
+      "commitOrder": 40,
+      "lineNumber": 4,
+      "type": "others",
+      "text": "其他优化",
+      "removed": false
+    },
+    {
+      "day": "2026-04-14",
+      "commitId": "7b162b27e9ae7c190251897136ba721860819e3b",
+      "committedAt": "2026-04-14T20:00:40Z",
+      "commitOrder": 41,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "添加圈小猫文档",
+      "removed": false
+    },
+    {
+      "day": "2026-04-14",
+      "commitId": "ceeb09d5dbe2c6033144ad9d7b99c43a7e079c1d",
+      "committedAt": "2026-04-14T20:42:16Z",
+      "commitOrder": 42,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "移除了 bootstrap 依赖",
+      "removed": false
+    },
+    {
+      "day": "2026-04-14",
+      "commitId": "ceeb09d5dbe2c6033144ad9d7b99c43a7e079c1d",
+      "committedAt": "2026-04-14T20:42:16Z",
+      "commitOrder": 42,
+      "lineNumber": 2,
+      "type": "others",
+      "text": "更改了 package.json 的位置",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "612fb74c1442a4a18ca86199f688579a58738dc8",
+      "committedAt": "2026-04-15T06:44:05Z",
+      "commitOrder": 43,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "添加破译和翻牌文档",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "1fdd20062393c7aad2019c6f96f2ac4ce40b72f8",
+      "committedAt": "2026-04-15T06:44:05Z",
+      "commitOrder": 44,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "Layout：侧边栏增加滚动功能",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "04b177457c8940c60f8f9ce7a387ddddd935b7da",
+      "committedAt": "2026-04-15T06:44:48Z",
+      "commitOrder": 45,
+      "lineNumber": 1,
+      "type": "updates",
+      "text": "rename decrypt/flipcard routes and use sidebar CSS vars",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "04b177457c8940c60f8f9ce7a387ddddd935b7da",
+      "committedAt": "2026-04-15T06:44:48Z",
+      "commitOrder": 45,
+      "lineNumber": 2,
+      "type": "others",
+      "text": "- Rename decrypt.md to password_cracker.md, img/decrypt to password_cracker",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "04b177457c8940c60f8f9ce7a387ddddd935b7da",
+      "committedAt": "2026-04-15T06:44:48Z",
+      "commitOrder": 45,
+      "lineNumber": 3,
+      "type": "others",
+      "text": "- Rename flipcard.md to flop.md, img/flipcard to flop",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "04b177457c8940c60f8f9ce7a387ddddd935b7da",
+      "committedAt": "2026-04-15T06:44:48Z",
+      "commitOrder": 45,
+      "lineNumber": 4,
+      "type": "others",
+      "text": "- Update Layout.vue nav hrefs and isActive paths",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "04b177457c8940c60f8f9ce7a387ddddd935b7da",
+      "committedAt": "2026-04-15T06:44:48Z",
+      "commitOrder": 45,
+      "lineNumber": 5,
+      "type": "others",
+      "text": "- Restore dynamic --hm-desktop-sidebar-top; add --hm-desktop-sidebar-bottom; replace hardcoded sidebar dimensions in style.css",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "04b177457c8940c60f8f9ce7a387ddddd935b7da",
+      "committedAt": "2026-04-15T06:44:48Z",
+      "commitOrder": 45,
+      "lineNumber": 6,
+      "type": "others",
+      "text": "Made-with: Cursor",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "e95ef37ace3ff2c0c388625aceb4cb2d1f16dee4",
+      "committedAt": "2026-04-15T11:32:09Z",
+      "commitOrder": 46,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "优化圈小猫、翻牌和破译文档。优化UI排版",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "06202f087356e91790d44d8f5d9d3785ac552767",
+      "committedAt": "2026-04-15T17:28:12Z",
+      "commitOrder": 47,
+      "lineNumber": 1,
+      "type": "updates",
+      "text": "顶栏搜索与侧栏折叠、表格增强插件与分段搜索锚点跳转",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "06202f087356e91790d44d8f5d9d3785ac552767",
+      "committedAt": "2026-04-15T17:28:12Z",
+      "commitOrder": 47,
+      "lineNumber": 2,
+      "type": "others",
+      "text": "- 新增 tableEnhance 插件：在表头上方新增 <!-- hm-table --> 指令时，将根据设定的参数决定渲染多少列宽",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "06202f087356e91790d44d8f5d9d3785ac552767",
+      "committedAt": "2026-04-15T17:28:12Z",
+      "commitOrder": 47,
+      "lineNumber": 3,
+      "type": "others",
+      "text": "- 搜索改为按标题分段索引，结果展示文档/小节上下文，搜索后，点击结果可带锚点滚动并处理路由与过渡",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "06202f087356e91790d44d8f5d9d3785ac552767",
+      "committedAt": "2026-04-15T17:28:12Z",
+      "commitOrder": 47,
+      "lineNumber": 4,
+      "type": "others",
+      "text": "- 搜索入口迁至顶栏，新增占位文案轮换动画；电脑端页面下，Github 与明暗主题切换并入顶栏",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "06202f087356e91790d44d8f5d9d3785ac552767",
+      "committedAt": "2026-04-15T17:28:12Z",
+      "commitOrder": 47,
+      "lineNumber": 5,
+      "type": "others",
+      "text": "- 桌面文档侧栏改为可折叠、布局与 TOC 显示条件调整；",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "06202f087356e91790d44d8f5d9d3785ac552767",
+      "committedAt": "2026-04-15T17:28:12Z",
+      "commitOrder": 47,
+      "lineNumber": 6,
+      "type": "others",
+      "text": "- 圈小猫文档优化；",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "06202f087356e91790d44d8f5d9d3785ac552767",
+      "committedAt": "2026-04-15T17:28:12Z",
+      "commitOrder": 47,
+      "lineNumber": 7,
+      "type": "others",
+      "text": "- 配套更新 Layout.vue 与 style.css 样式与变量",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "a31284cab4b2bf4ebbb59570a974a9ef3852b3b4",
+      "committedAt": "2026-04-15T18:10:11Z",
+      "commitOrder": 48,
+      "lineNumber": 1,
+      "type": "updates",
+      "text": "顶栏搜索与侧栏折叠、表格增强插件与分段搜索锚点跳转",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "a31284cab4b2bf4ebbb59570a974a9ef3852b3b4",
+      "committedAt": "2026-04-15T18:10:11Z",
+      "commitOrder": 48,
+      "lineNumber": 2,
+      "type": "others",
+      "text": "- 新增 tableEnhance 插件：在表头上方新增 <!-- hm-table --> 指令时，将根据设定的参数决定渲染多少列宽",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "a31284cab4b2bf4ebbb59570a974a9ef3852b3b4",
+      "committedAt": "2026-04-15T18:10:11Z",
+      "commitOrder": 48,
+      "lineNumber": 3,
+      "type": "others",
+      "text": "- 搜索改为按标题分段索引，结果展示文档/小节上下文，搜索后，点击结果可带锚点滚动并处理路由与过渡",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "a31284cab4b2bf4ebbb59570a974a9ef3852b3b4",
+      "committedAt": "2026-04-15T18:10:11Z",
+      "commitOrder": 48,
+      "lineNumber": 4,
+      "type": "others",
+      "text": "- 搜索入口迁至顶栏，新增占位文案轮换动画；电脑端页面下，Github 与明暗主题切换并入顶栏",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "a31284cab4b2bf4ebbb59570a974a9ef3852b3b4",
+      "committedAt": "2026-04-15T18:10:11Z",
+      "commitOrder": 48,
+      "lineNumber": 5,
+      "type": "others",
+      "text": "- 桌面文档侧栏改为可折叠、布局与 TOC 显示条件调整；",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "a31284cab4b2bf4ebbb59570a974a9ef3852b3b4",
+      "committedAt": "2026-04-15T18:10:11Z",
+      "commitOrder": 48,
+      "lineNumber": 6,
+      "type": "others",
+      "text": "- 圈小猫文档优化；",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "a31284cab4b2bf4ebbb59570a974a9ef3852b3b4",
+      "committedAt": "2026-04-15T18:10:11Z",
+      "commitOrder": 48,
+      "lineNumber": 7,
+      "type": "others",
+      "text": "- 配套更新 Layout.vue 与 style.css 样式与变量",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "3445ef388b732d8a3bdb0b26d9b1d239ade61e2f",
+      "committedAt": "2026-04-15T18:10:27Z",
+      "commitOrder": 49,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "Merge branch 'main' of https://github.com/BingKKni/Huanmeng-Docs",
+      "removed": false
+    },
+    {
+      "day": "2026-04-15",
+      "commitId": "4680d05ffc4e75f5517947a1906f9213a710e4e6",
+      "committedAt": "2026-04-15T18:27:29Z",
+      "commitOrder": 50,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "markdown 水平线样式优化；底部移除部分版权信息",
+      "removed": false
+    },
+    {
+      "day": "2026-04-16",
+      "commitId": "c76bc0dba21dac46cf34cc6176bd83d76bba372a",
+      "committedAt": "2026-04-16T02:16:40Z",
+      "commitOrder": 51,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "手机端汉堡菜单展开动画优化，避免掉帧",
+      "removed": false
+    },
+    {
+      "day": "2026-04-16",
+      "commitId": "a559db0b92f04aabe8c262e735c74ba13316a430",
+      "committedAt": "2026-04-16T02:30:59Z",
+      "commitOrder": 52,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "搜索逻辑优化，添加搜索索引生成脚本",
+      "removed": false
+    },
+    {
+      "day": "2026-04-16",
+      "commitId": "c1d4ddf018e65892b87e94aac40672a3623e3243",
+      "committedAt": "2026-04-16T03:56:26Z",
+      "commitOrder": 53,
+      "lineNumber": 1,
+      "type": "updates",
+      "text": "优化图片展示性能",
+      "removed": false
+    },
+    {
+      "day": "2026-04-16",
+      "commitId": "c2417d9d3c49518e613971b8a2bbabcd674bc2fe",
+      "committedAt": "2026-04-16T05:59:52Z",
+      "commitOrder": 54,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "手机端用户现在会禁用网页动画以提升性能；",
+      "removed": false
+    },
+    {
+      "day": "2026-04-16",
+      "commitId": "c2417d9d3c49518e613971b8a2bbabcd674bc2fe",
+      "committedAt": "2026-04-16T05:59:52Z",
+      "commitOrder": 54,
+      "lineNumber": 2,
+      "type": "others",
+      "text": "改进了缩略图的生成",
+      "removed": false
+    },
+    {
+      "day": "2026-04-16",
+      "commitId": "b56f5fa1f52ce1ea42d13400ee4fe71fea71db36",
+      "committedAt": "2026-04-16T06:35:17Z",
+      "commitOrder": 55,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "添加了部分文档与预放入了部分图片",
+      "removed": false
+    },
+    {
+      "day": "2026-04-16",
+      "commitId": "93b7c6c213e3f7dcd1badeb7fd6be21e6e4c53a1",
+      "committedAt": "2026-04-16T07:26:16Z",
+      "commitOrder": 56,
+      "lineNumber": 1,
+      "type": "updates",
+      "text": "为手机端用户禁用进度条动画以提升性能",
+      "removed": false
+    },
+    {
+      "day": "2026-04-16",
+      "commitId": "5f7b9e791ed5884f746056889e7e9a29d2300753",
+      "committedAt": "2026-04-16T10:05:01Z",
+      "commitOrder": 57,
+      "lineNumber": 1,
+      "type": "updates",
+      "text": "优化手机端查看原图体验",
+      "removed": false
+    },
+    {
+      "day": "2026-04-16",
+      "commitId": "5f7b9e791ed5884f746056889e7e9a29d2300753",
+      "committedAt": "2026-04-16T10:05:01Z",
+      "commitOrder": 57,
+      "lineNumber": 2,
+      "type": "others",
+      "text": "禁用手机端网页放大缩小手势",
+      "removed": false
+    },
+    {
+      "day": "2026-04-16",
+      "commitId": "eff7d3124930dd119ff798d1bed8448f04c7ee8d",
+      "committedAt": "2026-04-16T10:41:20Z",
+      "commitOrder": 58,
+      "lineNumber": 1,
+      "type": "updates",
+      "text": "优化手机端首页布局",
+      "removed": false
+    },
+    {
+      "day": "2026-04-16",
+      "commitId": "eff7d3124930dd119ff798d1bed8448f04c7ee8d",
+      "committedAt": "2026-04-16T10:41:20Z",
+      "commitOrder": 58,
+      "lineNumber": 2,
+      "type": "others",
+      "text": "优化汉堡菜单",
+      "removed": false
+    },
+    {
+      "day": "2026-04-16",
+      "commitId": "ea7e99a5d8f11ce93471f8c03f3eeb0f0066d914",
+      "committedAt": "2026-04-16T11:02:43Z",
+      "commitOrder": 59,
+      "lineNumber": 1,
+      "type": "updates",
+      "text": "新增深色模式",
+      "removed": false
+    },
+    {
+      "day": "2026-04-16",
+      "commitId": "e7b72f6c6197d4730969b1ad3fe5389970410634",
+      "committedAt": "2026-04-16T11:32:23Z",
+      "commitOrder": 60,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "dev: 尝试优化图片缩略图生成",
+      "removed": false
+    },
+    {
+      "day": "2026-04-16",
+      "commitId": "4826ea50336191595b5e619171acaad0ed8ab8bf",
+      "committedAt": "2026-04-16T18:04:38Z",
+      "commitOrder": 61,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "优化今日老婆文档，图片下一步优化",
+      "removed": false
+    },
+    {
+      "day": "2026-04-16",
+      "commitId": "4826ea50336191595b5e619171acaad0ed8ab8bf",
+      "committedAt": "2026-04-16T18:04:38Z",
+      "commitOrder": 61,
+      "lineNumber": 2,
+      "type": "updates",
+      "text": "优化手机端的导航栏交互逻辑，优化图片展示",
+      "removed": false
+    },
+    {
+      "day": "2026-04-16",
+      "commitId": "c5bb89ed648e40047b57d3c24d7164dbfcc5edfc",
+      "committedAt": "2026-04-16T19:14:31Z",
+      "commitOrder": 62,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "fix: 修复图片裁切不生效的问题；",
+      "removed": false
+    },
+    {
+      "day": "2026-04-16",
+      "commitId": "c5bb89ed648e40047b57d3c24d7164dbfcc5edfc",
+      "committedAt": "2026-04-16T19:14:31Z",
+      "commitOrder": 62,
+      "lineNumber": 2,
+      "type": "others",
+      "text": "improve: 优化图片缩略图预生成逻辑；",
+      "removed": false
+    },
+    {
+      "day": "2026-04-16",
+      "commitId": "c5bb89ed648e40047b57d3c24d7164dbfcc5edfc",
+      "committedAt": "2026-04-16T19:14:31Z",
+      "commitOrder": 62,
+      "lineNumber": 3,
+      "type": "updates",
+      "text": "新增手机端2个手势（目前暂时未生效，明天修）",
+      "removed": false
+    },
+    {
+      "day": "2026-04-17",
+      "commitId": "64e73c82b77594a0b22054bf0b20e27a6ba8809d",
+      "committedAt": "2026-04-17T03:15:27Z",
+      "commitOrder": 63,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "更正 CONTRIBUTING 和 README 说明",
+      "removed": false
+    },
+    {
+      "day": "2026-04-17",
+      "commitId": "1e1910a6f8b31b1db095578de8b8ca26f39462f0",
+      "committedAt": "2026-04-17T10:35:52Z",
+      "commitOrder": 64,
+      "lineNumber": 1,
+      "type": "updates",
+      "text": "优化手机端导航栏",
+      "removed": false
+    },
+    {
+      "day": "2026-04-17",
+      "commitId": "1e1910a6f8b31b1db095578de8b8ca26f39462f0",
+      "committedAt": "2026-04-17T10:35:52Z",
+      "commitOrder": 64,
+      "lineNumber": 2,
+      "type": "docs",
+      "text": "添加导航栏菜单",
+      "removed": false
+    },
+    {
+      "day": "2026-04-17",
+      "commitId": "7d7ad6a4f7f8e38cc6114129613d86c82cc2f3df",
+      "committedAt": "2026-04-17T19:26:48Z",
+      "commitOrder": 65,
+      "lineNumber": 1,
+      "type": "updates",
+      "text": "社群添加\"BiliBili\"，\"群聊\"和\"频道\"更名为\"QQ群\"和\"QQ频道\"；",
+      "removed": false
+    },
+    {
+      "day": "2026-04-17",
+      "commitId": "7d7ad6a4f7f8e38cc6114129613d86c82cc2f3df",
+      "committedAt": "2026-04-17T19:26:48Z",
+      "commitOrder": 65,
+      "lineNumber": 2,
+      "type": "others",
+      "text": "预设颜色语法新增青色和金色；",
+      "removed": false
+    },
+    {
+      "day": "2026-04-17",
+      "commitId": "7d7ad6a4f7f8e38cc6114129613d86c82cc2f3df",
+      "committedAt": "2026-04-17T19:26:48Z",
+      "commitOrder": 65,
+      "lineNumber": 3,
+      "type": "others",
+      "text": "首页的子文档入口UI更新；",
+      "removed": false
+    },
+    {
+      "day": "2026-04-17",
+      "commitId": "7d7ad6a4f7f8e38cc6114129613d86c82cc2f3df",
+      "committedAt": "2026-04-17T19:26:48Z",
+      "commitOrder": 65,
+      "lineNumber": 4,
+      "type": "docs",
+      "text": "优化翻牌、今日老婆、接龙玩法文档内部语法；",
+      "removed": false
+    },
+    {
+      "day": "2026-04-17",
+      "commitId": "7d7ad6a4f7f8e38cc6114129613d86c82cc2f3df",
+      "committedAt": "2026-04-17T19:26:48Z",
+      "commitOrder": 65,
+      "lineNumber": 5,
+      "type": "others",
+      "text": "油漆炸弹删除历史更新记录；",
+      "removed": false
+    },
+    {
+      "day": "2026-04-17",
+      "commitId": "9780c53ac82c20eba151d4068793d381d5284455",
+      "committedAt": "2026-04-17T19:29:04Z",
+      "commitOrder": 66,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "添加了部分文档与预放入了部分图片",
+      "removed": false
+    },
+    {
+      "day": "2026-04-17",
+      "commitId": "4aa2112940a472ccc4a27755a98d6665c30df23e",
+      "committedAt": "2026-04-17T19:29:04Z",
+      "commitOrder": 67,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "添加了部分文档",
+      "removed": false
+    },
+    {
+      "day": "2026-04-17",
+      "commitId": "5927faf83bc1ee80f2837e45f27d2320afc71823",
+      "committedAt": "2026-04-17T19:42:14Z",
+      "commitOrder": 68,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "更正今日老婆文档位置（命名还没改，下次改）以及增加侧边栏入口",
+      "removed": false
+    },
+    {
+      "day": "2026-04-18",
+      "commitId": "28734d77ba093c6555b41b7b8b542e2d112ca625",
+      "committedAt": "2026-04-18T03:18:13Z",
+      "commitOrder": 69,
+      "lineNumber": 1,
+      "type": "updates",
+      "text": "删除2个手势（导航栏和打开侧边栏）",
+      "removed": false
+    },
+    {
+      "day": "2026-04-18",
+      "commitId": "56ef2fa4cdb0f56b143aa754582054951a0d87e7",
+      "committedAt": "2026-04-18T07:25:31Z",
+      "commitOrder": 70,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "电脑端优化侧边栏收缩后的动画和UI",
+      "removed": false
+    },
+    {
+      "day": "2026-04-18",
+      "commitId": "a766ce35b457aa908c315cc3161aadaca686197a",
+      "committedAt": "2026-04-18T09:49:16Z",
+      "commitOrder": 71,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "今日老婆文档更正",
+      "removed": false
+    },
+    {
+      "day": "2026-04-18",
+      "commitId": "a6ffdddf5e07349c75812543822f3909c88c1c50",
+      "committedAt": "2026-04-18T10:31:53Z",
+      "commitOrder": 72,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "圈小猫文档变量名更正",
+      "removed": false
+    },
+    {
+      "day": "2026-04-19",
+      "commitId": "773f673f6cd05841b0544046db95ceb0d7aae192",
+      "committedAt": "2026-04-19T01:58:35Z",
+      "commitOrder": 73,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "添加了部分文档 (#11)",
+      "removed": false
+    },
+    {
+      "day": "2026-04-19",
+      "commitId": "945e9add8f9dcfb79208ac8efeb066ead7685b49",
+      "committedAt": "2026-04-19T09:50:36Z",
+      "commitOrder": 74,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "更正扫雷文档",
+      "removed": false
+    },
+    {
+      "day": "2026-04-20",
+      "commitId": "2f79bf139138bce70260469c8e9222145be52361",
+      "committedAt": "2026-04-20T07:50:15Z",
+      "commitOrder": 75,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "添加了部分协议 (#12)",
+      "removed": false
+    },
+    {
+      "day": "2026-04-20",
+      "commitId": "402770fd274d42b46b7a3708e550f72da4559800",
+      "committedAt": "2026-04-20T13:42:59Z",
+      "commitOrder": 76,
+      "lineNumber": 1,
+      "type": "others",
+      "text": "破译、圈小猫图片更新",
+      "removed": false
+    },
+    {
+      "day": "2026-04-21",
+      "commitId": "b1ea5840f381ae099f03b073de011c1795d78fee",
+      "committedAt": "2026-04-21T18:22:01Z",
+      "commitOrder": 77,
+      "lineNumber": 1,
+      "type": "updates",
+      "text": "添加跟随设备自动切换浅色/深色模式功能",
+      "removed": false
+    },
+    {
+      "day": "2026-04-21",
+      "commitId": "b1ea5840f381ae099f03b073de011c1795d78fee",
+      "committedAt": "2026-04-21T18:22:01Z",
+      "commitOrder": 77,
+      "lineNumber": 2,
+      "type": "docs",
+      "text": "添加规则中心页面，添加贡献指南页面",
+      "removed": false
+    }
+  ]
+}

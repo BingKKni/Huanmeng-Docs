@@ -2,6 +2,7 @@ import { defineConfig } from 'vitepress'
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs'
 import colorTextPlugin from './plugins/colorText.js'
 import imageThumbnailPlugin from './plugins/imageThumbnail.mjs'
+import preserveBlankLinesPlugin from './plugins/preserveBlankLines.js'
 import tableEnhancePlugin from './plugins/tableEnhance.js'
 import markdownItAttrs from 'markdown-it-attrs'
 import { loadImageThumbnailManifest } from './image-thumbnail-utils.mjs'
@@ -12,6 +13,8 @@ const imageThumbnailManifest = loadImageThumbnailManifest()
 export default defineConfig({
   title: "幻梦Bot",
   cleanUrls: true,
+  /** 首屏按系统偏好切换深色/浅色，并注入 check-dark-mode 避免闪烁；用户手动切换后会写入 localStorage 固定偏好。 */
+  appearance: true,
   description: "QQ幻梦机器人的说明文档",
   head: [
     ['meta', { name: 'viewport', content: 'width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no' }],
@@ -27,6 +30,15 @@ export default defineConfig({
     ['meta', { name: 'twitter:description', content: 'QQ幻梦机器人的说明文档' }],
     ['meta', { name: 'twitter:image', content: 'https://xbdqwq.com/img/hm_icon.png' }]
   ],
+  themeConfig: {
+    notFound: {
+      code: '404',
+      title: '未找到对应页面',
+      quote: '很抱歉，您访问的页面不存在。',
+      linkLabel: '返回首页',
+      linkText: '返回首页'
+    }
+  },
   markdown: {
     math: true,
     // 需要注册 vitepress-plugin-tabs 的 markdown-it 插件，以支持 ::: tabs 语法
@@ -35,6 +47,7 @@ export default defineConfig({
       md.set({ breaks: true })
       md.use(tabsMarkdownPlugin)
       md.use(colorTextPlugin)
+      md.use(preserveBlankLinesPlugin)
       md.use(tableEnhancePlugin)
       md.use(markdownItAttrs)
       md.use(imageThumbnailPlugin, { manifest: imageThumbnailManifest })
