@@ -11,9 +11,14 @@ import { useDocContentEnhancements } from './composables/useDocContentEnhancemen
 import { useDocToc } from './composables/useDocToc.js'
 import { useInfoDialog } from './composables/useInfoDialog.js'
 import { useLightbox } from './composables/useLightbox.js'
+import { useBackNavigation } from './composables/useBackNavigation.js'
 
 const { frontmatter, page } = useData()
 const router = useRouter()
+
+// --- Back Navigation (from= param) ---
+const { backLinkInfo, syncFromParam } = useBackNavigation()
+
 // --- Search Logic ---
 const SEARCH_INDEX_PATH = '/search-index.json'
 const SEARCH_HISTORY_STORAGE_KEY = 'hm-search-history'
@@ -1235,6 +1240,7 @@ function handleBrowserGestureZoomGuard(e) {
 }
 
 onMounted(() => {
+  syncFromParam()
   syncSearchHistoryFromStorage()
   syncViewportMode()
   resetMobileHeaderState()
@@ -1275,6 +1281,7 @@ onMounted(() => {
   }
 
   router.onAfterRouteChange = async href => {
+    syncFromParam()
     setPendingSearchHeading(getHashTargetFromHref(href), pendingSearchHeadingTitle, pendingSearchHeadingFlash)
     await routerProgressPrevAfter?.(href)
     requestAnimationFrame(() => {
@@ -2046,6 +2053,15 @@ watch(infoDialogVisible, async visible => {
               'docs-support-article': page.relativePath === 'about/support.md'
             }"
           >
+            <a v-if="backLinkInfo" :href="withBase(backLinkInfo.url)" class="doc-back-btn">
+              <span class="doc-back-btn__icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11.5 3.5L7.5 8L11.5 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                  <path d="M7.5 3.5L3.5 8L7.5 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+              <span>返回到"{{ backLinkInfo.label }}"</span>
+            </a>
             <Content />
           </article>
           

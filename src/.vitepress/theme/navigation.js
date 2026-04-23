@@ -61,8 +61,9 @@ export const desktopSidebarLinks = [
   {
     href: '/docs/entertainment/',
     label: '✨ 娱乐功能',
-    isActive: relativePath => relativePath === 'docs/entertainment/index.md',
-    hasAnyActive: relativePath => relativePath === 'docs/entertainment/index.md' || relativePath.startsWith('docs/entertainment/'),
+    navigable: false,
+    isActive: () => false,
+    hasAnyActive: relativePath => relativePath.startsWith('docs/entertainment/'),
     children: [
       { href: '/docs/entertainment/signin', label: '打卡', isActive: relativePath => relativePath === 'docs/entertainment/signin.md' },
       { href: '/docs/entertainment/fortune', label: '今日运势', isActive: relativePath => relativePath === 'docs/entertainment/fortune.md' },

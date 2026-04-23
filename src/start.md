@@ -15,7 +15,7 @@
                 <div class="app-card-desc">请在添加幻梦前仔细阅读用户准则。</div>
             </div>
         </div>
-        <a href="/about/rule/user" class="app-action-btn">前往阅读</a>
+        <a href="/about/rule/user?from=start" class="app-action-btn">前往阅读</a>
     </div>
 </div>
 
