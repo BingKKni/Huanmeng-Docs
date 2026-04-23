@@ -9,6 +9,9 @@ node_modules/
 **/.vscode/
 src/public/search-index.json
 src/public/img-thumbs/
+src/changelog/*.md
+!src/changelog/index.md
+src/.vitepress/generated/
 
 # 环境变量与密钥（若有）
 .env

@@ -201,13 +201,13 @@ function buildChangelogEntries(commits, initialEntries = []) {
       if (rollback) {
         const removed = applyRollback(entries, rollback)
         if (!removed) {
-          console.warn(`Rollback target not found: ${line}`)
+          console.warn(`未找到回滚目标：${line}`)
         }
         return
       }
 
       if (isRollbackLine(line)) {
-        console.warn(`Invalid rollback format ignored: ${line}`)
+        console.warn(`回滚格式无效，已忽略：${line}`)
         return
       }
 
@@ -418,11 +418,11 @@ async function main() {
     await writeCache(entries)
     const daysWithSections = groupEntriesByDay(entries)
     await writeGeneratedArtifacts(daysWithSections)
-    const fetchModeText = isIncrementalBuild ? 'incremental' : 'full'
-    console.log(`Generated ${daysWithSections.length + 1} changelog pages from ${entries.length} items and ${commits.length} commits (${fetchModeText}).`)
+    const fetchModeText = isIncrementalBuild ? '增量' : '全量'
+    console.log(`更新日志生成完成，共处理 ${commits.length} 个提交、${entries.length} 条记录，生成 ${daysWithSections.length + 1} 个页面（${fetchModeText}模式）。`)
   } catch (error) {
     if (Array.isArray(cachedEntries)) {
-      console.warn('Failed to refresh changelog from GitHub, using local changelog cache.')
+      console.warn('从 GitHub 拉取更新日志失败，将使用本地缓存继续构建。')
       console.warn(error)
       const daysWithSections = groupEntriesByDay(cachedEntries)
       await writeGeneratedArtifacts(daysWithSections)
