@@ -4464,6 +4464,62 @@ html.dark .custom-block.details {
   }
 }
 
+.doc-back-btn {
+  width: 100%;
+  max-width: 420px;
+  margin-bottom: 28px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background-color: #f1f3f5;
+  color: #495057 !important;
+  text-decoration: none !important;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.doc-back-btn__icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.doc-back-btn__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+@media (hover: hover) {
+  .doc-back-btn:hover {
+    background-color: #dee2e6;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .doc-back-btn {
+    max-width: none;
+  }
+}
+
+.dark .doc-back-btn {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ced4da !important;
+}
+
+@media (hover: hover) {
+  .dark .doc-back-btn:hover {
+    background-color: rgba(255, 255, 255, 0.13);
+  }
+}
+
 .emoji-avatar {
   display: flex;
   align-items: center;

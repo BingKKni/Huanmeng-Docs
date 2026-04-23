@@ -2,7 +2,7 @@
   "version": 3,
   "owner": "BingKKni",
   "repo": "Huanmeng-Docs",
-  "updatedAt": "2026-04-23T04:33:32.043Z",
+  "updatedAt": "2026-04-23T07:56:40.279Z",
   "entries": [
     {
       "day": "2026-04-09",
@@ -1292,6 +1292,46 @@
       "lineNumber": 1,
       "type": "updates",
       "text": "构建时，输出改为中文",
+      "removed": false
+    },
+    {
+      "day": "2026-04-23",
+      "commitId": "1f59d216098378fba2e399a644d9251e3eff2735",
+      "committedAt": "2026-04-23T04:34:38Z",
+      "commitOrder": 2,
+      "lineNumber": 1,
+      "type": "updates",
+      "text": "侧边栏添加水波纹点击效果",
+      "removed": false
+    },
+    {
+      "day": "2026-04-23",
+      "commitId": "1f59d216098378fba2e399a644d9251e3eff2735",
+      "committedAt": "2026-04-23T04:34:38Z",
+      "commitOrder": 2,
+      "lineNumber": 2,
+      "type": "updates",
+      "text": "恢复了手机端的切换页面动画（但效果还是砍了一刀）",
+      "removed": false
+    },
+    {
+      "day": "2026-04-23",
+      "commitId": "17dac17eb5a1fb2fecafb9c1fccf9d1f497a4f4c",
+      "committedAt": "2026-04-23T04:43:05Z",
+      "commitOrder": 3,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "随机图文档优化",
+      "removed": false
+    },
+    {
+      "day": "2026-04-23",
+      "commitId": "17dac17eb5a1fb2fecafb9c1fccf9d1f497a4f4c",
+      "committedAt": "2026-04-23T04:43:05Z",
+      "commitOrder": 3,
+      "lineNumber": 2,
+      "type": "updates",
+      "text": "修复 page-capabilities.js 未被跟踪的问题",
       "removed": false
     }
   ]

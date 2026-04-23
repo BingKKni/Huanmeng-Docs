@@ -54,7 +54,7 @@
                 <div class="app-card-desc">支持幻梦开发者以让幻梦变得更加好用~</div>
             </div>
         </div>
-        <a href="/about/support" class="app-action-btn">前往</a>
+        <a href="/about/support?from=docs_index" class="app-action-btn">前往</a>
     </div>
 </div>
 
@@ -73,7 +73,7 @@
                 <div class="app-card-desc">每天来打卡，养成好习惯~</div>
             </div>
         </div>
-        <a href="/docs/entertainment/signin" class="app-action-btn">前往</a>
+        <a href="/docs/entertainment/signin?from=docs_index" class="app-action-btn">前往</a>
     </div>
     <!-- 今日运势 -->
     <div class="app-card">
@@ -84,7 +84,7 @@
                 <div class="app-card-desc">快来抽取今日的运势加成吧!</div>
             </div>
         </div>
-        <a href="/docs/entertainment/fortune" class="app-action-btn">前往</a>
+        <a href="/docs/entertainment/fortune?from=docs_index" class="app-action-btn">前往</a>
     </div>
     <!-- 今日老婆 -->
     <div class="app-card">
@@ -95,7 +95,7 @@
                 <div class="app-card-desc">每天你都可以来幻梦这里抽取一位角色作为你的老婆!</div>
             </div>
         </div>
-        <a href="/docs/entertainment/daily_wife/" class="app-action-btn">前往</a>
+        <a href="/docs/entertainment/daily_wife/?from=docs_index" class="app-action-btn">前往</a>
     </div>
     <!-- 今日超能力 -->
     <div class="app-card">
@@ -128,7 +128,7 @@
                 <div class="app-card-desc">如字面意思，就是好感度</div>
             </div>
         </div>
-        <a href="https://docs.qq.com/aio/DZEJoalhPcHZmaVJR?p=1AtEdKyEM4fLa1rplIrEtE" target="_blank" rel="noopener noreferrer" class="app-action-btn">前往</a>
+        <a href="/docs/entertainment/sence?from=docs_index" class="app-action-btn">前往</a>
     </div>
     <!-- 随机图 -->
     <div class="app-card">
@@ -139,7 +139,7 @@
                 <div class="app-card-desc">随机获取一张二次元美图!</div>
             </div>
         </div>
-        <a href="/docs/entertainment/random_image" class="app-action-btn">前往</a>
+        <a href="/docs/entertainment/random_image?from=docs_index" class="app-action-btn">前往</a>
     </div>
     <!-- 保险箱 -->
     <div class="app-card">
@@ -161,7 +161,7 @@
                 <div class="app-card-desc">快来设定一个属于自己的人设吧~</div>
             </div>
         </div>
-        <a href="/docs/entertainment/sence" class="app-action-btn">前往</a>
+        <a href="/docs/entertainment/sence?from=docs_index" class="app-action-btn">前往</a>
     </div>
     <!-- 油漆炸弹 -->
     <div class="app-card">
@@ -172,7 +172,7 @@
                 <div class="app-card-desc">哎呀呀，可不要踩到油漆了哟~</div>
             </div>
         </div>
-        <a href="/docs/entertainment/paint_bomb" class="app-action-btn">前往</a>
+        <a href="/docs/entertainment/paint_bomb?from=docs_index" class="app-action-btn">前往</a>
     </div>
     <!-- 扫雷 -->
     <div class="app-card">
@@ -194,7 +194,7 @@
                 <div class="app-card-desc">考验大脑的瞬时运算能力!</div>
             </div>
         </div>
-        <a href="https://docs.qq.com/aio/DZEJoalhPcHZmaVJR?p=oYA5yBFzdzfg71fprYTK2j" target="_blank" rel="noopener noreferrer" class="app-action-btn">前往</a>
+        <a href="/docs/entertainment/fast_math?from=docs_index" class="app-action-btn">前往</a>
     </div>
     <!-- 翻牌 -->
     <div class="app-card">
@@ -205,7 +205,7 @@
                 <div class="app-card-desc">来看看你今天的运气有多好吧</div>
             </div>
         </div>
-        <a href="/docs/entertainment/flop" class="app-action-btn">前往</a>
+        <a href="/docs/entertainment/flop?from=docs_index" class="app-action-btn">前往</a>
     </div>
     <!-- 破译 -->
     <div class="app-card">
@@ -216,7 +216,7 @@
                 <div class="app-card-desc">神秘森林的宝箱破译探险~</div>
             </div>
         </div>
-        <a href="/docs/entertainment/password_cracker" class="app-action-btn">前往</a>
+        <a href="/docs/entertainment/password_cracker?from=docs_index" class="app-action-btn">前往</a>
     </div>
     <!-- 圈小猫 -->
     <div class="app-card">
@@ -227,7 +227,7 @@
                 <div class="app-card-desc">圈住它，别让它跑了!</div>
             </div>
         </div>
-        <a href="/docs/entertainment/catch_the_cat/" class="app-action-btn">前往</a>
+        <a href="/docs/entertainment/catch_the_cat/?from=docs_index" class="app-action-btn">前往</a>
     </div>
     <!-- 二十四点 -->
     <div class="app-card">
@@ -238,7 +238,7 @@
                 <div class="app-card-desc">经典数学运算小游戏~</div>
             </div>
         </div>
-        <a href="/docs/entertainment/twenty_four_points" class="app-action-btn">前往</a>
+        <a href="/docs/entertainment/twenty_four_points?from=docs_index" class="app-action-btn">前往</a>
     </div>
     <!-- 恶臭数字论证器 -->
     <div class="app-card">
@@ -260,7 +260,7 @@
                 <div class="app-card-desc">考验你词汇的时候到了，小人类!</div>
             </div>
         </div>
-        <a href="/docs/entertainment/word_chain" class="app-action-btn">前往</a>
+        <a href="/docs/entertainment/word_chain?from=docs_index" class="app-action-btn">前往</a>
     </div>
 </div>
 
