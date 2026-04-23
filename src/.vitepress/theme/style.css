@@ -3918,6 +3918,33 @@ html.dark .hm-search-modal__close {
 }
 
 /* ────────────────────────── */
+/* 侧边栏条目水波纹效果          */
+/* ────────────────────────── */
+.desktop-doc-sidebar__item-link {
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes sidebar-ripple {
+  from {
+    transform: scale(0);
+    opacity: 0.12;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+.sidebar-ripple {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  background-color: currentColor;
+  animation: sidebar-ripple 0.55s ease-out forwards;
+}
+
+/* ────────────────────────── */
 /* TOC 右侧大纲栏样式          */
 /* ────────────────────────── */
 .desktop-toc-sidebar {

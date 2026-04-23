@@ -477,6 +477,7 @@ const NAV_ROUTE_PROGRESS_CAP = 90
 const NAV_ROUTE_PROGRESS_TO_100_MS = 320
 const NAV_ROUTE_PROGRESS_FADE_MS = 360
 const DOC_PAGE_TRANSITION_MS = 240
+const MOBILE_DOC_PAGE_TRANSITION_MS = 180
 const DOC_PAGE_FAST_SWITCH_WINDOW_MS = 180
 const DOC_PAGE_FAST_SWITCH_DISABLE_ANIM_MS = 420
 const DESKTOP_SEARCH_PLACEHOLDER_IDLE_MS = 4000
@@ -1356,15 +1357,11 @@ function onDocPageBeforeEnter(el) {
   })
 
   el.style.transition = 'none'
-
-  if (isMobileViewport()) {
-    el.style.opacity = '1'
-    el.style.transform = 'translateY(0)'
-    return
-  }
-
   el.style.opacity = '0'
-  el.style.transform = 'translateY(12px)'
+
+  if (!isMobileViewport()) {
+    el.style.transform = 'translateY(12px)'
+  }
 }
 
 async function onDocPageEnter(el, done) {
@@ -1396,34 +1393,14 @@ async function onDocPageEnter(el, done) {
 
   completeRouteNavProgressByKey(routeNavComparableKey(window.location.href))
 
-  if (isMobileViewport()) {
-    await nextRaf()
-    if (!isDocPageTransitionValid(el, runId)) {
-      finishInvalidEnter()
-      return
-    }
-
-    finishDocPageTransitionNow(el)
-    if (el.classList.contains('doc-article') && !el.classList.contains('search-results-article')) {
-      requestAnimationFrame(() => {
-        if (!el.isConnected) return
-        void processImageRowsAsync({ force: true, root: el })
-      })
-      requestAnimationFrame(() => {
-        void applyPendingSearchHeading()
-      })
-    }
-    done()
-    return
-  }
-
   await nextDoubleRaf()
   if (!isDocPageTransitionValid(el, runId)) {
     finishInvalidEnter()
     return
   }
 
-  const ms = isMobileViewport() || performance.now() < docPageDisableAnimUntil ? 0 : DOC_PAGE_TRANSITION_MS
+  const mobile = isMobileViewport()
+  const ms = performance.now() < docPageDisableAnimUntil ? 0 : (mobile ? MOBILE_DOC_PAGE_TRANSITION_MS : DOC_PAGE_TRANSITION_MS)
   let finished = false
   let tid = null
   let rafOuter = null
@@ -1486,12 +1463,14 @@ async function onDocPageEnter(el, done) {
 
   if (ms === 0) {
     el.style.opacity = '1'
-    el.style.transform = 'translateY(0)'
+    if (!mobile) el.style.transform = 'translateY(0)'
     requestAnimationFrame(safeDone)
     return
   }
 
-  el.style.transition = `opacity ${ms}ms ease, transform ${ms}ms ease`
+  el.style.transition = mobile
+    ? `opacity ${ms}ms ease`
+    : `opacity ${ms}ms ease, transform ${ms}ms ease`
   rafOuter = requestAnimationFrame(() => {
     rafInner = requestAnimationFrame(() => {
       if (!isDocPageTransitionValid(el, runId)) {
@@ -1499,7 +1478,7 @@ async function onDocPageEnter(el, done) {
         return
       }
       el.style.opacity = '1'
-      el.style.transform = 'translateY(0)'
+      if (!mobile) el.style.transform = 'translateY(0)'
     })
   })
 }
@@ -1508,7 +1487,8 @@ function onDocPageLeave(el, done) {
   const state = docPageTransitionState.get(el)
   if (state) state.cancelled = true
   cancelDocPageEnterTransition(el)
-  const ms = isMobileViewport() || performance.now() < docPageDisableAnimUntil ? 0 : DOC_PAGE_TRANSITION_MS
+  const mobile = isMobileViewport()
+  const ms = performance.now() < docPageDisableAnimUntil ? 0 : (mobile ? MOBILE_DOC_PAGE_TRANSITION_MS : DOC_PAGE_TRANSITION_MS)
   let finished = false
   const safeDone = () => {
     if (finished) return
@@ -1533,10 +1513,12 @@ function onDocPageLeave(el, done) {
     return
   }
 
-  el.style.transition = `opacity ${ms}ms ease, transform ${ms}ms ease`
+  el.style.transition = mobile
+    ? `opacity ${ms}ms ease`
+    : `opacity ${ms}ms ease, transform ${ms}ms ease`
   requestAnimationFrame(() => {
     el.style.opacity = '0'
-    el.style.transform = 'translateY(12px)'
+    if (!mobile) el.style.transform = 'translateY(12px)'
   })
 }
 

@@ -2,7 +2,7 @@
   "version": 3,
   "owner": "BingKKni",
   "repo": "Huanmeng-Docs",
-  "updatedAt": "2026-04-23T02:18:05.835Z",
+  "updatedAt": "2026-04-23T04:33:32.043Z",
   "entries": [
     {
       "day": "2026-04-09",
@@ -1262,6 +1262,36 @@
       "lineNumber": 2,
       "type": "docs",
       "text": "添加规则中心页面，添加贡献指南页面",
+      "removed": false
+    },
+    {
+      "day": "2026-04-23",
+      "commitId": "a14e5fe7f22aad600a6d37009129fed30df448ad",
+      "committedAt": "2026-04-23T02:32:26Z",
+      "commitOrder": 0,
+      "lineNumber": 1,
+      "type": "docs",
+      "text": "start.md 推荐 QQ 版本更改",
+      "removed": false
+    },
+    {
+      "day": "2026-04-23",
+      "commitId": "a14e5fe7f22aad600a6d37009129fed30df448ad",
+      "committedAt": "2026-04-23T02:32:26Z",
+      "commitOrder": 0,
+      "lineNumber": 2,
+      "type": "updates",
+      "text": "移除了对changelog里历史日志的追踪",
+      "removed": false
+    },
+    {
+      "day": "2026-04-23",
+      "commitId": "36f7dcb3ea7e0293bdbf9a22c4a01c25cdff28bd",
+      "committedAt": "2026-04-23T02:33:19Z",
+      "commitOrder": 1,
+      "lineNumber": 1,
+      "type": "updates",
+      "text": "构建时，输出改为中文",
       "removed": false
     }
   ]

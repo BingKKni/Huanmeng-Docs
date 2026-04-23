@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { withBase } from 'vitepress'
 
 defineOptions({
@@ -95,6 +95,39 @@ function toggleItem(item) {
   if (!hasChildren(item)) return
   sharedExpandedKeys.value[item.href] = !sharedExpandedKeys.value[item.href]
 }
+
+const itemLinkRef = ref(null)
+
+function handlePointerDown(event) {
+  const el = event.currentTarget
+  if (!(el instanceof HTMLElement)) return
+
+  const rect = el.getBoundingClientRect()
+  const x = event.clientX - rect.left
+  const y = event.clientY - rect.top
+  const size = Math.max(rect.width, rect.height) * 2.5
+
+  const ripple = document.createElement('span')
+  ripple.className = 'sidebar-ripple'
+  ripple.style.cssText = `width:${size}px;height:${size}px;left:${x - size / 2}px;top:${y - size / 2}px;`
+  el.appendChild(ripple)
+  ripple.addEventListener('animationend', () => ripple.remove(), { once: true })
+}
+
+// Scroll newly-activated sidebar item into view within the sidebar body.
+// This prevents the "ripple fires, page navigates, but sidebar doesn't follow" issue.
+watch(isExactActive, (active) => {
+  if (!active) return
+  nextTick(() => {
+    itemLinkRef.value?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  })
+})
+
+onMounted(() => {
+  if (isExactActive.value && itemLinkRef.value) {
+    itemLinkRef.value.scrollIntoView({ block: 'nearest' })
+  }
+})
 </script>
 
 <template>
@@ -112,6 +145,7 @@ function toggleItem(item) {
   <div v-else-if="item" class="desktop-doc-sidebar__group">
     <component
       :is="itemTag"
+      ref="itemLinkRef"
       class="desktop-doc-sidebar__item-link"
       :class="[
         depth === 0 ? 'desktop-doc-sidebar__link' : 'desktop-doc-sidebar__child-link',
@@ -129,6 +163,7 @@ function toggleItem(item) {
       :aria-current="isExactActive ? 'page' : undefined"
       :aria-expanded="hasChildren(item) ? String(isExpanded) : undefined"
       @click="handleItemClick"
+      @pointerdown="handlePointerDown"
     >
       <span class="desktop-doc-sidebar__item-label">{{ item.label }}</span>
       <span
