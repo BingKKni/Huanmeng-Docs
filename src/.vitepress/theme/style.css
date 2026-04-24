@@ -1204,7 +1204,7 @@ a:hover {
     width: 14px;
     height: 14px;
     color: #6c757d;
-    transition: none;
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .sidebar-menu-icon.expanded {
@@ -1214,7 +1214,9 @@ a:hover {
   .desktop-doc-sidebar__children {
     display: grid;
     grid-template-rows: 0fr;
-    transition: none;
+    margin: 0;
+    transition: grid-template-rows 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+                margin 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     overflow: hidden;
   }
 
@@ -1439,7 +1441,7 @@ a:hover {
     width: 14px;
     height: 14px;
     color: #6c757d;
-    transition: none;
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .sidebar-menu-icon.expanded {
@@ -1449,7 +1451,9 @@ a:hover {
   .desktop-doc-sidebar__children {
     display: grid;
     grid-template-rows: 0fr;
-    transition: none;
+    margin: 0;
+    transition: grid-template-rows 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+                margin 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     overflow: hidden;
   }
 
@@ -3868,7 +3872,7 @@ html.dark .hm-search-modal__close {
     width: 14px;
     height: 14px;
     color: #6c757d;
-    transition: none;
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .sidebar-compact-mode .sidebar-menu-icon.expanded {
@@ -3878,7 +3882,9 @@ html.dark .hm-search-modal__close {
   .sidebar-compact-mode .desktop-doc-sidebar__children {
     display: grid;
     grid-template-rows: 0fr;
-    transition: none;
+    margin: 0;
+    transition: grid-template-rows 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+                margin 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     overflow: hidden;
   }
 
@@ -3918,13 +3924,36 @@ html.dark .hm-search-modal__close {
 }
 
 /* ────────────────────────── */
-/* 侧边栏条目水波纹效果          */
+/* 侧边栏条目点击动画            */
 /* ────────────────────────── */
 .desktop-doc-sidebar__item-link {
   position: relative;
   overflow: hidden;
 }
 
+/* 电脑端（鼠标设备）：背景色淡入淡出，参考导航栏按钮动画 */
+@media (hover: hover) {
+  .desktop-doc-sidebar__link {
+    transition: color 0.2s ease, background-color 0.2s ease;
+  }
+
+  .desktop-doc-sidebar__item-link:active:not(.active) {
+    background-color: var(--hm-accent-soft-strong);
+    transition: background-color 0.05s ease;
+  }
+
+  .desktop-doc-sidebar__item-link.active:active {
+    background-color: var(--hm-sidebar-active-bg-hover);
+    transition: background-color 0.05s ease;
+  }
+
+  /* 电脑端隐藏水波纹 */
+  .sidebar-ripple {
+    display: none;
+  }
+}
+
+/* 手机/触屏端：保留水波纹效果 */
 @keyframes sidebar-ripple {
   from {
     transform: scale(0);

@@ -1,0 +1,10 @@
+# robots.txt for https://xbdqwq.com
+
+User-agent: *
+Allow: /
+
+# 排除图片目录
+Disallow: /img/
+Disallow: /img-thumbs/
+
+Sitemap: https://xbdqwq.com/sitemap.xml
