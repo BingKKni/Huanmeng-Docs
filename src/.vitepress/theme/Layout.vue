@@ -2098,6 +2098,13 @@ watch(infoDialogVisible, async visible => {
     <footer class="site-footer">
       <div class="site-container site-footer-inner">
         <span><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" class="site-footer-link">浙ICP备2026018380号</a></span>
+        <span>
+          <a href="https://beian.mps.gov.cn/#/query/webSearch?code=33078402101557" rel="noreferrer" target="_blank" class="site-footer-link site-footer-link--beian">
+            <img class="site-footer-beian-icon" :src="withBase('/img/beian_msp.png')" alt="" aria-hidden="true">
+            <span>浙公网安备33078402101557号</span>
+          </a>
+        </span>
+        <span><a href="https://icp.gov.moe/?keyword=20264888" target="_blank" rel="noopener noreferrer" class="site-footer-link">萌ICP备20264888号</a></span>
         <span>© 2024-{{ currentYear }} 幻梦，保留所有权利</span>
       </div>
     </footer>

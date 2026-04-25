@@ -2586,6 +2586,19 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
   color: inherit;
 }
 
+.site-footer-link--beian {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.site-footer-beian-icon {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
 .search-results-title,
 .search-results-divider {
   margin-bottom: 1.5rem;
