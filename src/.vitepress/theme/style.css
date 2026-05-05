@@ -2542,8 +2542,12 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
 
 .doc-article .plugin-tabs[data-variant='hm-donate'] .plugin-tabs--content img {
   max-width: 100%;
-  height: auto;
   vertical-align: middle;
+}
+
+/* 仅对未显式声明 height 的图片做等比缩放，避免覆盖 {height="..."} 注入的属性 */
+.doc-article .plugin-tabs[data-variant='hm-donate'] .plugin-tabs--content img:not([height]) {
+  height: auto;
 }
 
 @media print {
