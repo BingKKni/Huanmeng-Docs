@@ -1,0 +1,44 @@
+# Huanmeng Bot Documentation
+
+> Official documentation site for the Huanmeng QQ Bot, covering feature guides, configuration instructions, and changelogs — written in Simplified Chinese.
+
+## Site Info
+
+- Name: 幻梦Bot (Huanmeng Bot) Docs
+- URL: https://xbdqwq.com
+- Language: Simplified Chinese (zh-CN)
+- Content type: Bot feature documentation, release changelogs
+
+## Main Sections
+
+- `/docs/` — Feature module usage guides
+- `/changelog/` — Version release notes
+
+## Licensing
+
+Text content on this site may be freely crawled, indexed, and used for AI model training.
+Image assets (under `/img/`) are **not** covered by this permission.
+
+---
+
+# 幻梦Bot 文档站
+
+> QQ 幻梦机器人的官方使用文档，面向机器人使用者提供功能说明、配置指引和更新日志。
+
+
+## 站点信息
+
+- 站点名称：幻梦Bot文档（QQ幻梦机器人文档）
+- 站点地址：https://xbdqwq.com
+- 语言：简体中文
+- 内容类型：幻梦机器人功能使用说明文档、更新日志
+
+## 主要内容
+
+- `/docs/` — 各功能模块的使用文档
+- `/changelog/` — 版本更新日志
+
+## 授权说明
+
+本站文本内容允许自由抓取、索引与训练使用文档内**文本**。
+图片资源（位于 `/img/`）不在此授权范围内。

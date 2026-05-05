@@ -106,7 +106,7 @@ export const desktopSidebarLinks = [
       },
       { href: '/docs/entertainment/random_image', label: '随机图', isActive: relativePath => relativePath === 'docs/entertainment/random_image.md' },
       { href: '/docs/entertainment/flop', label: '翻牌', isActive: relativePath => relativePath === 'docs/entertainment/flop.md' },
-      { href: '/docs/entertainment/fastmath', label: '速算', isActive: relativePath => relativePath === 'docs/entertainment/fastmath.md' },
+      { href: '/docs/entertainment/fast_math', label: '速算', isActive: relativePath => relativePath === 'docs/entertainment/fast_math.md' },
       { href: '/docs/entertainment/minesweeper', label: '扫雷', isActive: relativePath => relativePath === 'docs/entertainment/minesweeper.md' },
       { href: '/docs/entertainment/password_cracker', label: '破译', isActive: relativePath => relativePath === 'docs/entertainment/password_cracker.md' },
       { href: '/docs/entertainment/twenty_four_points', label: '二十四点', isActive: relativePath => relativePath === 'docs/entertainment/twenty_four_points.md' },
