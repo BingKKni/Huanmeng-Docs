@@ -213,11 +213,14 @@ export function useDocContentEnhancements({ docArticleRef, openLightbox, openInf
     return preparedRows
   }
 
-  function imgHasExplicitHeight(img) {
-    const raw = img.getAttribute('height')
-    if (raw == null || String(raw).trim() === '') return false
-    const n = Number(raw)
-    return Number.isFinite(n) && n > 0
+  function imgHasExplicitDimension(img) {
+    for (const attr of ['width', 'height']) {
+      const raw = img.getAttribute(attr)
+      if (raw == null || String(raw).trim() === '') continue
+      const n = Number(raw)
+      if (Number.isFinite(n) && n > 0) return true
+    }
+    return false
   }
 
   function applyMultiImageRowHeights(p, imgs) {
@@ -226,8 +229,8 @@ export function useDocContentEnhancements({ docArticleRef, openLightbox, openInf
     })
 
     const hasAlignClass = imgs.some(img => img.classList.contains('hm-left-img') || img.classList.contains('hm-right-img'))
-    const allExplicitHeight = imgs.length > 0 && imgs.every(imgHasExplicitHeight)
-    const useFlush = allExplicitHeight && imgs.length === 2 && !hasAlignClass
+    const allExplicitDimension = imgs.length > 0 && imgs.every(imgHasExplicitDimension)
+    const useFlush = allExplicitDimension && imgs.length === 2 && !hasAlignClass
 
     if (useFlush) {
       p.classList.add('hm-img-row--flush')

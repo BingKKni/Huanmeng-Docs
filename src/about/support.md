@@ -61,11 +61,11 @@
 ### 支持方式
 ::: tabs variant:hm-donate-image
 == 支付宝
-![支付宝-红包图片](/img/donate_alipay_redbag.png){height="350"} ![支付宝-投喂图片](/img/donate_alipay.png){height="350"}
+![支付宝-红包图片](/img/donate_alipay_redbag.png){width="200"} ![支付宝-投喂图片](/img/donate_alipay.png){width="200"}
 
 == 微信
-![微信-投喂图片](/img/donate_wechat.png){height="350"}
+![微信-投喂图片](/img/donate_wechat.png){width="300"}
 
 == QQ
-![QQ-投喂图片](/img/donate_qq.png){height="350"}
+![QQ-投喂图片](/img/donate_qq.png){width="300"}
 :::

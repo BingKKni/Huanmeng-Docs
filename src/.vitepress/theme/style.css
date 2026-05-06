@@ -1960,7 +1960,6 @@ div[class*='language-']>.copy[data-copy-state='error'] {
 
 .doc-article .hm-img-row.hm-img-row--flush img {
   flex: 0 0 auto;
-  width: auto;
   max-width: 100%;
   object-fit: contain;
 }
