@@ -119,16 +119,33 @@ auto 为自动适应颜色，根据用户设置的主题颜色自动适应。
 :::
 ````
 
-站内现有页面也会写成下面这样：
+站内现有页面也会写成下面这样（两种专用 variant）：
+
+**`hm-donate-image`**：图片型档位页，内容会水平居中，适合放二维码 / 截图。
 
 ````md
-::: tabs variant:hm-donate
+::: tabs variant:hm-donate-image
 
-== donate-example-1
-内容 A
+== 支付宝
+![](/img/donate_alipay.png){height="350"}
 
-== donate-example-2
-内容 B
+== 微信
+![](/img/donate_wechat.png){height="350"}
+
+:::
+````
+
+**`hm-donate-text`**：文本型档位页，采用左右两列 Grid 布局、两列均垂直居中。**首个块级子元素**（介绍段落）进入左列，其余（如「档位福利：」段落和后续列表）进入右列。因此记得在`介绍段落`与 `档位福利：（示例）` 之间**保留一空行**，让它们拆成两个段落。
+
+````md
+::: tabs variant:hm-donate-text
+
+== ￥7.9
+请幻梦作者喝一杯奶茶，让她拥有更好的心情敲打代码！
+
+档位福利：
+1. 解锁 xxx
+2. 获得 xxx
 
 :::
 ````

@@ -2424,15 +2424,20 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
 }
 
 /* Doc tab bar: not pills — vitepress-plugin-tabs uses plain <button role="tab">. */
-.doc-article .plugin-tabs:not([data-variant='hm-donate']) .plugin-tabs--tab {
+.doc-article .plugin-tabs:not([data-variant='hm-donate-image']):not([data-variant='hm-donate-text']) .plugin-tabs--tab {
   border-radius: 0 !important;
 }
 
 /*
- * 图片多标签页，UI参考 YuukaBot 的文档 (.vp-tabs / .vp-tab-nav)
+ * 投喂档位多标签页，UI 参考 YuukaBot 的文档 (.vp-tabs / .vp-tab-nav)
  * 地址: https://bot.yunmengdu.cn/about/sponsor — assets/style-*.css
+ * 说明:
+ *   - hm-donate-image: 图片型档位页（支付宝/微信/QQ 二维码等），内容居中。
+ *   - hm-donate-text:  文本型档位页（如 ￥7.9/12.9），左右两列，垂直居中。
+ *     首个块级子元素（介绍段落）进入左列，其余子元素（「档位福利：」和列表）进入右列。
  */
-.doc-article .plugin-tabs[data-variant='hm-donate'] {
+.doc-article .plugin-tabs[data-variant='hm-donate-image'],
+.doc-article .plugin-tabs[data-variant='hm-donate-text'] {
   /* Custom theme has no default VitePress :root tokens — always provide fallbacks. */
   --hm-sponsor-tab-radius: 0.5rem;
   --hm-sponsor-tab-nav-bg: var(--vp-c-bg-soft, #f1f3f5);
@@ -2445,7 +2450,8 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
   overflow: hidden;
 }
 
-.doc-article .plugin-tabs[data-variant='hm-donate'] .plugin-tabs--tab-list {
+.doc-article .plugin-tabs[data-variant='hm-donate-image'] .plugin-tabs--tab-list,
+.doc-article .plugin-tabs[data-variant='hm-donate-text'] .plugin-tabs--tab-list {
   padding: 0;
   overflow-x: auto;
   overflow-y: hidden;
@@ -2454,11 +2460,13 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
   transition: background-color 0.25s;
 }
 
-.doc-article .plugin-tabs[data-variant='hm-donate'] .plugin-tabs--tab-list::after {
+.doc-article .plugin-tabs[data-variant='hm-donate-image'] .plugin-tabs--tab-list::after,
+.doc-article .plugin-tabs[data-variant='hm-donate-text'] .plugin-tabs--tab-list::after {
   display: none;
 }
 
-.doc-article .plugin-tabs[data-variant='hm-donate'] .plugin-tabs--tab {
+.doc-article .plugin-tabs[data-variant='hm-donate-image'] .plugin-tabs--tab,
+.doc-article .plugin-tabs[data-variant='hm-donate-text'] .plugin-tabs--tab {
   position: relative;
   min-width: 4rem;
   margin: 0;
@@ -2477,14 +2485,17 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
     color 0.25s;
 }
 
-.doc-article .plugin-tabs[data-variant='hm-donate'] .plugin-tabs--tab:hover {
+.doc-article .plugin-tabs[data-variant='hm-donate-image'] .plugin-tabs--tab:hover,
+.doc-article .plugin-tabs[data-variant='hm-donate-text'] .plugin-tabs--tab:hover {
   background: var(--hm-sponsor-tab-nav-hover);
   color: var(--vp-c-text-1, #212529);
 }
 
 /* Reuse ::before/::after like Theme Hope tabs; override plugin-tabs' ::after underline. */
-.doc-article .plugin-tabs[data-variant='hm-donate'] .plugin-tabs--tab::before,
-.doc-article .plugin-tabs[data-variant='hm-donate'] .plugin-tabs--tab::after {
+.doc-article .plugin-tabs[data-variant='hm-donate-image'] .plugin-tabs--tab::before,
+.doc-article .plugin-tabs[data-variant='hm-donate-image'] .plugin-tabs--tab::after,
+.doc-article .plugin-tabs[data-variant='hm-donate-text'] .plugin-tabs--tab::before,
+.doc-article .plugin-tabs[data-variant='hm-donate-text'] .plugin-tabs--tab::after {
   content: ' ';
   position: absolute;
   bottom: 0;
@@ -2498,60 +2509,114 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
   transition: none;
 }
 
-.doc-article .plugin-tabs[data-variant='hm-donate'] .plugin-tabs--tab::before {
+.doc-article .plugin-tabs[data-variant='hm-donate-image'] .plugin-tabs--tab::before,
+.doc-article .plugin-tabs[data-variant='hm-donate-text'] .plugin-tabs--tab::before {
   right: 100%;
   left: auto;
 }
 
-.doc-article .plugin-tabs[data-variant='hm-donate'] .plugin-tabs--tab::after {
+.doc-article .plugin-tabs[data-variant='hm-donate-image'] .plugin-tabs--tab::after,
+.doc-article .plugin-tabs[data-variant='hm-donate-text'] .plugin-tabs--tab::after {
   left: 100%;
   right: auto;
 }
 
-.doc-article .plugin-tabs[data-variant='hm-donate'] .plugin-tabs--tab[aria-selected='true'] {
+.doc-article .plugin-tabs[data-variant='hm-donate-image'] .plugin-tabs--tab[aria-selected='true'],
+.doc-article .plugin-tabs[data-variant='hm-donate-text'] .plugin-tabs--tab[aria-selected='true'] {
   background: var(--hm-sponsor-tab-panel-bg);
   color: var(--vp-c-text-1, #212529);
 }
 
-.doc-article .plugin-tabs[data-variant='hm-donate'] .plugin-tabs--tab[aria-selected='true']::before {
+.doc-article .plugin-tabs[data-variant='hm-donate-image'] .plugin-tabs--tab[aria-selected='true']::before,
+.doc-article .plugin-tabs[data-variant='hm-donate-text'] .plugin-tabs--tab[aria-selected='true']::before {
   background: radial-gradient(16px at left top,
       transparent 50%,
       var(--hm-sponsor-tab-panel-bg) 50%);
 }
 
-.doc-article .plugin-tabs[data-variant='hm-donate'] .plugin-tabs--tab[aria-selected='true']::after {
+.doc-article .plugin-tabs[data-variant='hm-donate-image'] .plugin-tabs--tab[aria-selected='true']::after,
+.doc-article .plugin-tabs[data-variant='hm-donate-text'] .plugin-tabs--tab[aria-selected='true']::after {
   background: radial-gradient(16px at right top,
       transparent 50%,
       var(--hm-sponsor-tab-panel-bg) 50%);
 }
 
-.doc-article .plugin-tabs[data-variant='hm-donate'] .plugin-tabs--tab:first-of-type[aria-selected='true']::before {
+.doc-article .plugin-tabs[data-variant='hm-donate-image'] .plugin-tabs--tab:first-of-type[aria-selected='true']::before,
+.doc-article .plugin-tabs[data-variant='hm-donate-text'] .plugin-tabs--tab:first-of-type[aria-selected='true']::before {
   display: none;
 }
 
-.doc-article .plugin-tabs[data-variant='hm-donate'] .plugin-tabs--content {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: flex-start;
-  justify-content: center;
+/* ───── 图片型档位（支付宝/微信/QQ 二维码等）：内容区块级流，段落内的图片水平居中 ───── */
+.doc-article .plugin-tabs[data-variant='hm-donate-image'] .plugin-tabs--content {
   padding: 1rem 0.75rem;
   border-radius: 0 0 var(--hm-sponsor-tab-radius) var(--hm-sponsor-tab-radius);
   background: var(--hm-sponsor-tab-panel-bg);
+  text-align: center;
 }
 
-.doc-article .plugin-tabs[data-variant='hm-donate'] .plugin-tabs--content img {
+.doc-article .plugin-tabs[data-variant='hm-donate-image'] .plugin-tabs--content img {
   max-width: 100%;
   vertical-align: middle;
 }
 
 /* 仅对未显式声明 height 的图片做等比缩放，避免覆盖 {height="..."} 注入的属性 */
-.doc-article .plugin-tabs[data-variant='hm-donate'] .plugin-tabs--content img:not([height]) {
+.doc-article .plugin-tabs[data-variant='hm-donate-image'] .plugin-tabs--content img:not([height]) {
   height: auto;
 }
 
+/* 多图段落会被 useDocContentEnhancements 运行时加上 .hm-img-row（flex 容器），
+ * 外层 text-align: center 对 flex 子项不生效，需显式把 flex 主轴对齐为居中。
+ * 覆盖 .hm-img-row--flush 默认的 justify-content: flex-start。 */
+.doc-article .plugin-tabs[data-variant='hm-donate-image'] .plugin-tabs--content .hm-img-row {
+  justify-content: center;
+}
+
+/* ───── 文本型档位（￥7.9/12.9 等）：左右两列 Grid，两列均垂直居中 ─────
+ *   首个块级子元素（介绍段落）通过大跨度 grid-row 占满整列 → 再借 align-self:center 垂直居中；
+ *   其余子元素（「档位福利：」段落和后续列表）落入右列，自然向下堆叠。
+ *   说明：此处故意不设置 row-gap——大跨度 grid-row 会在隐式行间叠出等量行间距，
+ *        让面板变得异常高；依赖段落/列表各自的自然外边距即可保证视觉节奏。 */
+.doc-article .plugin-tabs[data-variant='hm-donate-text'] .plugin-tabs--content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  column-gap: 2rem;
+  padding: 1.5rem;
+  border-radius: 0 0 var(--hm-sponsor-tab-radius) var(--hm-sponsor-tab-radius);
+  background: var(--hm-sponsor-tab-panel-bg);
+}
+
+.doc-article .plugin-tabs[data-variant='hm-donate-text'] .plugin-tabs--content > :first-child {
+  grid-column: 1;
+  grid-row: 1 / span 99;
+  align-self: center;
+  text-align: center;
+  margin: 0;
+}
+
+.doc-article .plugin-tabs[data-variant='hm-donate-text'] .plugin-tabs--content > :not(:first-child) {
+  grid-column: 2;
+}
+
+/* 窄屏回退：两列 Grid 改为单列块级流，避免挤压列表导致可读性下降 */
+@media (max-width: 640px) {
+  .doc-article .plugin-tabs[data-variant='hm-donate-text'] .plugin-tabs--content {
+    display: block;
+    padding: 1rem 1rem;
+  }
+
+  .doc-article .plugin-tabs[data-variant='hm-donate-text'] .plugin-tabs--content > :first-child,
+  .doc-article .plugin-tabs[data-variant='hm-donate-text'] .plugin-tabs--content > :not(:first-child) {
+    grid-column: auto;
+    grid-row: auto;
+    align-self: auto;
+    text-align: initial;
+  }
+}
+
 @media print {
-  .doc-article .plugin-tabs[data-variant='hm-donate'] .plugin-tabs--tab-list {
+  .doc-article .plugin-tabs[data-variant='hm-donate-image'] .plugin-tabs--tab-list,
+  .doc-article .plugin-tabs[data-variant='hm-donate-text'] .plugin-tabs--tab-list {
     display: none;
   }
 }

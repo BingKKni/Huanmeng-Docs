@@ -2,7 +2,7 @@
   "version": 3,
   "owner": "BingKKni",
   "repo": "Huanmeng-Docs",
-  "updatedAt": "2026-04-26T16:21:19.625Z",
+  "updatedAt": "2026-05-05T14:33:13.614Z",
   "entries": [
     {
       "day": "2026-04-09",
@@ -1332,6 +1332,16 @@
       "lineNumber": 2,
       "type": "updates",
       "text": "修复 page-capabilities.js 未被跟踪的问题",
+      "removed": false
+    },
+    {
+      "day": "2026-05-05",
+      "commitId": "13ac4b8779660322bf1e456c1680169b6d83976e",
+      "committedAt": "2026-05-05T11:25:24Z",
+      "commitOrder": 0,
+      "lineNumber": 1,
+      "type": "updates",
+      "text": "优化赞助页面排版",
       "removed": false
     }
   ]

@@ -1,6 +1,6 @@
 ## 每日密码门位置
 
-::: tabs variant:hm-donate
+::: tabs variant:hm-donate-image
 == 零号大坝
 ![零号大坝](/img/delta_force/door_zero_dam.png){width="600"}
 
