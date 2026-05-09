@@ -117,7 +117,7 @@
                 <div class="app-card-desc">可不要玩上瘾了哟，适度游戏</div>
             </div>
         </div>
-        <a href="https://docs.qq.com/aio/DZEJoalhPcHZmaVJR?p=TBRuw3aY8boTJ78sINt4W5" target="_blank" rel="noopener noreferrer" class="app-action-btn">前往</a>
+        <a href="/docs/entertainment/stamina/?from=docs_index" class="app-action-btn">前往</a>
     </div>
     <!-- 好感度 -->
     <div class="app-card">
@@ -183,7 +183,7 @@
                 <div class="app-card-desc">经典小游戏，幻梦在此基础上增添了许多有趣的玩法</div>
             </div>
         </div>
-        <a href="https://docs.qq.com/aio/DZEJoalhPcHZmaVJR?p=XZeqM3R9UIdb63y7ztRMSG" target="_blank" rel="noopener noreferrer" class="app-action-btn">前往</a>
+        <a href="/docs/entertainment/minesweeper?from=docs_index" class="app-action-btn">前往</a>
     </div>
     <!-- 速算 -->
     <div class="app-card">
@@ -249,7 +249,7 @@
                 <div class="app-card-desc">哼哼~ 啊啊啊啊啊!</div>
             </div>
         </div>
-        <a href="https://docs.qq.com/aio/DZEJoalhPcHZmaVJR?p=Zsp9lWemrEDn0JJniBkoLx" target="_blank" rel="noopener noreferrer" class="app-action-btn">前往</a>
+        <a href="/docs/entertainment/homo?from=docs_index" class="app-action-btn">前往</a>
     </div>
     <!-- 接龙游戏 -->
     <div class="app-card">

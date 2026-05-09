@@ -90,7 +90,21 @@ export const desktopSidebarLinks = [
           }
         ]
       },
+      {
+        href: '/docs/entertainment/exceptional_function/',
+        label: '今日超能力',
+        isActive: relativePath => relativePath === 'docs/entertainment/exceptional_function/index.md',
+        hasAnyActive: relativePath => relativePath.startsWith('docs/entertainment/exceptional_function/'),
+        children: [
+          {
+            href: '/docs/entertainment/exceptional_function/post_theme',
+            label: '投稿超能力主题',
+            isActive: relativePath => relativePath === 'docs/entertainment/exceptional_function/post_theme.md'
+          }
+        ]
+      },
       { href: '/docs/entertainment/sence', label: '好感度', isActive: relativePath => relativePath === 'docs/entertainment/sence.md' },
+      { href: '/docs/entertainment/stamina', label: '体力', isActive: relativePath => relativePath === 'docs/entertainment/stamina.md' },
       {
         href: '/docs/entertainment/catch_the_cat/',
         label: '圈小猫',
@@ -111,7 +125,8 @@ export const desktopSidebarLinks = [
       { href: '/docs/entertainment/password_cracker', label: '破译', isActive: relativePath => relativePath === 'docs/entertainment/password_cracker.md' },
       { href: '/docs/entertainment/twenty_four_points', label: '二十四点', isActive: relativePath => relativePath === 'docs/entertainment/twenty_four_points.md' },
       { href: '/docs/entertainment/paint_bomb', label: '油漆炸弹', isActive: relativePath => relativePath === 'docs/entertainment/paint_bomb.md' },
-      { href: '/docs/entertainment/word_chain', label: '词汇接龙', isActive: relativePath => relativePath === 'docs/entertainment/word_chain.md' }
+      { href: '/docs/entertainment/word_chain', label: '词汇接龙', isActive: relativePath => relativePath === 'docs/entertainment/word_chain.md' },
+      { href: '/docs/entertainment/homo', label: '恶臭数字论证器', isActive: relativePath => relativePath === 'docs/entertainment/homo.md' }
     ]
   },
   {
