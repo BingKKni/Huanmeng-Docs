@@ -3,12 +3,13 @@ function parseHmTableDirective(content) {
   if (!match) return null
 
   const raw = match[1].trim()
-  if (!raw) return { smart: false, widths: null, minWidth: null }
+  if (!raw) return { smart: false, widths: null, minWidth: null, center: false }
 
   const result = {
     smart: false,
     widths: null,
-    minWidth: null
+    minWidth: null,
+    center: false
   }
 
   raw.split(';').forEach(part => {
@@ -17,6 +18,11 @@ function parseHmTableDirective(content) {
 
     if (/^smart$/i.test(item)) {
       result.smart = true
+      return
+    }
+
+    if (/^center$/i.test(item)) {
+      result.center = true
       return
     }
 
@@ -98,6 +104,10 @@ export default function tableEnhancePlugin(md) {
 
         if (pendingDirective?.smart) {
           appendAttr(token, 'class', 'hm-table--smart')
+        }
+
+        if (pendingDirective?.center) {
+          appendAttr(token, 'class', 'hm-table--center')
         }
 
         if (pendingDirective?.minWidth) {

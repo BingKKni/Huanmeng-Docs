@@ -143,13 +143,17 @@ export function useDocContentEnhancements({ docArticleRef, openLightbox, openInf
         e.preventDefault()
         const href = btn.href
         const target = btn.target || '_blank'
+        const title = btn.dataset.confirmTitle || '提示'
+        const message = btn.dataset.confirmMessage || '即将跳转到幻梦QQ群主页，是否确认？'
+        const confirmLabel = btn.dataset.confirmLabel || '确定'
         openInfoDialog(
-          '即将跳转到幻梦QQ群主页，是否确认？',
-          '提示',
+          message,
+          title,
           () => {
             window.open(href, target)
           },
-          true
+          true,
+          confirmLabel
         )
       })
     })

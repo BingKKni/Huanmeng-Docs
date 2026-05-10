@@ -188,7 +188,8 @@ export const aboutSidebarLinks = [
     isActive: relativePath => relativePath === 'about/faq/index.md',
     hasAnyActive: relativePath => relativePath === 'about/faq/index.md' || relativePath.startsWith('about/faq/'),
     children: [
-      { href: '/about/faq/appeal', label: '封禁申诉', isActive: relativePath => relativePath === 'about/faq/appeal.md' }
+      { href: '/about/faq/appeal', label: '封禁申诉', isActive: relativePath => relativePath === 'about/faq/appeal.md' },
+      { href: '/about/faq/bugland', label: '布吉岛查询', isActive: relativePath => relativePath === 'about/faq/bugland.md' }
     ]
   },
   { href: '/about/support', label: '🧋 支持幻梦', isActive: relativePath => relativePath === 'about/support.md' }

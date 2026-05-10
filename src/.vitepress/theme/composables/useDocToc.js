@@ -217,27 +217,110 @@ export function useDocToc({ docArticleRef, isMobileView, supportsCurrentPageTocS
     return null
   }
 
+  const headingTagRegex = /^H[1-6]$/
+
   function flashHeading(el) {
-    el.classList.remove('heading-flash')
+    const isHeading = !!(el && el.tagName && headingTagRegex.test(el.tagName))
+    el.classList.remove('heading-flash', 'heading-flash--body')
     void el.offsetWidth
     el.classList.add('heading-flash')
+    if (!isHeading) el.classList.add('heading-flash--body')
     setTimeout(() => {
-      el.classList.remove('heading-flash')
+      el.classList.remove('heading-flash', 'heading-flash--body')
     }, 1200)
   }
 
-  function scrollToHeading(id, { updateHash = false, fallbackTitle = '', instant = false, flash = true } = {}) {
+  const leafBlockTags = new Set([
+    'P', 'LI', 'TD', 'TH', 'PRE', 'BLOCKQUOTE', 'SUMMARY',
+    'DT', 'DD', 'FIGCAPTION', 'CAPTION'
+  ])
+
+  function getHeadingLevel(el) {
+    if (!el || !el.tagName || !headingTagRegex.test(el.tagName)) return 0
+    return parseInt(el.tagName.charAt(1), 10)
+  }
+
+  function getSectionRange(headingEl) {
+    const range = []
+    const level = getHeadingLevel(headingEl)
+    if (!level) return range
+
+    let node = headingEl.nextElementSibling
+    while (node) {
+      const nodeLevel = getHeadingLevel(node)
+      if (nodeLevel && nodeLevel <= level) break
+      range.push(node)
+      node = node.nextElementSibling
+    }
+    return range
+  }
+
+  function isLeafBlockTarget(el) {
+    if (!el || !el.tagName) return false
+    return leafBlockTags.has(el.tagName) || headingTagRegex.test(el.tagName)
+  }
+
+  function findFlashTargetWithText(rootEl, lowerQuery) {
+    if (!rootEl || !lowerQuery) return null
+    if (!rootEl.textContent || !rootEl.textContent.toLowerCase().includes(lowerQuery)) return null
+
+    const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, null)
+    let textNode = walker.nextNode()
+    while (textNode) {
+      if (textNode.nodeValue && textNode.nodeValue.toLowerCase().includes(lowerQuery)) {
+        let parent = textNode.parentElement
+        while (parent && parent !== rootEl.parentElement) {
+          if (isLeafBlockTarget(parent)) return parent
+          parent = parent.parentElement
+        }
+        return rootEl
+      }
+      textNode = walker.nextNode()
+    }
+    return rootEl
+  }
+
+  function expandClosedDetails(el) {
+    let node = el
+    while (node && node !== document.body) {
+      if (node.tagName === 'DETAILS' && !node.open) {
+        node.open = true
+      }
+      node = node.parentElement
+    }
+  }
+
+  function resolveFlashTarget(headingEl, matchQuery) {
+    if (!matchQuery) return headingEl
+    const lowerQuery = String(matchQuery).toLowerCase()
+    if (!lowerQuery) return headingEl
+
+    if (headingEl.textContent && headingEl.textContent.toLowerCase().includes(lowerQuery)) {
+      return headingEl
+    }
+
+    const sectionEls = getSectionRange(headingEl)
+    for (const sectionEl of sectionEls) {
+      const found = findFlashTargetWithText(sectionEl, lowerQuery)
+      if (found) return found
+    }
+    return headingEl
+  }
+
+  function scrollToHeading(id, { updateHash = false, fallbackTitle = '', instant = false, flash = true, matchQuery = '' } = {}) {
     const el = findHeadingElement(id, fallbackTitle)
     if (!el) return false
 
     const targetId = el.id || normalizeHashTarget(id)
+    const flashTarget = resolveFlashTarget(el, matchQuery)
+    expandClosedDetails(flashTarget)
 
     if (tocScrollTimeout) clearTimeout(tocScrollTimeout)
     if (targetId && tocHeaders.value.some(header => header.id === targetId)) {
       activeTocId.value = targetId
     }
 
-    const top = el.getBoundingClientRect().top + window.scrollY - 120
+    const top = flashTarget.getBoundingClientRect().top + window.scrollY - 120
     const distance = Math.abs(top - window.scrollY)
     const duration = Math.min(Math.max(distance * 0.25, 300), 650)
 
@@ -249,7 +332,7 @@ export function useDocToc({ docArticleRef, isMobileView, supportsCurrentPageTocS
         window.history.replaceState(null, '', url)
       }
       if (flash) {
-        flashHeading(el)
+        flashHeading(flashTarget)
       }
       tocScrollTimeout = setTimeout(() => {
         tocScrollTimeout = null
@@ -264,7 +347,7 @@ export function useDocToc({ docArticleRef, isMobileView, supportsCurrentPageTocS
         window.history.replaceState(null, '', url)
       }
       if (flash) {
-        flashHeading(el)
+        flashHeading(flashTarget)
       }
     })
 
@@ -301,6 +384,7 @@ export function useDocToc({ docArticleRef, isMobileView, supportsCurrentPageTocS
     scrollToToc,
     normalizeHashTarget,
     getHashTargetFromHref,
-    normalizeHeadingText
+    normalizeHeadingText,
+    getActiveDocArticle
   }
 }

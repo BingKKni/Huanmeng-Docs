@@ -129,6 +129,9 @@ svg {
   --ct-gray: #7d7d7d;
   --ct-gold: #fdb10f;
   --ct-aqua: #00bcd4;
+  /* ─── 圆角徽章混色参数（日间模式）：与 --ct-* 按比例混合得到柔和底色 ─── */
+  --cb-mix-base: var(--hm-bg);
+  --cb-mix-ratio: 22%;
   /* 文档正文宽度：随屏幕放大，但保留上限，避免 2K/4K 行长失控 */
   --hm-content-max-width: clamp(960px, 68vw, 1080px);
   /* Markdown <hr>（***）*/
@@ -208,6 +211,9 @@ html.dark {
   --ct-gray: #94a3b8;
   --ct-gold: #f5c842;
   --ct-aqua: #00e5ff;
+  /* ─── 圆角徽章混色参数（夜间模式）：抬高比例并落在更亮的表面色上以保证可读 ─── */
+  --cb-mix-base: var(--hm-surface-2);
+  --cb-mix-ratio: 38%;
   --hm-doc-hr-color: rgba(235, 239, 245, 0.16);
 }
 
@@ -266,6 +272,73 @@ html.dark {
 
 .ct-aqua {
   color: var(--ct-aqua);
+}
+
+/* ─── 圆角徽章 class（bg-* 语法生成） ─── */
+.cb {
+  display: inline-block;
+  padding: 1px 10px;
+  border-radius: 6px;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--hm-text-1);
+  background: var(--hm-bg-muted);
+}
+
+.cb-auto {
+  background: color-mix(in srgb, var(--ct-auto) var(--cb-mix-ratio), var(--cb-mix-base));
+}
+
+.cb-darkred {
+  background: color-mix(in srgb, var(--ct-darkred) var(--cb-mix-ratio), var(--cb-mix-base));
+}
+
+.cb-red {
+  background: color-mix(in srgb, var(--ct-red) var(--cb-mix-ratio), var(--cb-mix-base));
+}
+
+.cb-yellow {
+  background: color-mix(in srgb, var(--ct-yellow) var(--cb-mix-ratio), var(--cb-mix-base));
+}
+
+.cb-orange {
+  background: color-mix(in srgb, var(--ct-orange) var(--cb-mix-ratio), var(--cb-mix-base));
+}
+
+.cb-green {
+  background: color-mix(in srgb, var(--ct-green) var(--cb-mix-ratio), var(--cb-mix-base));
+}
+
+.cb-darkgreen {
+  background: color-mix(in srgb, var(--ct-darkgreen) var(--cb-mix-ratio), var(--cb-mix-base));
+}
+
+.cb-pink {
+  background: color-mix(in srgb, var(--ct-pink) var(--cb-mix-ratio), var(--cb-mix-base));
+}
+
+.cb-purple {
+  background: color-mix(in srgb, var(--ct-purple) var(--cb-mix-ratio), var(--cb-mix-base));
+}
+
+.cb-cyan {
+  background: color-mix(in srgb, var(--ct-cyan) var(--cb-mix-ratio), var(--cb-mix-base));
+}
+
+.cb-blue {
+  background: color-mix(in srgb, var(--ct-blue) var(--cb-mix-ratio), var(--cb-mix-base));
+}
+
+.cb-gray {
+  background: color-mix(in srgb, var(--ct-gray) var(--cb-mix-ratio), var(--cb-mix-base));
+}
+
+.cb-gold {
+  background: color-mix(in srgb, var(--ct-gold) var(--cb-mix-ratio), var(--cb-mix-base));
+}
+
+.cb-aqua {
+  background: color-mix(in srgb, var(--ct-aqua) var(--cb-mix-ratio), var(--cb-mix-base));
 }
 
 body {
@@ -890,9 +963,13 @@ a:hover {
   transform: rotate(180deg);
 }
 
-.site-nav__link:focus,
-.site-nav__link:focus-visible {
+/* 鼠标点击只移除浏览器默认 outline、不画自定义蓝环；
+ * 键盘 Tab 触发 :focus-visible 时再显示蓝色焦点环以保证无障碍。 */
+.site-nav__link:focus {
   outline: none;
+}
+
+.site-nav__link:focus-visible {
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.18);
 }
 
@@ -903,10 +980,12 @@ a:hover {
 }
 
 @media (hover: hover) {
+  /* 与社群下拉项 .site-nav__dropdown-link:hover 保持一致：仅做柔和底色高亮，
+   * 文字使用主文本色而非蓝色（避免「首页」等导航按钮在悬浮时变蓝）。 */
   .site-nav__link:hover {
-    color: #212529;
-    background-color: #e9ecef;
-    border-color: #e9ecef;
+    color: var(--hm-text-1);
+    background-color: var(--hm-accent-soft);
+    border-color: var(--hm-accent-soft);
   }
 
   .site-nav__link.active:hover {
@@ -1844,6 +1923,12 @@ div[class*='language-']>.copy[data-copy-state='error'] {
   min-width: var(--hm-table-min-width, 100%);
 }
 
+/* `<!-- hm-table: center -->` 指令：把整张表格在 wrap 容器内水平居中（不影响溢出滚动）。 */
+.doc-article .hm-table-wrap>table.hm-table--center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .doc-article .hm-table-wrap>table th,
 .doc-article .hm-table-wrap>table td {
   border: 1px solid #d1d2d1;
@@ -2568,6 +2653,17 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
  * 覆盖 .hm-img-row--flush 默认的 justify-content: flex-start。 */
 .doc-article .plugin-tabs[data-variant='hm-donate-image'] .plugin-tabs--content .hm-img-row {
   justify-content: center;
+  flex-wrap: nowrap;
+}
+
+/* 窄屏自适应：当两图加 gap 的合计宽度超过面板宽度时，允许图片在 flex 容器内
+ * 等比缩小以完整显示，避免「支付宝」双 width="200" 图片横向溢出。
+ * 覆盖 .hm-img-row--flush 默认的 flex: 0 0 auto（不可缩小）。 */
+.doc-article .plugin-tabs[data-variant='hm-donate-image'] .plugin-tabs--content .hm-img-row img {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
 }
 
 /* ───── 文本型档位（￥7.9/12.9 等）：左右两列 Grid，两列均垂直居中 ─────
@@ -2646,14 +2742,6 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
   font-size: 0.875rem;
 }
 
-.site-footer-meta {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
-}
-
 .site-footer-filings {
   display: flex;
   align-items: baseline;
@@ -2663,19 +2751,19 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
   white-space: nowrap;
 }
 
-.site-footer-copyright {
-  font-size: 0.75rem;
-  line-height: 1.5;
-}
-
 .site-footer-contact {
   flex: 0 0 auto;
   margin-left: auto;
-  color: #495057;
-  font-size: 0.95rem;
-  font-weight: 500;
+  color: var(--hm-text-2);
+  font-size: 0.75rem;
   line-height: 1.5;
   white-space: nowrap;
+}
+
+.site-footer-divider {
+  margin: 0 0.4rem;
+  color: var(--hm-text-3);
+  opacity: 0.6;
 }
 
 .site-footer-link {
@@ -3035,9 +3123,12 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
   transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
-.home-btn:focus,
-.home-btn:focus-visible {
+/* 同 .site-nav__link：鼠标点击不画蓝环，仅键盘 Tab 时显示。 */
+.home-btn:focus {
   outline: none;
+}
+
+.home-btn:focus-visible {
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.18);
 }
 
@@ -3248,6 +3339,33 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
     width: 96%;
     align-self: center;
     text-align: center;
+  }
+}
+
+/* 文章正文内联蓝色按钮（用于触发二次确认对话框等场景） */
+.group-join-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 18px;
+  background-color: #007bff;
+  color: #fff !important;
+  border: 1px solid #007bff;
+  border-radius: 6px;
+  text-decoration: none !important;
+  font-size: 0.95rem;
+  font-weight: 500;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+@media (hover: hover) {
+  .group-join-btn:hover {
+    background-color: #0069d9;
+    border-color: #0062cc;
+    color: #fff !important;
   }
 }
 
@@ -3538,9 +3656,9 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
     white-space: normal;
   }
 
-  .site-footer-copyright,
   .site-footer-contact {
     margin-left: 0;
+    white-space: normal;
     font-size: 0.72rem;
   }
 }
@@ -4215,16 +4333,25 @@ html.dark {
 }
 
 .heading-flash {
+  /* Default inset for headings; --body modifier overrides for body-line flashes */
+  --hm-heading-flash-inset-y: -10px;
+  --hm-heading-flash-inset-x: -16px;
   position: relative;
   /* Ensure highlight is behind text but above page background */
   isolation: isolate;
 }
 
+.heading-flash--body {
+  /* Smaller inset for body-line flashes so the highlight does not overlap
+     adjacent paragraphs (vertical) or the article side bar (horizontal). */
+  --hm-heading-flash-inset-y: -2px;
+  --hm-heading-flash-inset-x: -4px;
+}
+
 .heading-flash::before {
   content: '';
   position: absolute;
-  /* Top/Bottom expanded by 6px, Left/Right expanded by 24px */
-  inset: -10px -16px;
+  inset: var(--hm-heading-flash-inset-y) var(--hm-heading-flash-inset-x);
   background-color: var(--hm-heading-flash-bg);
   border-radius: 0px;
   z-index: -1;
@@ -4368,7 +4495,6 @@ html.dark .mobile-search-box input:focus {
   background-color: var(--hm-accent-soft);
 }
 
-.site-nav__link:hover,
 .desktop-doc-sidebar__link:hover,
 .desktop-doc-sidebar__child-link:hover,
 .sidebar-compact-mode .desktop-doc-sidebar__link:hover,

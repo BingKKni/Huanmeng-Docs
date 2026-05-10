@@ -59,6 +59,7 @@
 :::
 
 ### 支持方式
+投喂后要记得保存好投喂成功的截图，并添加幻梦官方群联系群主哦！<a class="group-join-btn" href="https://qm.qq.com/q/6lmTZCS0SY" target="_blank" rel="noopener noreferrer" data-confirm-title="二次确认" data-confirm-message="即将跳转到QQ幻梦官方群，是否继续？" data-confirm-label="确认">点击加群</a>
 ::: tabs variant:hm-donate-image
 == 支付宝
 ![支付宝-红包图片](/img/donate_alipay_redbag.png){width="200"} ![支付宝-投喂图片](/img/donate_alipay.png){width="200"}

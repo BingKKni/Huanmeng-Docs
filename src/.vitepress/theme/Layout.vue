@@ -49,6 +49,7 @@ let desktopSearchPlaceholderResetTimer = null
 let pendingSearchHeadingId = ''
 let pendingSearchHeadingTitle = ''
 let pendingSearchHeadingFlash = true
+let pendingSearchHeadingMatchQuery = ''
 let pendingSearchHeadingFrame = null
 let searchIndexPromise = null
 let searchPageFocusPending = false
@@ -237,6 +238,7 @@ function clearPendingSearchHeading() {
   pendingSearchHeadingId = ''
   pendingSearchHeadingTitle = ''
   pendingSearchHeadingFlash = true
+  pendingSearchHeadingMatchQuery = ''
 }
 
 function clearPendingSearchHeadingFrame() {
@@ -250,10 +252,11 @@ function normalizeConfiguredHeading(text) {
   return normalizeHeadingText(String(text || '').replace(/^#+\s*/, ''))
 }
 
-function setPendingSearchHeading(id, title = '', flash = true) {
+function setPendingSearchHeading(id, title = '', flash = true, matchQuery = '') {
   pendingSearchHeadingId = normalizeHashTarget(id)
   pendingSearchHeadingTitle = normalizeConfiguredHeading(title)
   pendingSearchHeadingFlash = flash
+  pendingSearchHeadingMatchQuery = String(matchQuery || '')
 }
 
 async function applyPendingSearchHeading(retries = 60) {
@@ -275,9 +278,12 @@ async function applyPendingSearchHeading(retries = 60) {
   const targetId = pendingSearchHeadingId
   const targetTitle = pendingSearchHeadingTitle
   const shouldFlash = pendingSearchHeadingFlash
+  const matchQuery = pendingSearchHeadingMatchQuery
   await nextTick()
+  // 等待一帧再滚动，确保覆盖 VitePress 路由内置的 rAF scroll-to-hash（同页点击命中正文行场景下尤为关键）
+  await new Promise(resolve => requestAnimationFrame(resolve))
 
-  if (scrollToHeading(targetId, { updateHash: true, fallbackTitle: targetTitle, instant: true, flash: shouldFlash })) {
+  if (scrollToHeading(targetId, { updateHash: true, fallbackTitle: targetTitle, instant: true, flash: shouldFlash, matchQuery })) {
     clearPendingSearchHeading()
     return
   }
@@ -337,9 +343,10 @@ function handleSearchNavigation(target, event) {
   const targetRouteKey = routeNavComparableKey(targetHref)
   const headingId = normalizeHashTarget(target.headingId || getHashTargetFromHref(targetHref))
   const headingTitle = normalizeConfiguredHeading(target.headingTitle)
+  const matchQuery = String(target.matchQuery || '')
 
   if (headingId || headingTitle) {
-    setPendingSearchHeading(headingId, headingTitle, target.flashHeading !== false)
+    setPendingSearchHeading(headingId, headingTitle, target.flashHeading !== false, matchQuery)
   } else {
     clearPendingSearchHeading()
   }
@@ -358,14 +365,16 @@ function handleSearchNavigation(target, event) {
 }
 
 function handleResultClick(result, event) {
-  recordSearchHistory(searchQuery.value)
+  const matchQuery = searchQuery.value
+  recordSearchHistory(matchQuery)
   searchQuery.value = ''
   handleSearchNavigation(
     {
       href: result.link,
       headingId: result.headingId,
       headingTitle: result.headingTitle,
-      flashHeading: true
+      flashHeading: true,
+      matchQuery
     },
     event
   )
@@ -533,7 +542,8 @@ const {
   scrollToToc,
   normalizeHashTarget,
   getHashTargetFromHref,
-  normalizeHeadingText
+  normalizeHeadingText,
+  getActiveDocArticle
 } = useDocToc({
   docArticleRef,
   isMobileView,
@@ -1282,7 +1292,7 @@ onMounted(() => {
 
   router.onAfterRouteChange = async href => {
     syncFromParam()
-    setPendingSearchHeading(getHashTargetFromHref(href), pendingSearchHeadingTitle, pendingSearchHeadingFlash)
+    setPendingSearchHeading(getHashTargetFromHref(href), pendingSearchHeadingTitle, pendingSearchHeadingFlash, pendingSearchHeadingMatchQuery)
     await routerProgressPrevAfter?.(href)
     requestAnimationFrame(() => {
       completeRouteNavProgressByKey(routeNavComparableKey(href))
@@ -2097,21 +2107,25 @@ watch(infoDialogVisible, async visible => {
 
     <footer class="site-footer">
       <div class="site-container site-footer-inner">
-        <div class="site-footer-meta">
-          <div class="site-footer-filings">
-            <span><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" class="site-footer-link">浙ICP备2026018380号</a></span>
-            <span>
-              <a href="https://beian.mps.gov.cn/#/query/webSearch?code=33078402101557" rel="noreferrer" target="_blank" class="site-footer-link site-footer-link--beian">
-                <img class="site-footer-beian-icon" :src="withBase('/img/beian_msp.png')" alt="" aria-hidden="true">
-                <span>浙公网安备33078402101557号</span>
-              </a>
-            </span>
-            <span><a href="https://icp.gov.moe/?keyword=20264888" target="_blank" rel="noopener noreferrer" class="site-footer-link">萌ICP备20264888号</a></span>
-          </div>
-          <span class="site-footer-copyright">© 2024-{{ currentYear }} 幻梦，保留所有权利</span>
+        <div class="site-footer-filings">
+          <span><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" class="site-footer-link">浙ICP备2026018380号</a></span>
+          <span>
+            <a href="https://beian.mps.gov.cn/#/query/webSearch?code=33078402101557" rel="noreferrer" target="_blank" class="site-footer-link site-footer-link--beian">
+              <img class="site-footer-beian-icon" :src="withBase('/img/beian_msp.png')" alt="" aria-hidden="true">
+              <span>浙公网安备33078402101557号</span>
+            </a>
+          </span>
+          <span>
+            <a href="https://icp.gov.moe/?keyword=20264888" target="_blank" rel="noopener noreferrer" class="site-footer-link site-footer-link--beian">
+              <img class="site-footer-beian-icon" :src="withBase('/img/moe_gov.svg')" alt="" aria-hidden="true">
+              <span>萌ICP备20264888号</span>
+            </a>
+          </span>
         </div>
         <span class="site-footer-contact">
-          联系我们: <a href="mailto:admin@xbdqwq.com" class="site-footer-link">admin@xbdqwq.com</a>
+          <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer" class="site-footer-link">CC BY-SA 4.0 Licensed</a>
+          <span class="site-footer-divider" aria-hidden="true">|</span>
+          © 2024-{{ currentYear }} 幻梦
         </span>
       </div>
     </footer>
