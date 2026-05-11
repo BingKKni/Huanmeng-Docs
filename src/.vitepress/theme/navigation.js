@@ -126,6 +126,7 @@ export const desktopSidebarLinks = [
       { href: '/docs/entertainment/twenty_four_points', label: '二十四点', isActive: relativePath => relativePath === 'docs/entertainment/twenty_four_points.md' },
       { href: '/docs/entertainment/paint_bomb', label: '油漆炸弹', isActive: relativePath => relativePath === 'docs/entertainment/paint_bomb.md' },
       { href: '/docs/entertainment/word_chain', label: '词汇接龙', isActive: relativePath => relativePath === 'docs/entertainment/word_chain.md' },
+      { href: '/docs/entertainment/people_set_generation', label: '人设生成', isActive: relativePath => relativePath === 'docs/entertainment/people_set_generation.md' },
       { href: '/docs/entertainment/homo', label: '恶臭数字论证器', isActive: relativePath => relativePath === 'docs/entertainment/homo.md' }
     ]
   },

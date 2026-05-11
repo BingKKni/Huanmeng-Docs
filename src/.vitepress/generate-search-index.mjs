@@ -2,8 +2,20 @@ import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 const rootDir = process.cwd()
-const docsDir = path.join(rootDir, 'src', 'docs')
-const outputPath = path.join(rootDir, 'src', 'public', 'search-index.json')
+const srcDir = path.join(rootDir, 'src')
+const outputPath = path.join(srcDir, 'public', 'search-index.json')
+
+// 这些目录位于 src/ 顶层，但不属于面向用户的文档内容，需要从搜索索引中排除：
+// - .vitepress: VitePress 自身的配置/构建产物/主题源码
+// - public:     静态资源目录（不会被作为路由页面）
+// - search:     搜索结果页自身，纳入会造成自指
+// - 0.0.0.0:    vitepress dev --host 0.0.0.0 误生成的空目录
+const SEARCH_EXCLUDED_TOP_LEVEL_DIRS = new Set([
+  '.vitepress',
+  'public',
+  'search',
+  '0.0.0.0'
+])
 
 const mdStripRegexes = [
   { pattern: /```[\s\S]*?```/g, replace: '' },
@@ -115,8 +127,8 @@ function createHeadingSlugger() {
 }
 
 function docPathToLink(filePath) {
-  const relativePath = path.relative(docsDir, filePath).replace(/\\/g, '/')
-  let link = `/docs/${relativePath}`.replace(/\.md$/, '.html')
+  const relativePath = path.relative(srcDir, filePath).replace(/\\/g, '/')
+  let link = `/${relativePath}`.replace(/\.md$/, '.html')
   if (link.endsWith('/index.html')) {
     link = link.replace('/index.html', '/')
   }
@@ -132,7 +144,10 @@ function deriveDocTitle(rawContent, filePath) {
 
   const filename = path.basename(filePath, '.md')
   if (filename === 'index') {
-    return path.basename(path.dirname(filePath)) || '首页'
+    const parentDir = path.dirname(filePath)
+    // 站点根目录下的 index.md 视为"首页"，避免出现父目录名 "src" 这种内部命名外泄。
+    if (parentDir === srcDir) return '首页'
+    return path.basename(parentDir) || '首页'
   }
 
   return filename
@@ -200,6 +215,9 @@ async function collectMarkdownFiles(dir) {
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name)
     if (entry.isDirectory()) {
+      // 仅在 src/ 顶层做目录排除，避免误伤更深层级中可能出现的同名子目录。
+      const isTopLevel = path.dirname(fullPath) === srcDir
+      if (isTopLevel && SEARCH_EXCLUDED_TOP_LEVEL_DIRS.has(entry.name)) continue
       files.push(...await collectMarkdownFiles(fullPath))
       continue
     }
@@ -213,7 +231,7 @@ async function collectMarkdownFiles(dir) {
 }
 
 async function main() {
-  const markdownFiles = await collectMarkdownFiles(docsDir)
+  const markdownFiles = await collectMarkdownFiles(srcDir)
   const index = []
 
   for (const filePath of markdownFiles) {
