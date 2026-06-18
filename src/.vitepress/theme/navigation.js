@@ -106,6 +106,19 @@ export const desktopSidebarLinks = [
       { href: '/docs/entertainment/sence', label: '好感度', isActive: relativePath => relativePath === 'docs/entertainment/sence.md' },
       { href: '/docs/entertainment/stamina', label: '体力', isActive: relativePath => relativePath === 'docs/entertainment/stamina.md' },
       {
+        href: '/docs/entertainment/backpack/',
+        label: '保险箱',
+        isActive: relativePath => relativePath === 'docs/entertainment/backpack/index.md',
+        hasAnyActive: relativePath => relativePath.startsWith('docs/entertainment/backpack/'),
+        children: [
+          {
+            href: '/docs/entertainment/backpack/level',
+            label: '背包等级特权',
+            isActive: relativePath => relativePath === 'docs/entertainment/backpack/level.md'
+          }
+        ]
+      },
+      {
         href: '/docs/entertainment/catch_the_cat/',
         label: '圈小猫',
         isActive: relativePath => relativePath === 'docs/entertainment/catch_the_cat/index.md',
@@ -162,6 +175,11 @@ export const aboutSidebarLinks = [
         href: '/about/rule/image',
         label: '图片使用声明',
         isActive: relativePath => relativePath === 'about/rule/image.md'
+      },
+      {
+        href: '/about/rule/official_group',
+        label: '幻梦群群规',
+        isActive: relativePath => relativePath === 'about/rule/official_group.md'
       }
     ]
   },

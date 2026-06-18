@@ -23,4 +23,15 @@
         </div>
         <a href="/about/rule/image" class="app-action-btn">前往</a>
     </div>
+    <!-- official group rule -->
+    <div class="app-card">
+        <div class="app-card-left">
+            <div class="app-card-avatar emoji-avatar">📜</div>
+            <div class="app-card-info">
+                <div class="app-card-title">幻梦群群规</div>
+                <div class="app-card-desc">加入幻梦官方群前，请先阅读的群聊规则</div>
+            </div>
+        </div>
+        <a href="/about/rule/official_group" class="app-action-btn">前往</a>
+    </div>
 </div>
