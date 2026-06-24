@@ -422,6 +422,9 @@ const supportsCurrentPageTocSidebar = computed(() => supportsTocSidebar(page.val
 const currentSidebarLinks = computed(() => getCurrentSidebarLinks(page.value.relativePath))
 
 const mobileSidebarOpen = ref(false)
+const mobileTocOpen = ref(false)
+const mobileTocDragging = ref(false)
+const mobileTocSheetHeight = ref(0)
 const desktopSidebarCollapsed = ref(false)
 const menuOpen = ref(false)
 const desktopCommunityMenuOpen = ref(false)
@@ -438,6 +441,7 @@ const sidebarSpaceEnough = ref(true)
 const docArticleRef = ref(null)
 const siteHeaderRef = ref(null)
 const mainContainerRef = ref(null)
+const mobileTocSheetRef = ref(null)
 const infoDialogRef = ref(null)
 const {
   infoDialogVisible,
@@ -485,6 +489,7 @@ const DESKTOP_SIDEBAR_WIDTH_PX = 256
 const MOBILE_NAV_PANEL_MS = 300
 const MOBILE_NAV_CLOSE_FALLBACK_MS = MOBILE_NAV_PANEL_MS + 100
 const MOBILE_HEADER_SCROLL_DELTA = 8
+const MOBILE_TOC_SHEET_TOP_GAP_PX = 24
 const NAV_ROUTE_PROGRESS_START_MS = 0
 const NAV_ROUTE_PROGRESS_PER_SECOND = 60
 const NAV_ROUTE_PROGRESS_CAP = 90
@@ -551,6 +556,15 @@ const {
   onContentReady: () => applyPendingSearchHeading()
 })
 
+const shouldShowMobileTOC = computed(
+  () => isMobileView.value && supportsCurrentPageTocSidebar.value && tocHeaders.value.length > 0
+)
+
+const mobileTocSheetStyle = computed(() => {
+  if (mobileTocSheetHeight.value <= 0) return null
+  return { height: `${mobileTocSheetHeight.value}px` }
+})
+
 // -- 手势状态（侧边栏滑动 + 顶部过滑触发菜单）--------------------------
 /** 手势触点起始位置 */
 let swipeTouchStartX = 0
@@ -569,6 +583,11 @@ let lastFastTapZoomGuardAt = 0
 let lastFastTapZoomGuardX = 0
 let lastFastTapZoomGuardY = 0
 let lastFastTapZoomGuardControl = null
+let mobileTocSheetDefaultHeight = 0
+let mobileTocSheetDragStartHeight = 0
+let mobileTocSheetDragStartY = 0
+let mobileTocSheetDragPointerId = null
+let mobileTocSheetDragHandle = null
 
 /** 移动端文档切换顶部进度条（不占文档流） */
 const navRouteProgress = ref(0)
@@ -914,7 +933,7 @@ const siteHeaderMobileNavExpanded = computed(
 function syncBodyScrollLock() {
   const mobileMenuActive =
     isMobileViewport() && (menuOpen.value || mobileNavClosingHold.value)
-  const shouldLock = infoDialogVisible.value || lightboxVisible.value || mobileMenuActive || mobileSidebarOpen.value
+  const shouldLock = infoDialogVisible.value || lightboxVisible.value || mobileMenuActive || mobileSidebarOpen.value || mobileTocOpen.value
   if (shouldLock === bodyScrollLocked) return
 
   if (shouldLock) {
@@ -932,6 +951,114 @@ function syncBodyScrollLock() {
 function closeMobileMenu() {
   menuOpen.value = false
   closeMobileCommunityMenu()
+}
+
+function getMobileTocSheetMaxHeight() {
+  if (typeof window === 'undefined') return 0
+  return Math.max(0, window.innerHeight - MOBILE_TOC_SHEET_TOP_GAP_PX)
+}
+
+function clampMobileTocSheetHeight(height) {
+  const minHeight = mobileTocSheetDefaultHeight || height
+  const maxHeight = Math.max(minHeight, getMobileTocSheetMaxHeight())
+  return Math.min(Math.max(height, minHeight), maxHeight)
+}
+
+function measureMobileTocSheetDefaultHeight() {
+  const sheet = mobileTocSheetRef.value
+  if (!sheet) return
+  mobileTocSheetDefaultHeight = Math.round(sheet.getBoundingClientRect().height)
+}
+
+function stopMobileTocSheetDrag() {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('pointermove', handleMobileTocSheetPointerMove)
+    window.removeEventListener('pointerup', handleMobileTocSheetPointerEnd)
+    window.removeEventListener('pointercancel', handleMobileTocSheetPointerEnd)
+  }
+
+  if (mobileTocSheetDragHandle && mobileTocSheetDragPointerId != null) {
+    try {
+      mobileTocSheetDragHandle.releasePointerCapture(mobileTocSheetDragPointerId)
+    } catch {
+      /* pointer capture may already be released */
+    }
+  }
+
+  mobileTocDragging.value = false
+  mobileTocSheetDragPointerId = null
+  mobileTocSheetDragHandle = null
+}
+
+function resetMobileTocSheetDragState() {
+  stopMobileTocSheetDrag()
+  mobileTocSheetHeight.value = 0
+  mobileTocSheetDefaultHeight = 0
+}
+
+function handleMobileTocSheetPointerDown(event) {
+  if (!shouldShowMobileTOC.value || !mobileTocSheetRef.value) return
+  if (event.pointerType === 'mouse' && event.button !== 0) return
+
+  const sheetHeight = Math.round(mobileTocSheetRef.value.getBoundingClientRect().height)
+  if (!mobileTocSheetDefaultHeight) mobileTocSheetDefaultHeight = sheetHeight
+
+  event.preventDefault()
+  mobileTocDragging.value = true
+  mobileTocSheetHeight.value = sheetHeight
+  mobileTocSheetDragStartHeight = sheetHeight
+  mobileTocSheetDragStartY = event.clientY
+  mobileTocSheetDragPointerId = event.pointerId
+  mobileTocSheetDragHandle = event.currentTarget
+  mobileTocSheetDragHandle?.setPointerCapture?.(event.pointerId)
+
+  window.addEventListener('pointermove', handleMobileTocSheetPointerMove, { passive: false })
+  window.addEventListener('pointerup', handleMobileTocSheetPointerEnd)
+  window.addEventListener('pointercancel', handleMobileTocSheetPointerEnd)
+}
+
+function handleMobileTocSheetPointerMove(event) {
+  if (!mobileTocDragging.value || event.pointerId !== mobileTocSheetDragPointerId) return
+  event.preventDefault()
+  const deltaY = mobileTocSheetDragStartY - event.clientY
+  mobileTocSheetHeight.value = clampMobileTocSheetHeight(mobileTocSheetDragStartHeight + deltaY)
+}
+
+function handleMobileTocSheetPointerEnd(event) {
+  if (event.pointerId !== mobileTocSheetDragPointerId) return
+  stopMobileTocSheetDrag()
+}
+
+function closeMobileToc() {
+  mobileTocOpen.value = false
+  stopMobileTocSheetDrag()
+}
+
+function handleMobileTocSheetAfterLeave() {
+  resetMobileTocSheetDragState()
+}
+
+function openMobileToc() {
+  if (!shouldShowMobileTOC.value) return
+  resetMobileTocSheetDragState()
+  closeMobileMenu()
+  closeSidebar()
+  mobileTocOpen.value = true
+  nextTick(() => {
+    measureMobileTocSheetDefaultHeight()
+  })
+}
+
+function handleMobileTocClick(id) {
+  closeMobileToc()
+  if (typeof window === 'undefined') {
+    scrollToToc(id)
+    return
+  }
+
+  window.requestAnimationFrame(() => {
+    scrollToToc(id)
+  })
 }
 
 function toggleMobileSidebar() {
@@ -998,6 +1125,11 @@ function handleDocumentKeydown(e) {
     return
   }
 
+  if (mobileTocOpen.value) {
+    closeMobileToc()
+    return
+  }
+
   if (desktopCommunityMenuOpen.value) {
     closeDesktopCommunityMenu()
     return
@@ -1047,6 +1179,7 @@ function handleWindowResize() {
   if (!isMobileViewport()) {
     clearMobileNavCloseFallback()
     closeMobileMenu()
+    closeMobileToc()
     mobileNavClosingHold.value = false
     closeMobileCommunityMenu()
   } else {
@@ -1058,6 +1191,10 @@ function handleWindowResize() {
   if (!isMobileViewport()) {
     resetMobileHeaderState()
     return
+  }
+
+  if (mobileTocSheetHeight.value > 0) {
+    mobileTocSheetHeight.value = clampMobileTocSheetHeight(mobileTocSheetHeight.value)
   }
 
   lastScrollY = Math.max(window.scrollY || 0, 0)
@@ -1312,6 +1449,7 @@ onBeforeUnmount(() => {
   clearPendingSearchHeadingFrame()
   cleanupDocContentEnhancements()
   clearNavRouteProgressTimers()
+  resetMobileTocSheetDragState()
   cleanupToc()
   navRoutePendingKey = null
 
@@ -1346,6 +1484,7 @@ watch(
     searchQuery.value = ''
     desktopSearchHistoryOpen.value = false
     closeMobileMenu()
+    closeMobileToc()
     closeCommunityMenus()
 
     closeInfoDialog()
@@ -1556,6 +1695,14 @@ watch(lightboxVisible, () => {
 
 watch(mobileSidebarOpen, () => {
   syncBodyScrollLock()
+})
+
+watch(mobileTocOpen, () => {
+  syncBodyScrollLock()
+})
+
+watch(shouldShowMobileTOC, shouldShow => {
+  if (!shouldShow) closeMobileToc()
 })
 
 watch(infoDialogVisible, async visible => {
@@ -1918,6 +2065,79 @@ watch(infoDialogVisible, async visible => {
     <!-- 侧边栏遮罩 -->
     <Transition name="sidebar-backdrop-fade">
       <div v-if="mobileSidebarOpen && shouldShowDesktopSidebar && isMobileView" class="sidebar-backdrop" @click="mobileSidebarOpen = false"></div>
+    </Transition>
+
+    <button
+      v-if="shouldShowMobileTOC && !mobileTocOpen"
+      class="mobile-toc-trigger"
+      type="button"
+      aria-label="打开本页目录"
+      aria-controls="mobile-toc-sheet"
+      :aria-expanded="String(mobileTocOpen)"
+      @click="openMobileToc"
+    >
+      <span class="mobile-toc-trigger__icon" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+      <span>目录</span>
+    </button>
+
+    <Transition name="mobile-toc-backdrop-fade">
+      <div v-if="mobileTocOpen" class="mobile-toc-backdrop" @click="closeMobileToc"></div>
+    </Transition>
+
+    <Transition name="mobile-toc-sheet-slide" @after-leave="handleMobileTocSheetAfterLeave">
+      <section
+        v-if="mobileTocOpen"
+        ref="mobileTocSheetRef"
+        id="mobile-toc-sheet"
+        class="mobile-toc-sheet"
+        :class="{
+          'mobile-toc-sheet--resized': mobileTocSheetHeight > 0,
+          'mobile-toc-sheet--dragging': mobileTocDragging
+        }"
+        :style="mobileTocSheetStyle"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="mobile-toc-title"
+      >
+        <div
+          class="mobile-toc-sheet__handle-zone"
+          role="separator"
+          aria-label="拖拽调整目录高度"
+          aria-orientation="horizontal"
+          @pointerdown="handleMobileTocSheetPointerDown"
+        >
+          <span class="mobile-toc-sheet__handle" aria-hidden="true"></span>
+        </div>
+        <div class="mobile-toc-sheet__header">
+          <div>
+            <p class="mobile-toc-sheet__eyebrow">本页内容</p>
+            <h2 id="mobile-toc-title" class="mobile-toc-sheet__title">快速跳转</h2>
+          </div>
+          <button class="mobile-toc-sheet__close" type="button" aria-label="关闭本页目录" @click="closeMobileToc">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
+        </div>
+        <nav class="mobile-toc-list" aria-label="本页目录">
+          <button
+            v-for="h in tocHeaders"
+            :key="h.id"
+            type="button"
+            class="mobile-toc-link"
+            :class="[`mobile-toc-link--level-${h.level}`]"
+            @click="handleMobileTocClick(h.id)"
+          >
+            <span class="mobile-toc-link__marker" aria-hidden="true"></span>
+            <span class="mobile-toc-link__text">{{ h.title }}</span>
+          </button>
+        </nav>
+      </section>
     </Transition>
 
     <aside

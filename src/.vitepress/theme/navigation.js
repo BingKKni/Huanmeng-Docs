@@ -1,4 +1,48 @@
-import { changelogSidebarLinks } from '../generated/changelog-sidebar.mjs'
+const changelogDays = [
+  '2026-06-19',
+  '2026-05-11',
+  '2026-05-10',
+  '2026-05-09',
+  '2026-05-06',
+  '2026-05-05',
+  '2026-05-03',
+  '2026-04-30',
+  '2026-04-29',
+  '2026-04-25',
+  '2026-04-24',
+  '2026-04-23',
+  '2026-04-22',
+  '2026-04-21',
+  '2026-04-20',
+  '2026-04-19',
+  '2026-04-18',
+  '2026-04-17',
+  '2026-04-16',
+  '2026-04-15',
+  '2026-04-14',
+  '2026-04-13',
+  '2026-04-12',
+  '2026-04-11',
+  '2026-04-10',
+  '2026-04-09'
+]
+
+const latestChangelogHref = `/changelog/${changelogDays[0]}`
+
+export const changelogSidebarLinks = [
+  {
+    href: latestChangelogHref,
+    label: '🗓️ 日志',
+    navigable: false,
+    isActive: () => false,
+    hasAnyActive: relativePath => relativePath === 'changelog/index.md' || changelogDays.some(day => relativePath === `changelog/${day}.md`),
+    children: changelogDays.map(day => ({
+      href: `/changelog/${day}`,
+      label: day,
+      isActive: relativePath => relativePath === `changelog/${day}.md`
+    }))
+  }
+]
 
 export const githubLink = {
   href: 'https://github.com/BingKKni/Huanmeng-Docs',
@@ -15,7 +59,7 @@ export const navLinks = [
     isActive: relativePath => relativePath === 'docs/index.md' || relativePath.startsWith('docs/')
   },
   {
-    href: '/changelog/latest',
+    href: latestChangelogHref,
     label: '更新日志',
     isActive: relativePath => relativePath === 'changelog/index.md' || relativePath.startsWith('changelog/')
   },

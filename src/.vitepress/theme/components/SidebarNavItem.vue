@@ -98,24 +98,8 @@ function toggleItem(item) {
 
 const itemLinkRef = ref(null)
 
-function handlePointerDown(event) {
-  const el = event.currentTarget
-  if (!(el instanceof HTMLElement)) return
-
-  const rect = el.getBoundingClientRect()
-  const x = event.clientX - rect.left
-  const y = event.clientY - rect.top
-  const size = Math.max(rect.width, rect.height) * 2.5
-
-  const ripple = document.createElement('span')
-  ripple.className = 'sidebar-ripple'
-  ripple.style.cssText = `width:${size}px;height:${size}px;left:${x - size / 2}px;top:${y - size / 2}px;`
-  el.appendChild(ripple)
-  ripple.addEventListener('animationend', () => ripple.remove(), { once: true })
-}
-
 // Scroll newly-activated sidebar item into view within the sidebar body.
-// This prevents the "ripple fires, page navigates, but sidebar doesn't follow" issue.
+// This keeps the current page visible after navigation updates the sidebar state.
 watch(isExactActive, (active) => {
   if (!active) return
   nextTick(() => {
@@ -163,7 +147,6 @@ onMounted(() => {
       :aria-current="isExactActive ? 'page' : undefined"
       :aria-expanded="hasChildren(item) ? String(isExpanded) : undefined"
       @click="handleItemClick"
-      @pointerdown="handlePointerDown"
     >
       <span class="desktop-doc-sidebar__item-label">{{ item.label }}</span>
       <span
