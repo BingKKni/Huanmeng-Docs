@@ -476,6 +476,7 @@ const {
   startLightboxCloseAnimation,
   handleLightboxClick,
   handleDesktopLightboxWheel,
+  handleDesktopLightboxMouseDown,
   handleLightboxTouchStart,
   handleLightboxTouchMove,
   handleLightboxTouchEnd,
@@ -2375,6 +2376,7 @@ watch(infoDialogVisible, async visible => {
       :image-transition="lightboxImageTransition"
       @click="handleLightboxClick"
       @wheel="handleDesktopLightboxWheel"
+      @mousedown="handleDesktopLightboxMouseDown"
       @touchstart="handleLightboxTouchStart"
       @touchmove="handleLightboxTouchMove"
       @touchend="handleLightboxTouchEnd"

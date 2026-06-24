@@ -34,6 +34,7 @@ defineProps({
 const emit = defineEmits([
   'click',
   'wheel',
+  'mousedown',
   'touchstart',
   'touchmove',
   'touchend',
@@ -62,12 +63,14 @@ const lightboxImgRef = defineModel('lightboxImgRef')
       <div ref="lightboxFlipRef" class="hm-lightbox__flip">
         <img
           ref="lightboxImgRef"
+          :class="{ 'hm-lightbox__image--zoomed': scale > 1 }"
           :src="src"
           alt=""
           :style="{
             transform: `translate3d(${offsetX}px, ${offsetY}px, 0) scale(${scale})`,
             transition: imageTransition,
           }"
+          @mousedown="emit('mousedown', $event)"
           @wheel.prevent="emit('wheel', $event)"
           @touchstart="emit('touchstart', $event)"
           @touchmove="emit('touchmove', $event)"

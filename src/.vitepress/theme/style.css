@@ -89,8 +89,9 @@ svg {
   --vp-c-text-3: var(--hm-text-3);
   --vp-c-border: var(--hm-border);
   --hm-selection-bg: rgba(124, 58, 237, 0.2);
-  --hm-code-block-bg: #faf9f5;
-  --hm-code-block-border: #dddbd6;
+  --hm-code-block-bg: #f5f7fa;
+  --hm-code-block-border: #e2e8f0;
+  --hm-code-block-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
   --hm-code-lang-color: rgba(33, 37, 41, 0.42);
   --hm-code-line-highlight: rgba(15, 23, 42, 0.055);
   --hm-desktop-sidebar-left: 0px;
@@ -178,8 +179,9 @@ html.dark {
   --hm-table-head-bg: #1b2633;
   --hm-search-highlight-bg: rgba(250, 204, 21, 0.28);
   --hm-selection-bg: rgba(192, 132, 252, 0.35);
-  --hm-code-block-bg: #101722;
-  --hm-code-block-border: #2b3644;
+  --hm-code-block-bg: #0e1620;
+  --hm-code-block-border: #2a3441;
+  --hm-code-block-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   --hm-code-lang-color: rgba(229, 234, 243, 0.52);
   --hm-code-line-highlight: rgba(148, 163, 184, 0.14);
   --hm-dialog-overlay: rgba(0, 0, 0, 0.35);
@@ -494,7 +496,7 @@ a:hover {
 
 @media (hover: hover) {
   .site-header-icon-btn:hover {
-    color: #0076ff;
+    color: #6c757d;
   }
 }
 
@@ -980,18 +982,16 @@ a:hover {
 }
 
 @media (hover: hover) {
-  /* 与社群下拉项 .site-nav__dropdown-link:hover 保持一致：仅做柔和底色高亮，
-   * 文字使用主文本色而非蓝色（避免「首页」等导航按钮在悬浮时变蓝）。 */
   .site-nav__link:hover {
-    color: var(--hm-text-1);
-    background-color: var(--hm-accent-soft);
-    border-color: var(--hm-accent-soft);
+    color: #6c757d;
+    background-color: transparent;
+    border-color: transparent;
   }
 
   .site-nav__link.active:hover {
     color: #fff;
-    background-color: #0069d9;
-    border-color: #0062cc;
+    background-color: #007bff;
+    border-color: #007bff;
   }
 }
 
@@ -1065,8 +1065,8 @@ a:hover {
 
 @media (hover: hover) {
   .site-nav__dropdown-link:hover {
-    color: var(--hm-text-1);
-    background: var(--hm-accent-soft);
+    color: var(--hm-text-2);
+    background: transparent;
   }
 }
 
@@ -1705,7 +1705,7 @@ a:hover {
   overflow-x: auto;
   color: inherit;
   background: var(--hm-code-block-bg);
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 .doc-article code {
@@ -1727,14 +1727,14 @@ a:hover {
   margin: 1rem 0;
   background: var(--hm-code-block-bg);
   border: 1px solid var(--hm-code-block-border);
-  border-radius: 6px;
-  box-shadow: none;
+  border-radius: 8px;
+  box-shadow: var(--hm-code-block-shadow);
   overflow: hidden;
 }
 
 .doc-article div[class*='language-']>pre {
   margin: 0;
-  padding: 1rem;
+  padding: 0.85rem 3rem 0.85rem 1rem;
   color: var(--shiki-light) !important;
   background: transparent !important;
   border-radius: 0;
@@ -1743,9 +1743,9 @@ a:hover {
 
 .doc-article .vp-code .line.highlighted {
   display: inline-block;
-  width: calc(100% + 2rem);
-  margin: 0 -1rem;
-  padding: 0 1rem;
+  width: calc(100% + 4rem);
+  margin: 0 -3rem 0 -1rem;
+  padding: 0 3rem 0 1rem;
   background-color: var(--hm-code-line-highlight);
 }
 
@@ -1767,8 +1767,9 @@ div[class*='language-']>.lang {
 
 div[class*='language-']>.copy {
   position: absolute;
-  top: 0.9rem;
+  top: 50%;
   right: 0.75rem;
+  transform: translateY(-50%);
   z-index: 3;
   display: block;
   width: 1.6rem;
@@ -1787,7 +1788,7 @@ div[class*='language-']>.copy {
 }
 
 div[class*='language-']>.copy:active {
-  transform: scale(0.85);
+  transform: translateY(-50%) scale(0.85);
   opacity: 1;
 }
 
@@ -1827,7 +1828,7 @@ div[class*='language-']>.copy[data-copy-state='error'] {
 
 .custom-block .custom-block-title {
   font-weight: 700;
-  font-size: 0.875rem;
+  font-size: inherit;
   margin-bottom: 0.25rem;
 }
 
@@ -2431,6 +2432,14 @@ html.dark .hm-dialog__title {
 @media (min-width: 768px) {
   .hm-lightbox img {
     cursor: zoom-in;
+  }
+
+  .hm-lightbox img.hm-lightbox__image--zoomed {
+    cursor: grab;
+  }
+
+  .hm-lightbox img.hm-lightbox__image--zoomed:active {
+    cursor: grabbing;
   }
 }
 

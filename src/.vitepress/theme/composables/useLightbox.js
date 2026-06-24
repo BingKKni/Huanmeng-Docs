@@ -71,6 +71,7 @@ export function useLightbox({ isMobileViewport }) {
   }
 
   function resetLightboxGestureState() {
+    removeDesktopLightboxMouseListeners()
     lightboxImageTransition.value = 'transform 0.18s ease'
     lightboxOffsetX.value = 0
     lightboxOffsetY.value = 0
@@ -90,6 +91,16 @@ export function useLightbox({ isMobileViewport }) {
 
   function suppressLightboxClick() {
     lightboxSuppressClickUntil = Date.now() + LIGHTBOX_GESTURE_CLICK_SUPPRESS_MS
+  }
+
+  function addDesktopLightboxMouseListeners() {
+    window.addEventListener('mousemove', handleDesktopLightboxMouseMove)
+    window.addEventListener('mouseup', handleDesktopLightboxMouseUp)
+  }
+
+  function removeDesktopLightboxMouseListeners() {
+    window.removeEventListener('mousemove', handleDesktopLightboxMouseMove)
+    window.removeEventListener('mouseup', handleDesktopLightboxMouseUp)
   }
 
   function getLightboxViewportSize() {
@@ -489,6 +500,56 @@ export function useLightbox({ isMobileViewport }) {
     zoomLightboxAroundPoint(Number((lightboxScale.value + scaleDelta).toFixed(2)), e.clientX, e.clientY)
   }
 
+  function handleDesktopLightboxMouseDown(e) {
+    if (isMobileViewport()) return
+    if (lightboxPhase.value !== 'open') return
+    if (e.button !== 0) return
+    if (lightboxScale.value <= LIGHTBOX_SCALE_MIN) return
+
+    lightboxDragging = true
+    lightboxDragMoved = false
+    lightboxDragFromPinch = false
+    lightboxDragStartX = e.clientX
+    lightboxDragStartY = e.clientY
+    lightboxDragStartOffsetX = lightboxOffsetX.value
+    lightboxDragStartOffsetY = lightboxOffsetY.value
+    lightboxImageTransition.value = 'none'
+    addDesktopLightboxMouseListeners()
+    e.preventDefault()
+  }
+
+  function handleDesktopLightboxMouseMove(e) {
+    if (isMobileViewport()) return
+    if (!lightboxDragging || lightboxPhase.value !== 'open') return
+
+    const deltaX = e.clientX - lightboxDragStartX
+    const deltaY = e.clientY - lightboxDragStartY
+    if (!lightboxDragMoved && (Math.abs(deltaX) >= LIGHTBOX_DRAG_START_THRESHOLD_PX || Math.abs(deltaY) >= LIGHTBOX_DRAG_START_THRESHOLD_PX)) {
+      lightboxDragMoved = true
+    }
+
+    setLightboxOffset(lightboxDragStartOffsetX + deltaX, lightboxDragStartOffsetY + deltaY, lightboxScale.value)
+    if (lightboxDragMoved) suppressLightboxClick()
+    e.preventDefault()
+  }
+
+  function handleDesktopLightboxMouseUp(e) {
+    if (!lightboxDragging) return
+
+    removeDesktopLightboxMouseListeners()
+    lightboxDragging = false
+    lightboxDragStartX = 0
+    lightboxDragStartY = 0
+    lightboxDragStartOffsetX = lightboxOffsetX.value
+    lightboxDragStartOffsetY = lightboxOffsetY.value
+    lightboxImageTransition.value = 'transform 0.18s ease'
+    if (lightboxDragMoved) {
+      suppressLightboxClick()
+      e.preventDefault()
+    }
+    lightboxDragMoved = false
+  }
+
   function handleLightboxTouchStart(e) {
     if (!isMobileViewport()) return
     if (lightboxPhase.value !== 'open') return
@@ -656,6 +717,7 @@ export function useLightbox({ isMobileViewport }) {
     startLightboxCloseAnimation,
     handleLightboxClick,
     handleDesktopLightboxWheel,
+    handleDesktopLightboxMouseDown,
     handleLightboxTouchStart,
     handleLightboxTouchMove,
     handleLightboxTouchEnd,
