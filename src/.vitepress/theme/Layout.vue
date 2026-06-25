@@ -458,6 +458,11 @@ function isMobileViewport() {
   return isMobileView.value
 }
 
+function openMobileInfoDialog(...args) {
+  if (!isMobileViewport()) return
+  openInfoDialog(...args)
+}
+
 const {
   lightboxSrc,
   lightboxVisible,
@@ -533,7 +538,8 @@ const {
 } = useDocContentEnhancements({
   docArticleRef,
   openLightbox,
-  openInfoDialog
+  openInfoDialog: openMobileInfoDialog,
+  isMobileViewport
 })
 
 const {
@@ -760,6 +766,11 @@ function handleDesktopCommunityMenuDocumentClick(event) {
 }
 
 function handleCommunityLinkClick(event, link) {
+  if (!isMobileViewport()) {
+    closeCommunityMenus()
+    return
+  }
+
   event.preventDefault()
   closeCommunityMenus()
   closeMobileMenu()
@@ -1248,6 +1259,8 @@ function openExternalLinkInNewTab(href) {
 }
 
 function handleGithubClick(event) {
+  if (!isMobileViewport()) return
+
   event.preventDefault()
 
   openInfoDialog(
@@ -2326,7 +2339,7 @@ watch(infoDialogVisible, async visible => {
       </div>
     </main>
 
-    <footer class="site-footer">
+    <footer v-if="frontmatter.home" class="site-footer">
       <div class="site-container site-footer-inner">
         <div class="site-footer-filings">
           <span><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" class="site-footer-link">浙ICP备2026018380号</a></span>
