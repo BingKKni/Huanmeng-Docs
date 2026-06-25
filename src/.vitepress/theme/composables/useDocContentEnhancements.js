@@ -2,7 +2,7 @@ import { nextTick } from 'vue'
 
 const COPY_BUTTON_RESET_DELAY = 4000
 
-export function useDocContentEnhancements({ docArticleRef, openLightbox, openInfoDialog }) {
+export function useDocContentEnhancements({ docArticleRef, openLightbox, openInfoDialog, isMobileViewport }) {
   let imageRowProcessFrame = 0
   let imageRowForceProcess = false
   const copyButtonResetTimers = new Map()
@@ -140,6 +140,8 @@ export function useDocContentEnhancements({ docArticleRef, openLightbox, openInf
       if (btn.dataset.hmConfirmBound === '1') return
       btn.dataset.hmConfirmBound = '1'
       btn.addEventListener('click', e => {
+        if (!isMobileViewport()) return
+
         e.preventDefault()
         const href = btn.href
         const target = btn.target || '_blank'
