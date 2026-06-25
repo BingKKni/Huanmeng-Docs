@@ -1294,8 +1294,7 @@ a:hover {
     display: grid;
     grid-template-rows: 0fr;
     margin: 0;
-    transition: grid-template-rows 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-                margin 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: none;
     overflow: hidden;
   }
 
@@ -1309,6 +1308,15 @@ a:hover {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.16s ease, transform 0.16s ease;
+    will-change: opacity, transform;
+  }
+
+  .desktop-doc-sidebar__children.expanded .desktop-doc-sidebar__children-inner {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   .desktop-doc-sidebar__child-link {
@@ -1531,8 +1539,7 @@ a:hover {
     display: grid;
     grid-template-rows: 0fr;
     margin: 0;
-    transition: grid-template-rows 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-                margin 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: none;
     overflow: hidden;
   }
 
@@ -1546,6 +1553,15 @@ a:hover {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.16s ease, transform 0.16s ease;
+    will-change: opacity, transform;
+  }
+
+  .desktop-doc-sidebar__children.expanded .desktop-doc-sidebar__children-inner {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   .desktop-doc-sidebar__child-link {
@@ -1568,24 +1584,6 @@ a:hover {
   .desktop-doc-sidebar__child-link.active {
     font-weight: 400;
     background-color: #f1f4f6;
-  }
-}
-
-@media (max-width: 991.98px) {
-  .desktop-doc-sidebar__children {
-    transition: none;
-  }
-
-  .desktop-doc-sidebar__children-inner {
-    opacity: 0;
-    transform: translateY(-4px);
-    transition: opacity 0.16s ease, transform 0.16s ease;
-    will-change: opacity, transform;
-  }
-
-  .desktop-doc-sidebar__children.expanded .desktop-doc-sidebar__children-inner {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -4160,8 +4158,7 @@ html.dark .hm-search-modal__close {
     display: grid;
     grid-template-rows: 0fr;
     margin: 0;
-    transition: grid-template-rows 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-                margin 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: none;
     overflow: hidden;
   }
 
@@ -4175,6 +4172,15 @@ html.dark .hm-search-modal__close {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.16s ease, transform 0.16s ease;
+    will-change: opacity, transform;
+  }
+
+  .sidebar-compact-mode .desktop-doc-sidebar__children.expanded .desktop-doc-sidebar__children-inner {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   .sidebar-compact-mode .desktop-doc-sidebar__child-link {
