@@ -55,6 +55,14 @@ let searchIndexPromise = null
 let searchPageFocusPending = false
 
 const isSearchPage = computed(() => page.value.relativePath === 'search/index.md')
+const isNewsArticle = computed(() => page.value.relativePath.startsWith('news/') && page.value.relativePath !== 'news/index.md')
+const newsArticleTitle = computed(() => frontmatter.value.title || page.value.title || '')
+const newsArticleDate = computed(() => {
+  if (frontmatter.value.date) return String(frontmatter.value.date).slice(0, 10)
+
+  const match = page.value.relativePath.match(/^news\/(\d{4}-\d{2}-\d{2})-/)
+  return match?.[1] || ''
+})
 
 async function ensureSearchIndexLoaded() {
   if (searchIndexLoaded.value) return searchIndex.value
@@ -2202,12 +2210,18 @@ watch(infoDialogVisible, async visible => {
 
     <main
       class="site-main"
-      :class="{ 'hmdoc-index-main': !frontmatter.home && page.relativePath === 'hmdoc/index.md' }"
+      :class="{
+        'hmdoc-index-main': !frontmatter.home && page.relativePath === 'hmdoc/index.md',
+        'news-index-main': page.relativePath === 'news/index.md'
+      }"
     >
       <div
         ref="mainContainerRef"
         class="site-container site-main__container"
-        :class="{ 'hmdoc-index-container': !frontmatter.home && page.relativePath === 'hmdoc/index.md' }"
+        :class="{
+          'hmdoc-index-container': !frontmatter.home && page.relativePath === 'hmdoc/index.md',
+          'news-index-container': page.relativePath === 'news/index.md'
+        }"
       >
         <Transition
           :css="false"
@@ -2294,7 +2308,9 @@ watch(infoDialogVisible, async visible => {
             class="doc-article doc-article--padded"
             :class="{
               'docs-index-article': page.relativePath === 'docs/index.md',
-              'docs-support-article': page.relativePath === 'about/support.md'
+              'docs-support-article': page.relativePath === 'about/support.md',
+              'news-index-article': page.relativePath === 'news/index.md',
+              'news-article': isNewsArticle
             }"
           >
             <a v-if="backLinkInfo" :href="withBase(backLinkInfo.url)" class="doc-back-btn">
@@ -2306,6 +2322,10 @@ watch(infoDialogVisible, async visible => {
               </span>
               <span>返回到"{{ backLinkInfo.label }}"</span>
             </a>
+            <header v-if="isNewsArticle" class="news-article-header">
+              <h1 class="news-article-title">{{ newsArticleTitle }}</h1>
+              <time v-if="newsArticleDate" class="news-article-date" :datetime="newsArticleDate">{{ newsArticleDate }}</time>
+            </header>
             <Content />
           </article>
           

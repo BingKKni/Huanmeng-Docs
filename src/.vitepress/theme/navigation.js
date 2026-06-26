@@ -30,14 +30,14 @@ export const navLinks = [
     isActive: relativePath => relativePath === 'docs/index.md' || relativePath.startsWith('docs/')
   },
   {
-    href: latestChangelogHref,
-    label: '更新日志',
-    isActive: relativePath => relativePath === 'changelog/index.md' || relativePath.startsWith('changelog/')
+    href: '/news/',
+    label: '动态',
+    isActive: relativePath => relativePath === 'news/index.md' || relativePath.startsWith('news/')
   },
   {
     href: '/about/',
     label: '更多',
-    isActive: relativePath => relativePath === 'about/index.md' || relativePath.startsWith('about/')
+    isActive: relativePath => relativePath === 'about/index.md' || relativePath.startsWith('about/') || relativePath.startsWith('changelog/')
   },
   {
     label: '社区',
@@ -217,6 +217,17 @@ export const aboutSidebarLinks = [
     ]
   },
   {
+    href: latestChangelogHref,
+    label: '🗓️ 更新日志',
+    isActive: relativePath => relativePath === 'changelog/index.md',
+    hasAnyActive: relativePath => relativePath === 'changelog/index.md' || relativePath.startsWith('changelog/'),
+    children: changelogDays.map(day => ({
+      href: `/changelog/${day}`,
+      label: day,
+      isActive: relativePath => relativePath === `changelog/${day}.md`
+    }))
+  },
+  {
     href: '/about/faq/',
     label: '❓ 常见问题FAQ',
     isActive: relativePath => relativePath === 'about/faq/index.md',
@@ -231,7 +242,6 @@ export const aboutSidebarLinks = [
 
 export function getCurrentSidebarLinks(relativePath) {
   if (relativePath.startsWith('docs/')) return desktopSidebarLinks
-  if (relativePath.startsWith('about/')) return aboutSidebarLinks
-  if (relativePath.startsWith('changelog/')) return changelogSidebarLinks
+  if (relativePath.startsWith('about/') || relativePath.startsWith('changelog/')) return aboutSidebarLinks
   return []
 }
