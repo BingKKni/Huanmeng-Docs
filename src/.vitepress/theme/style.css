@@ -1619,10 +1619,25 @@ a:hover {
   background: transparent;
 }
 
+/* 文档标题：微软雅黑仅有 400/700 两档，500–600 无效；用 Noto Sans SC 的真字重替代阴影模拟，避免曲笔锯齿。 */
+.doc-article h1,
+.doc-article h2,
+.doc-article h3 {
+  font-family:
+    'Noto Sans SC',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Microsoft YaHei UI',
+    'Microsoft YaHei',
+    sans-serif;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+
 .doc-article h1 {
   margin-bottom: 1rem;
   font-size: 2.25rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .doc-article h2 {
@@ -1630,7 +1645,7 @@ a:hover {
   margin-bottom: 1rem;
   padding-bottom: 0;
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 600;
   border-bottom: none;
 }
 
@@ -1642,7 +1657,7 @@ a:hover {
   margin-top: 1.75rem;
   margin-bottom: 0.75rem;
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .doc-article p,
