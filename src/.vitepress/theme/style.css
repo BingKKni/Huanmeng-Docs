@@ -1955,6 +1955,8 @@ div[class*='language-']>.copy[data-copy-state='error'] {
   overflow-wrap: anywhere;
   word-break: normal;
   border-radius: 0;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 .doc-article .hm-table-wrap>table th br,
@@ -2170,6 +2172,7 @@ html.dark .hm-dialog__title {
   font-size: 1rem;
   line-height: 1.7;
   color: var(--hm-dialog-text-color);
+  white-space: pre-line;
 }
 
 .hm-dialog__footer {

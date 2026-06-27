@@ -1,5 +1,10 @@
 import { ref } from 'vue'
 
+function formatInfoDialogMessage(message) {
+  if (typeof message !== 'string') return ''
+  return message.replace(/\\n/g, '\n')
+}
+
 export function useInfoDialog() {
   const infoDialogVisible = ref(false)
   const infoDialogTitle = ref('信息')
@@ -10,7 +15,7 @@ export function useInfoDialog() {
 
   function openInfoDialog(message, title = '信息', onConfirm = null, showCancel = false, confirmLabel = '确定') {
     infoDialogTitle.value = title
-    infoDialogMessage.value = message
+    infoDialogMessage.value = formatInfoDialogMessage(message)
     infoDialogOnConfirm = onConfirm
     infoDialogShowCancel.value = Boolean(showCancel)
     infoDialogConfirmLabel.value = confirmLabel

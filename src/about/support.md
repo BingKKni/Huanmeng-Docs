@@ -59,7 +59,7 @@
 :::
 
 ### 支持方式
-投喂后要记得保存好投喂成功的截图，并添加幻梦官方群联系群主哦！<a class="group-join-btn" href="https://qm.qq.com/q/6lmTZCS0SY" target="_blank" rel="noopener noreferrer" data-confirm-title="二次确认" data-confirm-message="即将跳转到QQ幻梦官方群，是否继续？" data-confirm-label="确认">点击加群</a>
+投喂后要记得保存好投喂成功的截图，并添加幻梦官方群联系群主哦！<a class="group-join-btn" href="https://qm.qq.com/q/6lmTZCS0SY" target="_blank" rel="noopener noreferrer" data-confirm-title="二次确认" data-confirm-message='即将跳转到QQ幻梦官方群，是否继续？\n加群时请正确回答问题，否则会无法顺利进群哦。\n如果遇到答对也加不进去的情况，则可能是你的QQ头像或QQ等级有问题，遇到这种情况的小人类在回答进群提问时候后面额外填一下备注，比如"我投喂了"~' data-confirm-label="确认">点击加群</a>
 ::: tabs variant:hm-donate-image
 == 支付宝
 ![支付宝-红包图片](/img/donate_alipay_redbag.png){width="200"} ![支付宝-投喂图片](/img/donate_alipay.png){width="200"}

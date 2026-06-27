@@ -245,6 +245,24 @@ auto 为自动适应颜色，根据用户设置的主题颜色自动适应。
 - 不要为了一个很小的视觉效果写一大段 HTML。
 - 复用站内已有 class，避免引入没人维护的新结构。
 
+## 加群确认按钮
+
+文档里可以插入带二次确认弹窗的外链按钮，在移动端点击时会先弹出确认框，再跳转 QQ 群等外部链接：
+
+```html
+<a class="group-join-btn" href="https://qm.qq.com/q/6lmTZCS0SY" target="_blank" rel="noopener noreferrer" data-confirm-title="二次确认" data-confirm-message="即将跳转到QQ幻梦官方群，是否继续？" data-confirm-label="确认">点击加群</a>
+```
+
+可用属性：
+
+- `data-confirm-title`：弹窗标题，默认「提示」。
+- `data-confirm-message`：弹窗正文；支持用 `\n` 换行，例如 `第一行\n第二行`。
+- `data-confirm-label`：确认按钮文字，默认「确定」。
+
+::: info
+二次确认仅在移动端生效；桌面端会直接打开链接。顶栏「社区」菜单里的外链确认弹窗同样支持 `\n` 换行。
+:::
+
 ## 站内换行行为
 
 当前站点启用了更宽松的换行渲染，单个文本换行也会被渲染为 `<br>`。这能让一些旧文档或说明页更容易保持原本排版。
