@@ -240,8 +240,45 @@ export const aboutSidebarLinks = [
   { href: '/about/support', label: '🧋 支持幻梦', isActive: relativePath => relativePath === 'about/support.md' }
 ]
 
+export const newsSidebarLinks = [
+  {
+    href: '/news/',
+    label: '🏠 首页',
+    isActive: relativePath => relativePath === 'news/index.md',
+    hasAnyActive: relativePath => relativePath.startsWith('news/'),
+    children: [
+      {
+        href: '/news/2026-06-26-summer-update',
+        label: '暑期功能整理与文档站改版预告',
+        isActive: relativePath => relativePath === 'news/2026-06-26-summer-update.md'
+      },
+      {
+        href: '/news/2026-06-20-search-improvements',
+        label: '搜索体验优化记录',
+        isActive: relativePath => relativePath === 'news/2026-06-20-search-improvements.md'
+      },
+      {
+        href: '/news/2026-06-12-community-event',
+        label: '六月社区活动小结',
+        isActive: relativePath => relativePath === 'news/2026-06-12-community-event.md'
+      },
+      {
+        href: '/news/2026-06-04-docs-plan',
+        label: '文档内容补全计划',
+        isActive: relativePath => relativePath === 'news/2026-06-04-docs-plan.md'
+      },
+      {
+        href: '/news/2026-05-28-feature-preview',
+        label: '下一批功能说明预告',
+        isActive: relativePath => relativePath === 'news/2026-05-28-feature-preview.md'
+      }
+    ]
+  }
+]
+
 export function getCurrentSidebarLinks(relativePath) {
   if (relativePath.startsWith('docs/')) return desktopSidebarLinks
+  if (relativePath.startsWith('news/')) return newsSidebarLinks
   if (relativePath.startsWith('about/') || relativePath.startsWith('changelog/')) return aboutSidebarLinks
   return []
 }

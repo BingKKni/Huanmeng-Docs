@@ -2,7 +2,7 @@
  * 按相对路径前缀匹配。
  * @type {readonly string[]}
  */
-const DESKTOP_SIDEBAR_PREFIXES = Object.freeze(['docs/', 'about/', 'changelog/'])
+const DESKTOP_SIDEBAR_PREFIXES = Object.freeze(['docs/', 'news/', 'about/', 'changelog/'])
 
 /**
  * 除上述前缀外，再允许显示右侧 TOC 的页面（`page.relativePath` 全名）。
