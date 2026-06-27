@@ -3074,7 +3074,7 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
   border-bottom: 1px solid var(--newsroom-line);
 }
 
-.newsroom-list__item {
+.doc-article .newsroom-list__item {
   padding: 0 0 1rem;
   margin-bottom: 1rem;
   color: #141413;
@@ -3144,11 +3144,28 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
   font-weight: 500;
 }
 
-.newsroom-featured a:hover,
-.newsroom-list__item:hover {
-  color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
+@media (hover: hover) {
+  /* 精选动态：hover 时只让标题文本出现下划线，避免 meta/正文也带 underline */
+  .newsroom-featured a:hover {
+    color: inherit;
+  }
+
+  .newsroom-featured__main-content:hover h2,
+  .newsroom-side-card:hover h3 {
+    text-decoration: underline;
+    text-decoration-color: currentColor;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.1em;
+  }
+
+  /* 全部动态：日期/分类/标题三列整体显示下划线，颜色跟随文本（黑/白） */
+  .doc-article .newsroom-list__item:hover {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: currentColor;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.1em;
+  }
 }
 
 html.dark .newsroom-page {
