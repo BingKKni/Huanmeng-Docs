@@ -1,4 +1,5 @@
 import { changelogDays, latestChangelogHref } from './changelog-days.js'
+import { data as newsItems } from './news.data.js'
 
 export const changelogSidebarLinks = [
   {
@@ -246,33 +247,11 @@ export const newsSidebarLinks = [
     label: '🏠 首页',
     isActive: relativePath => relativePath === 'news/index.md',
     hasAnyActive: relativePath => relativePath.startsWith('news/'),
-    children: [
-      {
-        href: '/news/2026-06-26-summer-update',
-        label: '暑期功能整理与文档站改版预告',
-        isActive: relativePath => relativePath === 'news/2026-06-26-summer-update.md'
-      },
-      {
-        href: '/news/2026-06-20-search-improvements',
-        label: '搜索体验优化记录',
-        isActive: relativePath => relativePath === 'news/2026-06-20-search-improvements.md'
-      },
-      {
-        href: '/news/2026-06-12-community-event',
-        label: '六月社区活动小结',
-        isActive: relativePath => relativePath === 'news/2026-06-12-community-event.md'
-      },
-      {
-        href: '/news/2026-06-04-docs-plan',
-        label: '文档内容补全计划',
-        isActive: relativePath => relativePath === 'news/2026-06-04-docs-plan.md'
-      },
-      {
-        href: '/news/2026-05-28-feature-preview',
-        label: '下一批功能说明预告',
-        isActive: relativePath => relativePath === 'news/2026-05-28-feature-preview.md'
-      }
-    ]
+    children: newsItems.map(item => ({
+      href: item.url,
+      label: item.title,
+      isActive: relativePath => relativePath === item.relativePath
+    }))
   }
 ]
 

@@ -135,6 +135,10 @@ svg {
   --cb-mix-ratio: 22%;
   /* 文档正文宽度：随屏幕放大，但保留上限，避免 2K/4K 行长失控 */
   --hm-content-max-width: clamp(960px, 68vw, 1080px);
+  /* 拉丁文/数字/符号走 Inter，中文回落 Noto Sans SC（Noto 不加载 latin 子集） */
+  --hm-font-latin: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
+  --hm-font-cjk: 'Noto Sans SC', 'Microsoft YaHei UI', 'Microsoft YaHei';
+  --hm-font-sans: var(--hm-font-latin), var(--hm-font-cjk), 'Hiragino Sans GB', 'Source Han Sans SC', sans-serif;
   /* Markdown <hr>（***）*/
   --hm-doc-hr-color: rgba(15, 23, 42, 0.14);
 }
@@ -348,17 +352,7 @@ body {
   color: #212529;
   background: #ffffff;
   /* 统一站点字体栈 */
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    'Microsoft YaHei UI',
-    'Microsoft YaHei',
-    'Hiragino Sans GB',
-    'Source Han Sans SC',
-    'Noto Sans CJK SC',
-    'Noto Sans SC',
-    system-ui,
-    sans-serif;
+  font-family: var(--hm-font-sans);
 }
 
 .site-container {
@@ -1619,17 +1613,11 @@ a:hover {
   background: transparent;
 }
 
-/* 文档标题：微软雅黑仅有 400/700 两档，500–600 无效；用 Noto Sans SC 的真字重替代阴影模拟，避免曲笔锯齿。 */
+/* 文档标题：拉丁走 Inter；中文与 500–600 字重走 Noto Sans SC，避免雅黑假粗体 */
 .doc-article h1,
 .doc-article h2,
 .doc-article h3 {
-  font-family:
-    'Noto Sans SC',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Microsoft YaHei UI',
-    'Microsoft YaHei',
-    sans-serif;
+  font-family: var(--hm-font-sans);
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
 }
@@ -1667,6 +1655,49 @@ a:hover {
 
 .doc-article p {
   margin: var(--hm-doc-block-gap) 0;
+}
+
+/* 动态文章：Inter + Noto Sans SC 混排，用字重区分层级 */
+.doc-article.news-article {
+  max-width: 750px;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 16px;
+  line-height: 1.85;
+  font-family: var(--hm-font-sans);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.doc-article.news-article h1 {
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.doc-article.news-article h2 {
+  margin-top: 2.25rem;
+  font-size: 1.375rem;
+  font-weight: 600;
+}
+
+.doc-article.news-article h3 {
+  margin-top: 1.5rem;
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.doc-article.news-article p,
+.doc-article.news-article li {
+  line-height: 1.85;
+}
+
+.doc-article.news-article strong {
+  font-weight: 600;
+  font-synthesis: none;
+}
+
+.doc-article.news-article li + li {
+  margin-top: 0.35em;
 }
 
 .doc-article ol,

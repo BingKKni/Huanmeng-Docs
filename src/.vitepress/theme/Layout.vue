@@ -2297,7 +2297,8 @@ watch(infoDialogVisible, async visible => {
             class="doc-article doc-article--padded"
             :class="{
               'docs-index-article': page.relativePath === 'docs/index.md',
-              'docs-support-article': page.relativePath === 'about/support.md'
+              'docs-support-article': page.relativePath === 'about/support.md',
+              'news-article': page.relativePath.startsWith('news/') && page.relativePath !== 'news/index.md'
             }"
           >
             <a v-if="backLinkInfo" :href="withBase(backLinkInfo.url)" class="doc-back-btn">

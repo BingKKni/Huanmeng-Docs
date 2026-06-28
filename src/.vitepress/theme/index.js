@@ -1,8 +1,8 @@
 import Layout from './Layout.vue'
+import '@fontsource-variable/inter/wght.css'
+import '@fontsource/noto-sans-sc/chinese-simplified-400.css'
 import '@fontsource/noto-sans-sc/chinese-simplified-500.css'
 import '@fontsource/noto-sans-sc/chinese-simplified-600.css'
-import '@fontsource/noto-sans-sc/latin-500.css'
-import '@fontsource/noto-sans-sc/latin-600.css'
 import './style.css'
 import { enhanceAppWithTabs } from 'vitepress-plugin-tabs/client'
 
@@ -14,4 +14,3 @@ export default {
     enhanceAppWithTabs(app)
   }
 }
-

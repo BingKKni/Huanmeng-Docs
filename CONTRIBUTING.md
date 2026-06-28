@@ -16,11 +16,31 @@
 | --- | --- |
 | `src/index.md` | 首页（入口介绍与按钮等） |
 | `src/docs/` | 机器人帮助文档（如 `index.md` 等） |
+| `src/news/` | 动态文章 |
 | `src/public/` | 静态资源（图片等），在 Markdown 里常以 `/img/...` 引用 |
 | `src/changelog/` | 更新日志，每个按日期命名的 `YYYY-MM-DD.md` 是一条记录（推荐用 `npm run changelog` 生成，见下文） |
 | `src/.vitepress/` | VitePress 配置与主题（一般贡献文档时少改） |
 
 修改前先浏览现有页面的语气和结构，**纠错、补全步骤、更新配图**都很受欢迎。若需要大幅改写语气或版式，建议在 PR 或群里先简单沟通一下。
+
+## 动态
+
+动态位于 `src/news/`，每篇动态是一个 Markdown 文件。新增动态时，只需要创建文件并写好 frontmatter（详见文件头）；动态首页卡片和侧边栏会在构建阶段自动收录，不需要手动修改 `src/news/index.md` 或 `src/.vitepress/theme/navigation.js`。
+
+推荐文件名包含日期和简短主题，例如：`2026-07-01-summer-event.md`。
+
+```md
+---
+title: 暑期活动预告
+date: 2026-07-01
+emoji: 🎉
+description: 简短说明这篇动态会讲什么。
+---
+
+# 暑期活动预告
+
+正文内容正常编写即可。
+```
 
 ## 本地运行与构建
 
