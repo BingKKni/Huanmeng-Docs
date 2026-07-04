@@ -53,8 +53,11 @@ function isMarkdownAttributeBlock(token) {
   return parts.length > 0 && parts.every(part => markdownAttributePartRegex.test(part))
 }
 
+/* 与 plugins/colorText.js 的 OPEN_RE 对齐：token 允许 `bg-` 前缀
+   （圆角徽章语法），否则 {bg-#fff3c7}文本{} 这类写法的色值会残留在
+   searchText 里被搜到。 */
 function stripMarkdownStyleWrappers(str) {
-  return str.replace(/\{(#[0-9a-fA-F]{3,8}|[a-zA-Z][\w-]*)\}([^{}]*?)\{\s*\}/g, (match, token, content) => {
+  return str.replace(/\{(?:bg-)?(#[0-9a-fA-F]{3,8}|[a-zA-Z][\w-]*)\}([^{}]*?)\{\s*\}/g, (match, token, content) => {
     if (!markdownStyleTokenRegex.test(token)) return match
     return content
   })

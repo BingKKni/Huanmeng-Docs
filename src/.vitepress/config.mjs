@@ -66,8 +66,10 @@ export default defineConfig({
   },
   vite: {
     build: {
-      // Preserve existing deployment files like .user.ini in the output directory.
-      emptyOutDir: false
+      /* 每次构建清空 dist，避免旧哈希资产无限堆积。
+         .htaccess / error.html 等部署文件已移入 src/public/，
+         构建时会自动拷回 dist 根目录，不会丢失。 */
+      emptyOutDir: true
     }
   }
 })

@@ -435,6 +435,7 @@ const mobileHeaderHidden = ref(false)
 const mobileHeaderElevated = ref(false)
 const isMobileView = ref(false)
 const sidebarSpaceEnough = ref(true)
+const desktopTocVisible = ref(false)
 
 /** 文档页 `<article class="doc-article">`，避免 `querySelector` 命中过渡中错误的节点 */
 const docArticleRef = ref(null)
@@ -486,7 +487,7 @@ const {
   handleLightboxTouchEnd,
   handleLightboxTouchCancel
 } = useLightbox({ isMobileViewport })
-const MOBILE_MEDIA_QUERY = '(max-width: 767.98px)'
+const MOBILE_MEDIA_QUERY = '(max-width: 991.98px)'
 /** 与 style.css 中桌面侧栏媒体查询一致 */
 const DESKTOP_SIDEBAR_MEDIA_QUERY = '(min-width: 992px)'
 const DESKTOP_SIDEBAR_WIDTH_PX = 256
@@ -495,15 +496,10 @@ const MOBILE_NAV_PANEL_MS = 300
 const MOBILE_NAV_CLOSE_FALLBACK_MS = MOBILE_NAV_PANEL_MS + 100
 const MOBILE_HEADER_SCROLL_DELTA = 8
 const MOBILE_TOC_SHEET_TOP_GAP_PX = 24
-const NAV_ROUTE_PROGRESS_START_MS = 0
-const NAV_ROUTE_PROGRESS_PER_SECOND = 60
-const NAV_ROUTE_PROGRESS_CAP = 90
-const NAV_ROUTE_PROGRESS_TO_100_MS = 320
-const NAV_ROUTE_PROGRESS_FADE_MS = 360
 const DOC_PAGE_TRANSITION_MS = 240
-const MOBILE_DOC_PAGE_TRANSITION_MS = 180
 const DOC_PAGE_FAST_SWITCH_WINDOW_MS = 180
 const DOC_PAGE_FAST_SWITCH_DISABLE_ANIM_MS = 420
+const WINDOW_RESIZE_DEBOUNCE_MS = 150
 const DESKTOP_SEARCH_PLACEHOLDER_IDLE_MS = 4000
 const DESKTOP_SEARCH_PLACEHOLDER_ANIM_MS = 1200
 const DESKTOP_SEARCH_PLACEHOLDER_SWAP_MS = DESKTOP_SEARCH_PLACEHOLDER_ANIM_MS / 2
@@ -562,8 +558,10 @@ const {
   onContentReady: () => applyPendingSearchHeading()
 })
 
-const shouldShowMobileTOC = computed(
-  () => isMobileView.value && supportsCurrentPageTocSidebar.value && tocHeaders.value.length > 0
+const shouldShowFloatingTOC = computed(
+  () => supportsCurrentPageTocSidebar.value
+    && tocHeaders.value.length > 0
+    && (isMobileView.value || (!desktopTocVisible.value && shouldShowTOC.value))
 )
 
 const mobileTocSheetStyle = computed(() => {
@@ -595,24 +593,28 @@ let mobileTocSheetDragStartY = 0
 let mobileTocSheetDragPointerId = null
 let mobileTocSheetDragHandle = null
 
-/** 移动端文档切换顶部进度条（不占文档流） */
-const navRouteProgress = ref(0)
-const navRouteProgressVisible = ref(false)
-const navRouteProgressFading = ref(false)
-const navRouteProgressSmooth = ref(false)
-
 let routerProgressPrevBefore = undefined
 let routerProgressPrevAfter = undefined
-let navRoutePendingKey = null
-let navRouteShowTimer = null
-let navRouteRaf = null
-let navRouteProgressStartedAt = 0
-let navRouteCompleteTimer = null
-let navRouteFadeResetTimer = null
 let docPageTransitionRunId = 0
 const docPageTransitionState = new WeakMap()
 let lastRouteSwitchStartedAt = 0
 let docPageDisableAnimUntil = 0
+
+function prefersReducedMotion() {
+  return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+/**
+ * 页面切换动画时长。移动端固定为 0：对整篇长文做 opacity 过渡需要把
+ * 全文光栅化成大纹理再合成，低端手机上必掉帧——卡顿来自图层体积，
+ * 与缓动曲线无关。桌面端保留淡入 + 位移。
+ */
+function docPageTransitionDurationMs() {
+  if (typeof window === 'undefined') return 0
+  if (isMobileViewport() || prefersReducedMotion()) return 0
+  if (performance.now() < docPageDisableAnimUntil) return 0
+  return DOC_PAGE_TRANSITION_MS
+}
 
 function routeNavComparableKey(href) {
   try {
@@ -623,93 +625,13 @@ function routeNavComparableKey(href) {
   }
 }
 
-function clearNavRouteProgressTimers() {
-  if (navRouteShowTimer != null) {
-    clearTimeout(navRouteShowTimer)
-    navRouteShowTimer = null
-  }
-  if (navRouteRaf != null) {
-    cancelAnimationFrame(navRouteRaf)
-    navRouteRaf = null
-  }
-  if (navRouteCompleteTimer != null) {
-    clearTimeout(navRouteCompleteTimer)
-    navRouteCompleteTimer = null
-  }
-  if (navRouteFadeResetTimer != null) {
-    clearTimeout(navRouteFadeResetTimer)
-    navRouteFadeResetTimer = null
-  }
-}
-
-function tickNavRouteProgress() {
-  if (!navRoutePendingKey || !navRouteProgressVisible.value) {
-    navRouteRaf = null
-    return
-  }
-  const elapsedSec = (performance.now() - navRouteProgressStartedAt) / 1000
-  navRouteProgress.value = Math.min(NAV_ROUTE_PROGRESS_CAP, elapsedSec * NAV_ROUTE_PROGRESS_PER_SECOND)
-  navRouteRaf = requestAnimationFrame(tickNavRouteProgress)
-}
-
-function beginRouteNavProgress(href) {
-  if (isMobileViewport()) {
-    navRoutePendingKey = null
-    clearNavRouteProgressTimers()
-    navRouteProgress.value = 0
-    navRouteProgressVisible.value = false
-    navRouteProgressFading.value = false
-    navRouteProgressSmooth.value = false
-    return
-  }
-
-  clearNavRouteProgressTimers()
+/** 记录路由切换时刻：短时间内连续切换（快速点侧栏）时禁用页面过渡动画 */
+function markRouteSwitchStarted() {
   const now = performance.now()
   if (lastRouteSwitchStartedAt && now - lastRouteSwitchStartedAt <= DOC_PAGE_FAST_SWITCH_WINDOW_MS) {
     docPageDisableAnimUntil = now + DOC_PAGE_FAST_SWITCH_DISABLE_ANIM_MS
   }
   lastRouteSwitchStartedAt = now
-
-  navRoutePendingKey = routeNavComparableKey(href)
-  navRouteProgress.value = 0
-  navRouteProgressVisible.value = false
-  navRouteProgressFading.value = false
-  navRouteProgressSmooth.value = false
-
-  navRouteShowTimer = window.setTimeout(() => {
-    navRouteShowTimer = null
-    if (!navRoutePendingKey) return
-    navRouteProgressVisible.value = true
-    navRouteProgressStartedAt = performance.now()
-    navRouteRaf = requestAnimationFrame(tickNavRouteProgress)
-  }, NAV_ROUTE_PROGRESS_START_MS)
-}
-
-function completeRouteNavProgressByKey(key) {
-  if (navRoutePendingKey == null || key !== navRoutePendingKey) return
-
-  navRoutePendingKey = null
-  clearNavRouteProgressTimers()
-
-  if (!navRouteProgressVisible.value) {
-    navRouteProgress.value = 0
-    return
-  }
-
-  navRouteProgressSmooth.value = true
-  navRouteProgress.value = 100
-
-  navRouteCompleteTimer = window.setTimeout(() => {
-    navRouteCompleteTimer = null
-    navRouteProgressFading.value = true
-    navRouteFadeResetTimer = window.setTimeout(() => {
-      navRouteFadeResetTimer = null
-      navRouteProgressVisible.value = false
-      navRouteProgressFading.value = false
-      navRouteProgressSmooth.value = false
-      navRouteProgress.value = 0
-    }, NAV_ROUTE_PROGRESS_FADE_MS)
-  }, NAV_ROUTE_PROGRESS_TO_100_MS)
 }
 
 function isActiveLink(link) {
@@ -825,6 +747,11 @@ function clearDesktopSearchPlaceholderTimers() {
 function scheduleDesktopSearchPlaceholderCycle() {
   if (typeof window === 'undefined') return
   clearDesktopSearchPlaceholderTimers()
+  /* 用户偏好减弱动态效果时不轮换占位文案，固定显示当前一条 */
+  if (prefersReducedMotion()) {
+    desktopSearchPlaceholderAnimating.value = false
+    return
+  }
   desktopSearchPlaceholderCycleTimer = window.setTimeout(runDesktopSearchPlaceholderCycle, DESKTOP_SEARCH_PLACEHOLDER_IDLE_MS)
 }
 
@@ -865,9 +792,12 @@ function syncDesktopSidebarLayout() {
 
   if (!window.matchMedia(DESKTOP_SIDEBAR_MEDIA_QUERY).matches) {
     sidebarSpaceEnough.value = true
+    desktopTocVisible.value = false
     document.documentElement.style.removeProperty('--hm-desktop-sidebar-left')
     document.documentElement.style.removeProperty('--hm-desktop-sidebar-top')
     document.documentElement.style.removeProperty('--hm-desktop-sidebar-width')
+    document.documentElement.style.removeProperty('--hm-desktop-toc-left')
+    document.documentElement.style.removeProperty('--hm-desktop-toc-display')
     return
   }
 
@@ -885,7 +815,9 @@ function syncDesktopSidebarLayout() {
 
   const tocLeft = Math.round(cr.right) + 24
   document.documentElement.style.setProperty('--hm-desktop-toc-left', `${tocLeft}px`)
-  if (tocLeft + 220 > document.documentElement.clientWidth) {
+  const tocCanFit = tocLeft + 220 <= document.documentElement.clientWidth
+  desktopTocVisible.value = tocCanFit
+  if (!tocCanFit) {
     document.documentElement.style.setProperty('--hm-desktop-toc-display', `none`)
   } else {
     document.documentElement.style.setProperty('--hm-desktop-toc-display', `block`)
@@ -1008,7 +940,7 @@ function resetMobileTocSheetDragState() {
 }
 
 function handleMobileTocSheetPointerDown(event) {
-  if (!shouldShowMobileTOC.value || !mobileTocSheetRef.value) return
+  if (!shouldShowFloatingTOC.value || !mobileTocSheetRef.value) return
   if (event.pointerType === 'mouse' && event.button !== 0) return
 
   const sheetHeight = Math.round(mobileTocSheetRef.value.getBoundingClientRect().height)
@@ -1050,10 +982,10 @@ function handleMobileTocSheetAfterLeave() {
 }
 
 function openMobileToc() {
-  if (!shouldShowMobileTOC.value) return
+  if (!shouldShowFloatingTOC.value) return
   resetMobileTocSheetDragState()
   closeMobileMenu()
-  closeSidebar()
+  if (isMobileViewport()) closeSidebar()
   mobileTocOpen.value = true
   nextTick(() => {
     measureMobileTocSheetDefaultHeight()
@@ -1182,10 +1114,18 @@ function handleMobileHeaderScroll() {
   lastScrollY = currentScrollY
 }
 
-function handleWindowResize() {
+let windowResizeDebounceTimer = null
+let lastViewportWidth = 0
+
+function applyWindowResize() {
   syncViewportMode()
   syncLightboxScale()
   syncDesktopSidebarLayout()
+
+  /* 图片行布局只与视口宽度有关；移动端地址栏伸缩只改高度，跳过重排 */
+  const viewportWidth = window.innerWidth
+  const viewportWidthChanged = viewportWidth !== lastViewportWidth
+  lastViewportWidth = viewportWidth
 
   if (!isMobileViewport()) {
     clearMobileNavCloseFallback()
@@ -1197,7 +1137,7 @@ function handleWindowResize() {
     closeDesktopCommunityMenu()
   }
   syncBodyScrollLock()
-  scheduleImageRowProcessing(true)
+  if (viewportWidthChanged) scheduleImageRowProcessing(true)
 
   if (!isMobileViewport()) {
     resetMobileHeaderState()
@@ -1212,19 +1152,25 @@ function handleWindowResize() {
   mobileHeaderElevated.value = lastScrollY > 12
 }
 
+/**
+ * resize 防抖：移动端滚动时地址栏伸缩会连环触发 resize，原先每次都
+ * 强制布局（getBoundingClientRect / clientWidth）+ 重跑图片行处理，
+ * 是滚动掉帧的主因之一。等尺寸稳定后统一处理一次。
+ */
+function handleWindowResize() {
+  if (windowResizeDebounceTimer != null) {
+    window.clearTimeout(windowResizeDebounceTimer)
+  }
+  windowResizeDebounceTimer = window.setTimeout(() => {
+    windowResizeDebounceTimer = null
+    applyWindowResize()
+  }, WINDOW_RESIZE_DEBOUNCE_MS)
+}
+
 watch(
   isMobileView,
   () => {
     syncTocScrollListener()
-    if (isMobileViewport()) {
-      navRoutePendingKey = null
-      clearNavRouteProgressTimers()
-      navRouteProgress.value = 0
-      navRouteProgressVisible.value = false
-      navRouteProgressFading.value = false
-      navRouteProgressSmooth.value = false
-    }
-
     scheduleDesktopSearchPlaceholderCycle()
   },
   { immediate: true }
@@ -1403,6 +1349,7 @@ onMounted(() => {
   syncFromParam()
   syncSearchHistoryFromStorage()
   syncViewportMode()
+  lastViewportWidth = window.innerWidth
   resetMobileHeaderState()
   nextTick(() => {
     processContentActions()
@@ -1437,16 +1384,13 @@ onMounted(() => {
   router.onBeforeRouteChange = async href => {
     const prev = await routerProgressPrevBefore?.(href)
     if (prev === false) return false
-    beginRouteNavProgress(href)
+    markRouteSwitchStarted()
   }
 
   router.onAfterRouteChange = async href => {
     syncFromParam()
     setPendingSearchHeading(getHashTargetFromHref(href), pendingSearchHeadingTitle, pendingSearchHeadingFlash, pendingSearchHeadingMatchQuery)
     await routerProgressPrevAfter?.(href)
-    requestAnimationFrame(() => {
-      completeRouteNavProgressByKey(routeNavComparableKey(href))
-    })
   }
 })
 
@@ -1460,11 +1404,13 @@ onBeforeUnmount(() => {
   stopDesktopSearchPlaceholderCycle()
   clearMobileNavCloseFallback()
   clearPendingSearchHeadingFrame()
+  if (windowResizeDebounceTimer != null) {
+    window.clearTimeout(windowResizeDebounceTimer)
+    windowResizeDebounceTimer = null
+  }
   cleanupDocContentEnhancements()
-  clearNavRouteProgressTimers()
   resetMobileTocSheetDragState()
   cleanupToc()
-  navRoutePendingKey = null
 
   try {
     router.onBeforeRouteChange = routerProgressPrevBefore
@@ -1525,12 +1471,12 @@ function onDocPageBeforeEnter(el) {
     cancelEnter: null
   })
 
+  /* 不做动画时完全不隐藏页面，避免白屏帧 */
+  if (docPageTransitionDurationMs() === 0) return
+
   el.style.transition = 'none'
   el.style.opacity = '0'
-
-  if (!isMobileViewport()) {
-    el.style.transform = 'translateY(12px)'
-  }
+  el.style.transform = 'translateY(12px)'
 }
 
 async function onDocPageEnter(el, done) {
@@ -1560,16 +1506,13 @@ async function onDocPageEnter(el, done) {
     return
   }
 
-  completeRouteNavProgressByKey(routeNavComparableKey(window.location.href))
-
   await nextDoubleRaf()
   if (!isDocPageTransitionValid(el, runId)) {
     finishInvalidEnter()
     return
   }
 
-  const mobile = isMobileViewport()
-  const ms = performance.now() < docPageDisableAnimUntil ? 0 : (mobile ? MOBILE_DOC_PAGE_TRANSITION_MS : DOC_PAGE_TRANSITION_MS)
+  const ms = docPageTransitionDurationMs()
   let finished = false
   let tid = null
   let rafOuter = null
@@ -1632,14 +1575,11 @@ async function onDocPageEnter(el, done) {
 
   if (ms === 0) {
     el.style.opacity = '1'
-    if (!mobile) el.style.transform = 'translateY(0)'
     requestAnimationFrame(safeDone)
     return
   }
 
-  el.style.transition = mobile
-    ? `opacity ${ms}ms ease`
-    : `opacity ${ms}ms ease, transform ${ms}ms ease`
+  el.style.transition = `opacity ${ms}ms ease, transform ${ms}ms ease`
   rafOuter = requestAnimationFrame(() => {
     rafInner = requestAnimationFrame(() => {
       if (!isDocPageTransitionValid(el, runId)) {
@@ -1647,7 +1587,7 @@ async function onDocPageEnter(el, done) {
         return
       }
       el.style.opacity = '1'
-      if (!mobile) el.style.transform = 'translateY(0)'
+      el.style.transform = 'translateY(0)'
     })
   })
 }
@@ -1656,8 +1596,7 @@ function onDocPageLeave(el, done) {
   const state = docPageTransitionState.get(el)
   if (state) state.cancelled = true
   cancelDocPageEnterTransition(el)
-  const mobile = isMobileViewport()
-  const ms = performance.now() < docPageDisableAnimUntil ? 0 : (mobile ? MOBILE_DOC_PAGE_TRANSITION_MS : DOC_PAGE_TRANSITION_MS)
+  const ms = docPageTransitionDurationMs()
   let finished = false
   const safeDone = () => {
     if (finished) return
@@ -1682,12 +1621,10 @@ function onDocPageLeave(el, done) {
     return
   }
 
-  el.style.transition = mobile
-    ? `opacity ${ms}ms ease`
-    : `opacity ${ms}ms ease, transform ${ms}ms ease`
+  el.style.transition = `opacity ${ms}ms ease, transform ${ms}ms ease`
   requestAnimationFrame(() => {
     el.style.opacity = '0'
-    if (!mobile) el.style.transform = 'translateY(12px)'
+    el.style.transform = 'translateY(12px)'
   })
 }
 
@@ -1714,7 +1651,7 @@ watch(mobileTocOpen, () => {
   syncBodyScrollLock()
 })
 
-watch(shouldShowMobileTOC, shouldShow => {
+watch(shouldShowFloatingTOC, shouldShow => {
   if (!shouldShow) closeMobileToc()
 })
 
@@ -1753,7 +1690,7 @@ watch(infoDialogVisible, async visible => {
           </div>
 
           <div class="site-header-tools">
-            <!-- 桌面端导航，仅 md 及以上可见 -->
+            <!-- 桌面端导航，仅 lg 及以上可见 -->
             <nav class="site-nav site-nav--desktop">
               <template v-for="link in navLinks" :key="link.href || link.label">
                 <a
@@ -1888,7 +1825,7 @@ watch(infoDialogVisible, async visible => {
           </div>
 
           <div class="mobile-header-primary">
-            <!-- 移动端汉堡按钮，仅 md 以下可见 -->
+            <!-- 移动端汉堡按钮，仅 lg 以下可见 -->
             <button
               v-if="shouldShowDesktopSidebar"
               class="mobile-menu-btn"
@@ -2042,19 +1979,6 @@ watch(infoDialogVisible, async visible => {
         </div>
       </div>
 
-      <!-- 顶部导航加载进度条（移动端/桌面端统一） -->
-      <div
-        v-show="!isMobileView && (navRouteProgressVisible || navRouteProgressFading)"
-        class="site-nav-route-progress"
-        :class="{ 'site-nav-route-progress--fading': navRouteProgressFading }"
-        aria-hidden="true"
-      >
-        <div
-          class="site-nav-route-progress__fill"
-          :class="{ 'site-nav-route-progress__fill--smooth': navRouteProgressSmooth }"
-          :style="{ width: `${navRouteProgress}%` }"
-        />
-      </div>
     </header>
 
     <!-- 点击遮罩关闭移动端菜单 -->
@@ -2081,7 +2005,7 @@ watch(infoDialogVisible, async visible => {
     </Transition>
 
     <button
-      v-if="shouldShowMobileTOC && !mobileTocOpen"
+      v-if="shouldShowFloatingTOC && !mobileTocOpen"
       class="mobile-toc-trigger"
       type="button"
       aria-label="打开本页目录"

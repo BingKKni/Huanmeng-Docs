@@ -1,8 +1,8 @@
 import Layout from './Layout.vue'
 import '@fontsource-variable/inter/wght.css'
-import '@fontsource/noto-sans-sc/chinese-simplified-400.css'
-import '@fontsource/noto-sans-sc/chinese-simplified-500.css'
-import '@fontsource/noto-sans-sc/chinese-simplified-600.css'
+/* 可变字体 + unicode-range 分片：一个分片文件覆盖 100–900 全部字重，
+   浏览器只下载页面实际用到的片；标题可用 550 这类中间字重。 */
+import '@fontsource-variable/noto-sans-sc/index.css'
 import './style.css'
 import { enhanceAppWithTabs } from 'vitepress-plugin-tabs/client'
 

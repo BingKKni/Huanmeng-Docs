@@ -139,6 +139,12 @@ export function useDocToc({ docArticleRef, isMobileView, supportsCurrentPageTocS
   }
 
   function smoothScrollTo(endY, duration, callback) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      window.scrollTo(0, endY)
+      callback?.()
+      return
+    }
+
     const startY = window.scrollY
     const distanceY = endY - startY
     const startTime = performance.now()

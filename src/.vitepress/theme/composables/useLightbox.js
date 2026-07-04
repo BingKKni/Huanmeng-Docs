@@ -1,6 +1,9 @@
 import { nextTick, ref } from 'vue'
 
-const LIGHTBOX_SCALE_MIN = 1
+/* 最小缩放 0.5：允许把图片缩小到适配尺寸的一半查看全貌；
+   FIT(=1) 是"刚好适配视口"的基准，平移/关闭等交互仍以它为界。 */
+const LIGHTBOX_SCALE_MIN = 0.5
+const LIGHTBOX_FIT_SCALE = 1
 const MOBILE_LIGHTBOX_SCALE_MAX = 4
 const MOBILE_LIGHTBOX_DOUBLE_TAP_SCALE = 2.5
 const DESKTOP_LIGHTBOX_SCALE_MAX = 4
@@ -125,7 +128,8 @@ export function useLightbox({ isMobileViewport }) {
 
   function clampLightboxOffset(x, y, scale = lightboxScale.value) {
     const img = lightboxImgRef.value
-    if (!img || scale <= LIGHTBOX_SCALE_MIN) {
+    /* 不超过适配尺寸（含缩小状态）时图片必然完整可见，保持居中不可平移 */
+    if (!img || scale <= LIGHTBOX_FIT_SCALE) {
       return { x: 0, y: 0 }
     }
 
@@ -156,15 +160,16 @@ export function useLightbox({ isMobileViewport }) {
     const clampedScale = clampLightboxScale(nextScale)
 
     if (Math.abs(clampedScale - previousScale) < 0.001) {
-      if (clampedScale <= LIGHTBOX_SCALE_MIN) {
-        setLightboxOffset(0, 0, LIGHTBOX_SCALE_MIN)
+      if (clampedScale <= LIGHTBOX_FIT_SCALE) {
+        setLightboxOffset(0, 0, clampedScale)
       }
       return
     }
 
-    if (clampedScale <= LIGHTBOX_SCALE_MIN) {
-      lightboxScale.value = LIGHTBOX_SCALE_MIN
-      setLightboxOffset(0, 0, LIGHTBOX_SCALE_MIN)
+    /* 适配尺寸及以下：缩放围绕中心进行，不产生平移 */
+    if (clampedScale <= LIGHTBOX_FIT_SCALE) {
+      lightboxScale.value = clampedScale
+      setLightboxOffset(0, 0, clampedScale)
       return
     }
 
@@ -208,8 +213,8 @@ export function useLightbox({ isMobileViewport }) {
     if (!lightboxVisible.value) return
     const nextScale = clampLightboxScale(lightboxScale.value)
     lightboxScale.value = nextScale
-    if (nextScale <= LIGHTBOX_SCALE_MIN) {
-      setLightboxOffset(0, 0, LIGHTBOX_SCALE_MIN)
+    if (nextScale <= LIGHTBOX_FIT_SCALE) {
+      setLightboxOffset(0, 0, nextScale)
       return
     }
     setLightboxOffset(lightboxOffsetX.value, lightboxOffsetY.value, nextScale)
@@ -504,7 +509,7 @@ export function useLightbox({ isMobileViewport }) {
     if (isMobileViewport()) return
     if (lightboxPhase.value !== 'open') return
     if (e.button !== 0) return
-    if (lightboxScale.value <= LIGHTBOX_SCALE_MIN) return
+    if (lightboxScale.value <= LIGHTBOX_FIT_SCALE) return
 
     lightboxDragging = true
     lightboxDragMoved = false
@@ -572,7 +577,7 @@ export function useLightbox({ isMobileViewport }) {
     }
 
     if (e.touches.length !== 1) return
-    if (lightboxScale.value <= LIGHTBOX_SCALE_MIN) return
+    if (lightboxScale.value <= LIGHTBOX_FIT_SCALE) return
 
     const touch = e.touches[0]
     lightboxDragging = true
@@ -634,7 +639,7 @@ export function useLightbox({ isMobileViewport }) {
         lightboxImageTransition.value = 'transform 0.18s ease'
         suppressLightboxClick()
 
-        if (e.touches.length === 1 && lightboxScale.value > LIGHTBOX_SCALE_MIN) {
+        if (e.touches.length === 1 && lightboxScale.value > LIGHTBOX_FIT_SCALE) {
           const touch = e.touches[0]
           lightboxDragging = true
           lightboxDragMoved = false
@@ -674,8 +679,9 @@ export function useLightbox({ isMobileViewport }) {
     const now = Date.now()
     if (now - lightboxLastTapAt > 0 && now - lightboxLastTapAt <= LIGHTBOX_DOUBLE_TAP_DELAY_MS) {
       const touch = e.changedTouches[0]
-      if (lightboxScale.value > LIGHTBOX_SCALE_MIN) {
-        zoomLightboxAroundPoint(LIGHTBOX_SCALE_MIN, touch.clientX, touch.clientY)
+      /* 双击：偏离适配尺寸（放大或缩小状态）时回到适配，否则放大 */
+      if (Math.abs(lightboxScale.value - LIGHTBOX_FIT_SCALE) > 0.01) {
+        zoomLightboxAroundPoint(LIGHTBOX_FIT_SCALE, touch.clientX, touch.clientY)
       } else {
         zoomLightboxAroundPoint(MOBILE_LIGHTBOX_DOUBLE_TAP_SCALE, touch.clientX, touch.clientY)
       }

@@ -133,11 +133,17 @@ svg {
   /* ─── 圆角徽章混色参数（日间模式）：与 --ct-* 按比例混合得到柔和底色 ─── */
   --cb-mix-base: var(--hm-bg);
   --cb-mix-ratio: 22%;
-  /* 文档正文宽度：随屏幕放大，但保留上限，避免 2K/4K 行长失控 */
-  --hm-content-max-width: clamp(960px, 68vw, 1080px);
-  /* 拉丁文/数字/符号走 Inter，中文回落 Noto Sans SC（Noto 不加载 latin 子集） */
+  /* 文档宽内容通道：表格/代码/图可用满该宽度，但 2K/4K 不继续放大。 */
+  --hm-content-max-width: clamp(900px, 56vw, 1040px);
+  /* 全站唯一阅读行宽：仅约束文字级元素，宽内容(表格/代码/图)不受限。 */
+  --hm-doc-measure: 760px;
+  /* 全站唯一正文行高：CJK 取 1.8（1.75 与 1.85 的折中），所有正文类元素统一引用。 */
+  --hm-doc-line-height: 1.8;
+  --hm-doc-sidebar-gap: 24px;
+  --hm-doc-page-gutter: clamp(18px, 2vw, 32px);
+  /* 拉丁文/数字/符号走 Inter，中文回落 Noto Sans SC Variable（Inter 在前，Noto 的 latin 分片不会被请求） */
   --hm-font-latin: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
-  --hm-font-cjk: 'Noto Sans SC', 'Microsoft YaHei UI', 'Microsoft YaHei';
+  --hm-font-cjk: 'Noto Sans SC Variable', 'Noto Sans SC', 'Microsoft YaHei UI', 'Microsoft YaHei';
   --hm-font-sans: var(--hm-font-latin), var(--hm-font-cjk), 'Hiragino Sans GB', 'Source Han Sans SC', sans-serif;
   /* Markdown <hr>（***）*/
   --hm-doc-hr-color: rgba(15, 23, 42, 0.14);
@@ -579,41 +585,6 @@ a:hover {
   color: #495057;
 }
 
-/* 顶部路由进度条：默认桌面端也显示；移动端在媒体查询中覆盖细节 */
-.site-nav-route-progress {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: 3px;
-  pointer-events: none;
-  z-index: 5;
-  overflow: hidden;
-  opacity: 1;
-  transition: opacity 0.35s ease;
-  box-sizing: border-box;
-}
-
-.site-nav-route-progress--fading {
-  opacity: 0;
-}
-
-.site-nav-route-progress__fill {
-  display: block;
-  height: 100%;
-  width: 0;
-  margin: 0;
-  box-sizing: border-box;
-  background-color: #0076ff;
-  box-shadow: 0 0 10px rgba(0, 118, 255, 0.28);
-}
-
-.site-nav-route-progress__fill--smooth {
-  transition: width 0.34s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* 顶栏区域：用于挂载不占文档流的加载进度条 */
 .site-branding {
   display: flex;
   align-items: center;
@@ -651,7 +622,7 @@ a:hover {
   text-overflow: ellipsis;
 }
 
-@media (max-width: 767.98px) {
+@media (max-width: 991.98px) {
   .site-header {
     top: 0;
     width: 100%;
@@ -660,7 +631,6 @@ a:hover {
     border-right: none !important;
     border-radius: 0;
     overflow: hidden;
-    background-color: rgba(255, 255, 255, 0.96);
     transition: transform 0.24s ease, opacity 0.24s ease;
     will-change: transform;
   }
@@ -716,40 +686,6 @@ a:hover {
     gap: 1.05rem;
     justify-self: end;
     min-width: 0;
-  }
-
-  /* 移动端文档切换进度条：整块 header（顶栏+下拉导航）下沿，横向通栏 */
-  .site-nav-route-progress {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 3px;
-    pointer-events: none;
-    z-index: 5;
-    overflow: hidden;
-    opacity: 1;
-    transition: opacity 0.35s ease;
-    box-sizing: border-box;
-  }
-
-  .site-nav-route-progress--fading {
-    opacity: 0;
-  }
-
-  .site-nav-route-progress__fill {
-    display: block;
-    height: 100%;
-    width: 0;
-    margin: 0;
-    box-sizing: border-box;
-    background-color: #0076ff;
-    box-shadow: 0 0 10px rgba(0, 118, 255, 0.28);
-  }
-
-  .site-nav-route-progress__fill--smooth {
-    transition: width 0.34s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .site-branding-link {
@@ -1064,7 +1000,7 @@ a:hover {
   }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 992px) {
 
   /*
    * 顶栏需相对视口全宽：否则 .site-container 的 max-width 会把 Logo/搜索挤在页面中部，
@@ -1135,7 +1071,8 @@ a:hover {
     width: var(--hm-desktop-sidebar-width);
     z-index: 101;
     transform: translateX(0);
-    transition: transform 0.15s linear;
+    /* transform 走合成器，缓动曲线对性能无影响，放心用非线性 */
+    transition: transform 0.22s cubic-bezier(0.33, 1, 0.68, 1);
     pointer-events: auto;
   }
 
@@ -1407,7 +1344,8 @@ a:hover {
     z-index: 1050;
     pointer-events: none;
     transform: translateX(-100%);
-    transition: transform 0.15s linear;
+    /* transform 走合成器，缓动曲线对性能无影响，放心用非线性 */
+    transition: transform 0.22s cubic-bezier(0.33, 1, 0.68, 1);
   }
 
   .desktop-doc-sidebar.mobile-open {
@@ -1622,10 +1560,14 @@ a:hover {
   -webkit-font-smoothing: antialiased;
 }
 
+/* 标题字重：500 偏细、600 偏重，可变字体（Noto Sans SC Variable +
+   Inter Variable）支持任意中间值，h1/h2 取 550。
+   回退字体（微软雅黑只有 400/700 两档）下 550 会渲染为 700，
+   字体加载完成后即回到真实 550。 */
 .doc-article h1 {
   margin-bottom: 1rem;
   font-size: 2.25rem;
-  font-weight: 600;
+  font-weight: 550;
 }
 
 .doc-article h2 {
@@ -1633,7 +1575,7 @@ a:hover {
   margin-bottom: 1rem;
   padding-bottom: 0;
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 550;
   border-bottom: none;
 }
 
@@ -1648,56 +1590,41 @@ a:hover {
   font-weight: 500;
 }
 
+/* h4 不设样式时会按 UA 默认 700 渲染（CJK 实际落在 600），
+   比 h2/h3 还粗，这里一并归一到 500。 */
+.doc-article h4 {
+  font-weight: 500;
+}
+
 .doc-article p,
 .doc-article li {
-  line-height: 1.75;
+  line-height: var(--hm-doc-line-height);
 }
 
 .doc-article p {
   margin: var(--hm-doc-block-gap) 0;
 }
 
-/* 动态文章：Inter + Noto Sans SC 混排，用字重区分层级 */
-.doc-article.news-article {
-  max-width: 750px;
-  margin-left: auto;
-  margin-right: auto;
-  font-size: 16px;
-  line-height: 1.85;
-  font-family: var(--hm-font-sans);
-  font-synthesis: none;
-  -webkit-font-smoothing: antialiased;
-}
-
-.doc-article.news-article h1 {
-  font-size: 2rem;
-  font-weight: 600;
-}
-
-.doc-article.news-article h2 {
-  margin-top: 2.25rem;
-  font-size: 1.375rem;
-  font-weight: 600;
-}
-
-.doc-article.news-article h3 {
-  margin-top: 1.5rem;
-  font-size: 1.125rem;
-  font-weight: 500;
-}
-
-.doc-article.news-article p,
-.doc-article.news-article li {
-  line-height: 1.85;
-}
-
-.doc-article.news-article strong {
+/* 加粗统一走 600 字重：默认的 700 在正文字号下过重，
+   且回退字体（雅黑）只有 400/700，显式 600 保证各字体下观感一致。 */
+.doc-article strong {
   font-weight: 600;
   font-synthesis: none;
 }
 
-.doc-article.news-article li + li {
-  margin-top: 0.35em;
+/* ─────────────────────────────────────────────────────────────
+   电脑端阅读行宽：全站统一收窄正文，放行宽内容
+   - 仅 ≥992px 生效，手机/平板维持原样
+   - 排除：首页卡片页(docs-index/support)、搜索页
+   - 思路：限制文字级元素(measure)，表格/代码/图片/视频/卡片
+     仍可用满容器宽，避免被压窄出现横向滚动
+   ───────────────────────────────────────────────────────────── */
+@media (min-width: 992px) {
+  .doc-article:not(.docs-index-article):not(.docs-support-article):not(.search-results-article):not(.search-page-article) > :is(p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6, dl, hr),
+  .doc-article:not(.docs-index-article):not(.docs-support-article):not(.search-results-article):not(.search-page-article) > div > :is(p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6, dl, hr),
+  .doc-article:not(.docs-index-article):not(.docs-support-article):not(.search-results-article):not(.search-page-article) > div > div > :is(p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6, dl, hr) {
+    max-width: var(--hm-doc-measure, 800px);
+  }
 }
 
 .doc-article ol,
@@ -1706,13 +1633,14 @@ a:hover {
   padding-left: 1.25rem;
 }
 
+/* 有序列表与 ul 同用 outside 序号（换行后文字悬挂对齐），
+   缩进略大于 ul 以容纳两位数序号不外溢。 */
 .doc-article ol {
-  padding-left: 0;
-  list-style-position: inside;
+  padding-left: 1.5rem;
 }
 
 .doc-article li+li {
-  margin-top: 0;
+  margin-top: 0.35em;
 }
 
 .doc-article li>p {
@@ -1727,9 +1655,11 @@ a:hover {
   margin-bottom: 0;
 }
 
+/* 嵌套列表：上间距与 li+li 同节奏（0.35em），底部为 0——
+   与下一个同级 li 的间距由该 li 自身的 li+li margin 提供。 */
 .doc-article li>ol,
 .doc-article li>ul {
-  margin: 0 0 0 1.25rem;
+  margin: 0.35em 0 0 1.25rem;
 }
 
 .doc-article .hm-extra-break,
@@ -1744,7 +1674,7 @@ a:hover {
 }
 
 .doc-article pre {
-  margin: 1rem 0;
+  margin: var(--hm-doc-block-gap) 0;
   padding: 1rem;
   overflow-x: auto;
   color: inherit;
@@ -1768,7 +1698,7 @@ a:hover {
 /* VitePress code block wrapper */
 .doc-article div[class*='language-'] {
   position: relative;
-  margin: 1rem 0;
+  margin: var(--hm-doc-block-gap) 0;
   background: var(--hm-code-block-bg);
   border: 1px solid var(--hm-code-block-border);
   border-radius: 8px;
@@ -1867,7 +1797,7 @@ div[class*='language-']>.copy[data-copy-state='error'] {
   padding: 1rem 1.25rem;
   border-left: 0.25rem solid;
   border-radius: 0;
-  line-height: 1.75;
+  line-height: var(--hm-doc-line-height);
 }
 
 .custom-block .custom-block-title {
@@ -1961,12 +1891,11 @@ div[class*='language-']>.copy[data-copy-state='error'] {
 
 .doc-article blockquote>p {
   margin: 0;
-  line-height: 1.6;
 }
 
 .doc-article .hm-table-wrap {
   width: 100%;
-  margin-bottom: 1rem;
+  margin: var(--hm-doc-block-gap) 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -2441,10 +2370,12 @@ html.dark .hm-dialog__title {
   transform-origin: center center;
 }
 
+/* 适配尺寸刻意不撑满视口：四周留白提示"还能继续放大"，
+   也给双指/滚轮操作留出可点击的背景区域 */
 .hm-lightbox img {
   display: block;
-  max-width: min(90vw, 1400px);
-  max-height: 90vh;
+  max-width: min(85vw, 1320px);
+  max-height: 85vh;
   object-fit: contain;
   transform-origin: center center;
   transition: transform 0.18s ease;
@@ -2502,8 +2433,9 @@ html.dark .hm-dialog__title {
   }
 
   .hm-lightbox img {
-    max-width: 92vw;
-    max-height: calc(100vh - 48px);
+    /* 手机端同样留边：不满宽打开，方便用户继续双指放大 */
+    max-width: 86vw;
+    max-height: 80vh;
     cursor: default;
     /* 由灯箱自身接管双击 / 双指缩放，避免浏览器放大整页。 */
     touch-action: none;
@@ -2535,8 +2467,24 @@ html.dark .hm-dialog__title {
 }
 
 @media (min-width: 992px) {
+  .site-shell--doc-sidebar .site-main {
+    padding-left: calc(var(--hm-desktop-sidebar-width) + var(--hm-doc-sidebar-gap));
+    padding-right: var(--hm-doc-page-gutter);
+  }
+
   .site-main__container {
     max-width: var(--hm-content-max-width) !important;
+  }
+}
+
+/* 视口足够宽时给右侧对称留白（与左侧侧栏占位等宽），让正文列相对
+   「整个视口」居中，而不是相对「侧栏右侧的剩余空间」居中——修复
+   2K/4K 宽屏下正文整体偏右半个侧栏宽的问题。
+   1460px = 内容宽度下限 900px + 两侧各 280px 占位；低于该宽度做对称
+   留白会挤压正文出现横向滚动，维持原有靠左布局。 */
+@media (min-width: 1460px) {
+  .site-shell--doc-sidebar .site-main {
+    padding-right: calc(var(--hm-desktop-sidebar-width) + var(--hm-doc-sidebar-gap));
   }
 }
 
@@ -3134,6 +3082,13 @@ button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
+  }
+}
+
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .doc-article--padded {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
 }
 
@@ -4104,7 +4059,8 @@ html.dark .hm-search-modal__close {
     z-index: 1050;
     pointer-events: none;
     transform: translateX(-100%);
-    transition: transform 0.15s linear;
+    /* transform 走合成器，缓动曲线对性能无影响，放心用非线性 */
+    transition: transform 0.22s cubic-bezier(0.33, 1, 0.68, 1);
   }
 
   .sidebar-compact-mode .desktop-doc-sidebar.mobile-open {
@@ -4382,7 +4338,7 @@ html.dark .hm-search-modal__close {
   display: none;
 }
 
-@media (max-width: 767.98px) {
+@media (max-width: 1919.98px) {
   .mobile-toc-trigger {
     position: fixed;
     right: 16px;
@@ -4637,6 +4593,47 @@ html.dark .hm-search-modal__close {
   }
 }
 
+@media (min-width: 992px) and (max-width: 1919.98px) {
+  .mobile-toc-trigger {
+    right: var(--hm-doc-page-gutter);
+    bottom: 24px;
+  }
+
+  .mobile-toc-backdrop {
+    background: transparent;
+  }
+
+  .mobile-toc-sheet {
+    left: auto;
+    right: var(--hm-doc-page-gutter);
+    bottom: 82px;
+    width: min(340px, calc(100vw - 48px));
+    max-height: min(68vh, 560px);
+    padding-bottom: 0;
+    border: 1px solid var(--hm-border);
+    border-radius: 18px;
+    box-shadow: var(--hm-shadow-md);
+  }
+
+  .mobile-toc-sheet--resized {
+    max-height: min(76vh, 640px);
+  }
+
+  .mobile-toc-sheet__handle-zone {
+    display: none;
+  }
+
+  .mobile-toc-sheet__header {
+    padding-top: 16px;
+  }
+
+  .mobile-toc-sheet-slide-enter-from,
+  .mobile-toc-sheet-slide-leave-to {
+    transform: translateY(12px) scale(0.98);
+    opacity: 0;
+  }
+}
+
 /* ────────────────────────── */
 /* 标题滚动后高亮闪烁效果       */
 /* ────────────────────────── */
@@ -4696,11 +4693,12 @@ body,
   background: var(--hm-bg);
 }
 
+/* 头部使用不透明背景：backdrop-filter 会让移动端每帧滚动都重采样模糊，
+   而 0.96 透明度下模糊几乎不可见，性价比极低，故移除。 */
 .site-header {
-  background-color: var(--hm-bg-elevated);
+  background-color: var(--hm-bg);
   border-bottom-color: var(--hm-border);
   box-shadow: var(--hm-shadow-sm);
-  backdrop-filter: blur(14px);
 }
 
 .site-branding-link,
@@ -4989,17 +4987,18 @@ html.dark .custom-block.details {
   color: var(--hm-text-2);
 }
 
-/* ── 消除块级元素紧跟列表时的额外下边距 ── */
-/* 段落/列表的默认外边距会让“紧跟另一个列表”的场景显得偏松，
-   这里用 :has() 精确匹配并收紧该类间距。
-   用 :has() 精确匹配"后面跟着列表"的元素，更改其底部 margin。 */
+/* ── 段落与列表相邻时收紧间距 ── */
+/* 引导句 + 列表 + 后随段落(如图片行)属于同一组内容，组内间距统一取
+   0.35em——与 li+li 的节奏一致，避免出现"组内间距小于列表项间距"的
+   层级倒挂（相邻 margin 会折叠，实际观感即 0.35em）。
+   组与组之间仍由默认的 --hm-doc-block-gap(0.9rem) 区分层级。 */
 .doc-article p:has(+ ul),
 .doc-article p:has(+ ol),
 .doc-article ul:has(+ p),
 .doc-article ol:has(+ p),
 .doc-article ol:has(+ ul),
 .doc-article ul:has(+ ol) {
-  margin-bottom: 0.1rem;
+  margin-bottom: 0.35em;
 }
 
 .doc-article p+ul,
@@ -5008,7 +5007,7 @@ html.dark .custom-block.details {
 .doc-article ol+p,
 .doc-article ol+ul,
 .doc-article ul+ol {
-  margin-top: 0.1rem;
+  margin-top: 0.35em;
 }
 
 /* ── 应用卡片网格系统 ── */
@@ -5183,5 +5182,31 @@ html.dark .emoji-avatar {
 
   .app-card-grid .emoji-avatar {
     font-size: 28px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   无障碍：用户系统偏好「减弱动态效果」时，压缩所有过渡/动画时长。
+   0.01ms 而非 0：保证 transitionend/animationend 仍会触发，
+   依赖动画结束回调的 JS 逻辑不会被卡住。
+   ───────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  /* 例外：搜索/目录定位后的两次黄色闪烁是位置提示而非装饰性动效，
+     减弱动态效果下依然保留，帮助用户找到跳转后的段落。 */
+  .heading-flash::before {
+    animation-duration: 0.6s !important;
+    animation-iteration-count: 2 !important;
   }
 }
