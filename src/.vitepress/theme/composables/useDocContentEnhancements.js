@@ -1,10 +1,12 @@
 import { nextTick } from 'vue'
 
 const COPY_BUTTON_RESET_DELAY = 4000
+const TABLE_COLLAPSED_ROW_LIMIT = 3
 
 export function useDocContentEnhancements({ docArticleRef, openLightbox, openInfoDialog, isMobileViewport }) {
   let imageRowProcessFrame = 0
   let imageRowForceProcess = false
+  let tableIdCounter = 0
   const copyButtonResetTimers = new Map()
 
   function isImageOnlyParagraph(p) {
@@ -161,9 +163,98 @@ export function useDocContentEnhancements({ docArticleRef, openLightbox, openInf
     })
   }
 
+  function ensureTableId(table) {
+    if (table.id) return table.id
+    tableIdCounter += 1
+    table.id = `hm-table-${tableIdCounter}`
+    return table.id
+  }
+
+  function getTableToggle(wrap) {
+    const next = wrap.nextElementSibling
+    if (next?.classList?.contains('hm-table-toggle')) return next
+
+    const toggle = document.createElement('div')
+    toggle.className = 'hm-table-toggle'
+
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'hm-table-toggle__button'
+    toggle.appendChild(button)
+    wrap.insertAdjacentElement('afterend', toggle)
+
+    return toggle
+  }
+
+  function removeTableToggle(wrap) {
+    const next = wrap.nextElementSibling
+    if (next?.classList?.contains('hm-table-toggle')) next.remove()
+  }
+
+  function applyTableCollapsedState(wrap, rows, collapsed) {
+    rows.forEach((row, index) => {
+      row.hidden = collapsed && index >= TABLE_COLLAPSED_ROW_LIMIT
+    })
+
+    wrap.classList.toggle('hm-table-wrap--collapsible', rows.length > TABLE_COLLAPSED_ROW_LIMIT)
+    wrap.classList.toggle('hm-table-wrap--collapsed', collapsed)
+    wrap.classList.toggle('hm-table-wrap--expanded', !collapsed)
+    wrap.dataset.hmTableExpanded = collapsed ? 'false' : 'true'
+  }
+
+  function updateTableToggle(wrap, table, rows) {
+    const toggle = getTableToggle(wrap)
+    const button = toggle.querySelector('button')
+    const tableId = ensureTableId(table)
+    const isExpanded = wrap.dataset.hmTableExpanded === 'true'
+
+    button.setAttribute('aria-controls', tableId)
+    button.setAttribute('aria-expanded', String(isExpanded))
+    button.textContent = isExpanded ? '收起表格' : '展开表格'
+    button.setAttribute(
+      'aria-label',
+      isExpanded
+        ? `收起表格，只显示前 ${TABLE_COLLAPSED_ROW_LIMIT} 行`
+        : `展开表格，显示全部 ${rows.length} 行`
+    )
+
+    if (button.dataset.hmTableToggleBound === '1') return
+    button.dataset.hmTableToggleBound = '1'
+    button.addEventListener('click', () => {
+      const nextExpanded = wrap.dataset.hmTableExpanded !== 'true'
+      applyTableCollapsedState(wrap, rows, !nextExpanded)
+      updateTableToggle(wrap, table, rows)
+    })
+  }
+
+  function processCollapsibleTables(root = null) {
+    const container = root ?? docArticleRef.value
+    if (!container) return
+
+    container.querySelectorAll('.hm-table-wrap').forEach(wrap => {
+      const table = wrap.querySelector(':scope > table')
+      const rows = Array.from(table?.querySelectorAll(':scope > tbody > tr') || [])
+
+      if (!table || rows.length <= TABLE_COLLAPSED_ROW_LIMIT) {
+        rows.forEach(row => {
+          row.hidden = false
+        })
+        wrap.classList.remove('hm-table-wrap--collapsible', 'hm-table-wrap--collapsed', 'hm-table-wrap--expanded')
+        delete wrap.dataset.hmTableExpanded
+        removeTableToggle(wrap)
+        return
+      }
+
+      const shouldCollapse = wrap.dataset.hmTableExpanded !== 'true'
+      applyTableCollapsedState(wrap, rows, shouldCollapse)
+      updateTableToggle(wrap, table, rows)
+    })
+  }
+
   function processContentActions(root = null) {
     processCodeBlocks(root)
     bindJoinGroupButtons(root)
+    processCollapsibleTables(root)
   }
 
   function bindLightboxTriggers(root = null) {

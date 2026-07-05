@@ -49,6 +49,7 @@ svg {
   --hm-bg-elevated: rgba(255, 255, 255, 0.96);
   --hm-bg-overlay: rgba(255, 255, 255, 0.98);
   --hm-bg-inset: #ffffff;
+  --hm-dropdown-link-hover-bg: var(--hm-bg-muted);
   --hm-surface-1: #ffffff;
   --hm-surface-2: #f9fafb;
   --hm-surface-3: #f1f4f6;
@@ -78,8 +79,9 @@ svg {
   --hm-code-inline-text: #d63384;
   --hm-quote-bg: #ffffff;
   --hm-quote-border: #adb5bd;
-  --hm-table-border: #d1d2d1;
-  --hm-table-head-bg: #e5e8ec;
+  --hm-table-border: #e2e2df;
+  --hm-table-bg: var(--hm-bg);
+  --hm-table-head-bg: #f1f1f1;
   --hm-search-highlight-bg: rgba(255, 193, 7, 0.4);
   --vp-c-bg: var(--hm-bg);
   --vp-c-bg-soft: var(--hm-surface-2);
@@ -157,6 +159,7 @@ html.dark {
   --hm-bg-elevated: rgba(11, 15, 21, 0.94);
   --hm-bg-overlay: rgba(15, 21, 30, 0.98);
   --hm-bg-inset: #111925;
+  --hm-dropdown-link-hover-bg: rgba(148, 163, 184, 0.12);
   --hm-surface-1: #121a25;
   --hm-surface-2: #161f2b;
   --hm-surface-3: #1b2633;
@@ -187,7 +190,8 @@ html.dark {
   --hm-quote-bg: #121a25;
   --hm-quote-border: #475569;
   --hm-table-border: #334155;
-  --hm-table-head-bg: #1b2633;
+  --hm-table-bg: var(--hm-surface-1);
+  --hm-table-head-bg: rgba(148, 163, 184, 0.14);
   --hm-search-highlight-bg: rgba(250, 204, 21, 0.28);
   --hm-selection-bg: rgba(192, 132, 252, 0.35);
   --hm-code-block-bg: #0e1620;
@@ -994,10 +998,10 @@ a:hover {
   transition: color 0.2s ease, background-color 0.2s ease;
 }
 
-@media (hover: hover) {
-  .site-nav__dropdown-link:hover {
-    color: var(--hm-text-2);
-    background: transparent;
+@media (hover: hover) and (min-width: 992px) {
+  .site-nav__item .site-nav__dropdown .site-nav__dropdown-link:hover {
+    color: var(--hm-text-1);
+    background-color: var(--hm-dropdown-link-hover-bg);
   }
 }
 
@@ -1899,14 +1903,17 @@ div[class*='language-']>.copy[data-copy-state='error'] {
   margin: var(--hm-doc-block-gap) 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--hm-table-border);
+  border-radius: 8px;
 }
 
 .doc-article .hm-table-wrap>table {
-  width: auto;
+  width: 100%;
   min-width: max-content;
   margin-bottom: 0;
   border-collapse: collapse;
   border-radius: 0;
+  background: var(--hm-table-bg);
 }
 
 /* 默认表格保持内容宽度；仅复杂表格显式启用 smart 模式撑满并固定列分配。 */
@@ -1924,15 +1931,24 @@ div[class*='language-']>.copy[data-copy-state='error'] {
 
 .doc-article .hm-table-wrap>table th,
 .doc-article .hm-table-wrap>table td {
-  border: 1px solid #d1d2d1;
-  padding: 0.4rem 0.75rem;
+  border: 0;
+  border-bottom: 1px solid var(--hm-table-border);
+  padding: 0.75rem 1rem;
   vertical-align: middle;
-  line-height: 1.55;
+  line-height: 1.25rem;
   overflow-wrap: anywhere;
   word-break: normal;
   border-radius: 0;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+}
+
+.doc-article .hm-table-wrap>table tbody tr:last-child>td {
+  border-bottom: 0;
+}
+
+.doc-article .hm-table-wrap.hm-table-wrap--collapsed>table tbody tr:nth-child(3)>td {
+  border-bottom: 0;
 }
 
 .doc-article .hm-table-wrap>table th br,
@@ -1943,10 +1959,56 @@ div[class*='language-']>.copy[data-copy-state='error'] {
 }
 
 .doc-article .hm-table-wrap>table thead th {
-  background: #e5e8ec;
+  color: var(--hm-text-1);
+  background: var(--hm-table-head-bg);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  text-align: left;
   white-space: nowrap;
   word-break: keep-all;
   overflow-wrap: normal;
+}
+
+.doc-article .hm-table-wrap>table tbody td {
+  color: var(--hm-text-1);
+  font-size: 0.925rem;
+}
+
+.doc-article .hm-table-wrap.hm-table-wrap--collapsible {
+  margin-bottom: 0;
+}
+
+.doc-article .hm-table-toggle {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0 var(--hm-doc-block-gap);
+}
+
+.doc-article .hm-table-toggle__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--hm-table-border);
+  border-radius: 999px !important;
+  background: transparent;
+  color: var(--hm-text-2);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+@media (hover: hover) {
+  .doc-article .hm-table-toggle__button:hover {
+    color: var(--hm-text-1);
+    background-color: var(--hm-bg-muted);
+  }
 }
 
 .doc-article .hm-center {
@@ -5202,6 +5264,10 @@ html.dark .emoji-avatar {
 
   html {
     scroll-behavior: auto !important;
+  }
+
+  .site-nav__dropdown .site-nav__dropdown-link {
+    transition: none !important;
   }
 
   /* 例外：搜索/目录定位后的两次黄色闪烁是位置提示而非装饰性动效，
