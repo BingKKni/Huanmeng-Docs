@@ -135,16 +135,17 @@ svg {
   --cb-mix-ratio: 22%;
   /* 文档宽内容通道：表格/代码/图可用满该宽度，但 2K/4K 不继续放大。 */
   --hm-content-max-width: clamp(900px, 56vw, 1040px);
-  /* 全站唯一阅读行宽：仅约束文字级元素，宽内容(表格/代码/图)不受限。 */
-  --hm-doc-measure: 760px;
+  /* 全站正文行宽与内容通道保持一致。 */
+  --hm-doc-measure: var(--hm-content-max-width);
   /* 全站唯一正文行高：CJK 取 1.8（1.75 与 1.85 的折中），所有正文类元素统一引用。 */
   --hm-doc-line-height: 1.8;
   --hm-doc-sidebar-gap: 24px;
   --hm-doc-page-gutter: clamp(18px, 2vw, 32px);
-  /* 拉丁文/数字/符号走 Inter，中文回落 Noto Sans SC Variable（Inter 在前，Noto 的 latin 分片不会被请求） */
-  --hm-font-latin: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
-  --hm-font-cjk: 'Noto Sans SC Variable', 'Noto Sans SC', 'Microsoft YaHei UI', 'Microsoft YaHei';
-  --hm-font-sans: var(--hm-font-latin), var(--hm-font-cjk), 'Hiragino Sans GB', 'Source Han Sans SC', sans-serif;
+  /* 拉丁文/数字/符号走 Inter，中文优先走 Noto Sans SC，系统字体仅作最终回退。 */
+  --hm-font-latin: 'Inter Variable', 'Inter';
+  --hm-font-cjk: 'Noto Sans SC Variable', 'Noto Sans SC';
+  --hm-font-system: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Microsoft YaHei UI', 'Microsoft YaHei';
+  --hm-font-sans: var(--hm-font-latin), var(--hm-font-cjk), var(--hm-font-system), 'Hiragino Sans GB', 'Source Han Sans SC', sans-serif;
   /* Markdown <hr>（***）*/
   --hm-doc-hr-color: rgba(15, 23, 42, 0.14);
 }
@@ -1640,7 +1641,7 @@ a:hover {
 }
 
 .doc-article li+li {
-  margin-top: 0.35em;
+  margin-top: 0.2em;
 }
 
 .doc-article li>p {
@@ -1655,11 +1656,11 @@ a:hover {
   margin-bottom: 0;
 }
 
-/* 嵌套列表：上间距与 li+li 同节奏（0.35em），底部为 0——
+/* 嵌套列表：上间距与 li+li 同节奏（0.25em），底部为 0——
    与下一个同级 li 的间距由该 li 自身的 li+li margin 提供。 */
 .doc-article li>ol,
 .doc-article li>ul {
-  margin: 0.35em 0 0 1.25rem;
+  margin: 0.2em 0 0 1.25rem;
 }
 
 .doc-article .hm-extra-break,
