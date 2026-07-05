@@ -1947,7 +1947,9 @@ div[class*='language-']>.copy[data-copy-state='error'] {
   border-bottom: 0;
 }
 
-.doc-article .hm-table-wrap.hm-table-wrap--collapsed:not(.hm-table-wrap--animating)>table tbody tr:nth-child(3)>td {
+/* 折叠时最后一行可见行（边界行）去掉底边框；行号由 JS 按
+   TABLE_COLLAPSED_ROW_LIMIT 打类标记，CSS 不硬编码行数 */
+.doc-article .hm-table-wrap.hm-table-wrap--collapsed:not(.hm-table-wrap--animating)>table tbody tr.hm-table-row--collapse-edge>td {
   border-bottom: 0;
 }
 
@@ -1975,7 +1977,7 @@ div[class*='language-']>.copy[data-copy-state='error'] {
   font-size: 0.925rem;
 }
 
-.doc-article .hm-table-wrap.hm-table-wrap--collapsible>table tbody tr:nth-child(n + 4)>td {
+.doc-article .hm-table-wrap.hm-table-wrap--collapsible>table tbody tr.hm-table-row--overflow>td {
   opacity: 0;
   transform: translateY(-4px);
   transition:
@@ -1984,16 +1986,16 @@ div[class*='language-']>.copy[data-copy-state='error'] {
   will-change: opacity, transform;
 }
 
-.doc-article .hm-table-wrap.hm-table-wrap--expanded>table tbody tr:nth-child(n + 4)>td {
+.doc-article .hm-table-wrap.hm-table-wrap--expanded>table tbody tr.hm-table-row--overflow>td {
   opacity: 1;
   transform: translateY(0);
 }
 
-.doc-article .hm-table-wrap.hm-table-wrap--collapsed:not(.hm-table-wrap--animating)>table tbody tr:nth-child(n + 4) {
+.doc-article .hm-table-wrap.hm-table-wrap--collapsed:not(.hm-table-wrap--animating)>table tbody tr.hm-table-row--overflow {
   height: 0;
 }
 
-.doc-article .hm-table-wrap.hm-table-wrap--collapsed:not(.hm-table-wrap--animating)>table tbody tr:nth-child(n + 4)>td {
+.doc-article .hm-table-wrap.hm-table-wrap--collapsed:not(.hm-table-wrap--animating)>table tbody tr.hm-table-row--overflow>td {
   border-bottom: 0;
   height: 0;
   padding-top: 0;
@@ -2004,6 +2006,14 @@ div[class*='language-']>.copy[data-copy-state='error'] {
 
 .doc-article .hm-table-wrap.hm-table-wrap--collapsing {
   --hm-table-row-animation-duration: 0.1s;
+}
+
+/* 折叠/展开时由 JS 用 FLIP 驱动 wrap 高度过渡（参考侧边栏菜单的
+   短动画节奏），让表格下方内容平滑跟上而不是瞬间跳位 */
+.doc-article .hm-table-wrap.hm-table-wrap--height-animating {
+  overflow: hidden;
+  transition: height 0.2s ease;
+  will-change: height;
 }
 
 .doc-article .hm-table-wrap.hm-table-wrap--collapsible {
@@ -2111,6 +2121,13 @@ div[class*='language-']>.copy[data-copy-state='error'] {
 
 .doc-article img {
   max-width: 100%;
+}
+
+/* 构建期自动注入宽高的图片：宽度被 max-width 压缩时高度按比例跟随；
+   加载前浏览器即可依 width/height 属性推出 aspect-ratio 预留空间，
+   避免懒加载图片进入视口时顶开内容（滚动抖动、锚点落点漂移） */
+.doc-article img[data-hm-auto-size] {
+  height: auto;
 }
 
 .doc-article .hm-img-row {

@@ -1,6 +1,13 @@
 import { onContentUpdated } from 'vitepress'
 import { computed, nextTick, ref, watch } from 'vue'
 
+/* 平滑滚动优先用原生 window.scrollTo({ behavior: 'smooth' })：
+   动画由浏览器引擎（合成器线程）驱动，主线程忙时也不掉帧，
+   这也是 VitePress 官方主题目录跳转的实现方式。
+   JS 逐帧 scrollTo 是主线程滚动，仅作为老浏览器的回退。 */
+const supportsNativeSmoothScroll = typeof document !== 'undefined'
+  && 'scrollBehavior' in document.documentElement.style
+
 export function useDocToc({ docArticleRef, isMobileView, supportsCurrentPageTocSidebar, onContentReady = null }) {
   const tocHeaders = ref([])
   const activeTocId = ref('')
@@ -134,32 +141,95 @@ export function useDocToc({ docArticleRef, isMobileView, supportsCurrentPageTocS
     })
   })
 
-  function easeInOutQuint(t) {
-    return t < 0.5 ? 16 * t * t * t * t * t : 1 - Math.pow(-2 * t + 2, 5) / 2
+  /* 峰值速度是平均速度的 3 倍（quint 是 5 倍），中段滚速更平缓 */
+  function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
   }
 
-  function smoothScrollTo(endY, duration, callback) {
+  let nativeScrollSettleCancel = null
+
+  /* 原生平滑滚动的结束探测：优先 scrollend，rAF 位置稳定性兜底
+     （Safari 对 scrollend 支持较晚）。arrived=false 表示没到目标
+     （通常是用户中途触摸打断了原生滚动），此时不应再抢夺滚动控制权。
+     返回取消函数，供下一次跳转打断上一次的探测。 */
+  function waitForNativeScrollSettle(endY, callback) {
+    let finished = false
+    let rafId = 0
+    let lastY = window.scrollY
+    let idleFrames = 0
+    const startTime = performance.now()
+
+    const clampedTarget = () => {
+      const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+      return Math.min(Math.max(endY, 0), maxY)
+    }
+
+    const stop = () => {
+      finished = true
+      window.removeEventListener('scrollend', finish)
+      if (rafId) cancelAnimationFrame(rafId)
+    }
+
+    const finish = () => {
+      if (finished) return
+      stop()
+      callback({ arrived: Math.abs(window.scrollY - clampedTarget()) <= 4 })
+    }
+
+    if ('onscrollend' in window) {
+      window.addEventListener('scrollend', finish, { once: true })
+    }
+
+    const step = now => {
+      if (finished) return
+      const y = window.scrollY
+      idleFrames = Math.abs(y - lastY) < 1 ? idleFrames + 1 : 0
+      lastY = y
+      const atTarget = Math.abs(y - clampedTarget()) <= 4
+      if ((atTarget && idleFrames >= 2) || idleFrames >= 24 || now - startTime > 3000) {
+        finish()
+        return
+      }
+      rafId = requestAnimationFrame(step)
+    }
+    rafId = requestAnimationFrame(step)
+
+    return stop
+  }
+
+  function smoothScrollTo(endY, callback) {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       window.scrollTo(0, endY)
-      callback?.()
+      callback?.({ arrived: true })
+      return
+    }
+
+    if (supportsNativeSmoothScroll) {
+      nativeScrollSettleCancel?.()
+      window.scrollTo({ top: endY, behavior: 'smooth' })
+      nativeScrollSettleCancel = waitForNativeScrollSettle(endY, result => {
+        nativeScrollSettleCancel = null
+        callback?.(result)
+      })
       return
     }
 
     const startY = window.scrollY
     const distanceY = endY - startY
+    const duration = Math.min(Math.max(Math.abs(distanceY) * 0.45, 280), 900)
     const startTime = performance.now()
 
     function step(time) {
       const elapsed = time - startTime
       const progress = Math.min(elapsed / duration, 1)
-      const ease = easeInOutQuint(progress)
+      const ease = easeInOutCubic(progress)
 
       window.scrollTo(0, startY + distanceY * ease)
 
       if (progress < 1) {
         requestAnimationFrame(step)
       } else if (callback) {
-        callback()
+        callback({ arrived: true })
       }
     }
 
@@ -322,13 +392,14 @@ export function useDocToc({ docArticleRef, isMobileView, supportsCurrentPageTocS
     expandClosedDetails(flashTarget)
 
     if (tocScrollTimeout) clearTimeout(tocScrollTimeout)
+    nativeScrollSettleCancel?.()
+    nativeScrollSettleCancel = null
     if (targetId && tocHeaders.value.some(header => header.id === targetId)) {
       activeTocId.value = targetId
     }
 
-    const top = flashTarget.getBoundingClientRect().top + window.scrollY - 120
-    const distance = Math.abs(top - window.scrollY)
-    const duration = Math.min(Math.max(distance * 0.25, 300), 650)
+    const measureTargetTop = () => flashTarget.getBoundingClientRect().top + window.scrollY - 120
+    const top = measureTargetTop()
 
     if (instant) {
       window.scrollTo(0, top)
@@ -346,20 +417,36 @@ export function useDocToc({ docArticleRef, isMobileView, supportsCurrentPageTocS
       return true
     }
 
-    smoothScrollTo(top, duration, () => {
+    smoothScrollTo(top, ({ arrived } = { arrived: true }) => {
+      if (arrived) {
+        /* 滚动期间懒加载图片可能顶开内容导致落点漂移，结束后校准一次；
+           用户中途打断（arrived=false）时不校准，避免抢夺滚动控制权 */
+        const correctedTop = measureTargetTop()
+        if (Math.abs(correctedTop - window.scrollY) > 4) {
+          window.scrollTo(0, correctedTop)
+        }
+      }
       if (updateHash) {
         const url = new URL(window.location.href)
         url.hash = targetId
         window.history.replaceState(null, '', url)
       }
-      if (flash) {
+      if (flash && arrived) {
         flashHeading(flashTarget)
       }
+      /* 滚动结束后短暂延迟再释放桌面端 TOC 高亮的滚动监听抑制，
+         让校准 scrollTo 触发的尾部 scroll 事件先排空 */
+      if (tocScrollTimeout) clearTimeout(tocScrollTimeout)
+      tocScrollTimeout = setTimeout(() => {
+        tocScrollTimeout = null
+      }, 80)
     })
 
+    /* 原生平滑滚动时长由浏览器决定，先设一个宽松的抑制上限，
+       结束回调里会提前收窄 */
     tocScrollTimeout = setTimeout(() => {
       tocScrollTimeout = null
-    }, duration + 50)
+    }, 3200)
 
     return true
   }
@@ -370,6 +457,8 @@ export function useDocToc({ docArticleRef, isMobileView, supportsCurrentPageTocS
 
   function cleanupToc() {
     stopTocScrollListener()
+    nativeScrollSettleCancel?.()
+    nativeScrollSettleCancel = null
     if (tocScrollTimeout) {
       clearTimeout(tocScrollTimeout)
       tocScrollTimeout = null

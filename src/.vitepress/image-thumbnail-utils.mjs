@@ -14,24 +14,30 @@ const DIMENSION_ATTR_RE = /\b(width|height)\s*=\s*(?:"(\d+)"|'(\d+)'|(\d+))/g
 const MARKDOWN_IMAGE_RE = /!\[[^\]]*\]\((\/img\/[^)\s]+)(?:\s+(?:"[^"]*"|'[^']*'))?\)(\{[^{}\n]*\})?/g
 const SKIP_DIRS = new Set(['.vitepress', '.vscode', 'node_modules'])
 
+/* maxRenderWidth：sizes 各分支能取到的最大 CSS 宽度。原图不小于它时，
+   给 <img> 注入原图宽高不会改变现有渲染尺寸（宽度反正会被布局压到
+   sizes 以内），因此可以安全注入用于加载前的空间预留。 */
 export const RESPONSIVE_IMAGE_PRESETS = Object.freeze({
   'auto-single': Object.freeze({
     id: 'auto-single',
     fallbackWidth: 960,
     candidateWidths: Object.freeze([1080, 1440, 1600, 1920, 2160]),
-    sizes: '(max-width: 767.98px) calc(100vw - 24px), min(68vw, 1080px)'
+    sizes: '(max-width: 767.98px) calc(100vw - 24px), min(68vw, 1080px)',
+    maxRenderWidth: 1080
   }),
   'auto-double': Object.freeze({
     id: 'auto-double',
     fallbackWidth: 480,
     candidateWidths: Object.freeze([720, 960, 1080, 1200]),
-    sizes: '(max-width: 767.98px) calc((100vw - 36px) / 2), 534px'
+    sizes: '(max-width: 767.98px) calc((100vw - 36px) / 2), 534px',
+    maxRenderWidth: 534
   }),
   'auto-dense': Object.freeze({
     id: 'auto-dense',
     fallbackWidth: 360,
     candidateWidths: Object.freeze([480, 640]),
-    sizes: '(max-width: 767.98px) calc((100vw - 48px) / 3), 352px'
+    sizes: '(max-width: 767.98px) calc((100vw - 48px) / 3), 352px',
+    maxRenderWidth: 352
   })
 })
 
@@ -120,7 +126,17 @@ export function extractMarkdownImageUsages(source, filePath = '') {
         continue
       }
 
-      if (!responsivePresetId) continue
+      if (!responsivePresetId) {
+        /* 与文字混排、又没写宽高的图片：不生成缩略图，但仍记录来源，
+           供生成器写入 sourceDimensions 以便构建期注入固有尺寸 */
+        usages.push({
+          kind: 'plain',
+          key: sourceSrc,
+          sourceSrc,
+          sourceFile: filePath
+        })
+        continue
+      }
 
       usages.push({
         kind: 'responsive',
@@ -199,18 +215,19 @@ export function buildThumbnailPublicUrl(sourceSrc, width = null, height = null) 
 
 export function loadImageThumbnailManifest() {
   if (!existsSync(manifestPath)) {
-    return { version: 2, thumbnails: {}, responsiveImages: {} }
+    return { version: 3, thumbnails: {}, responsiveImages: {}, sourceDimensions: {} }
   }
 
   try {
     const raw = readFileSync(manifestPath, 'utf8')
     const parsed = JSON.parse(raw)
     return {
-      version: parsed?.version ?? 2,
+      version: parsed?.version ?? 3,
       thumbnails: parsed?.thumbnails ?? {},
-      responsiveImages: parsed?.responsiveImages ?? {}
+      responsiveImages: parsed?.responsiveImages ?? {},
+      sourceDimensions: parsed?.sourceDimensions ?? {}
     }
   } catch {
-    return { version: 2, thumbnails: {}, responsiveImages: {} }
+    return { version: 3, thumbnails: {}, responsiveImages: {}, sourceDimensions: {} }
   }
 }

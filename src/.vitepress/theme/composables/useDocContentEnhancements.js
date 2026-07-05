@@ -1,9 +1,11 @@
 import { nextTick } from 'vue'
 
 const COPY_BUTTON_RESET_DELAY = 4000
-const TABLE_COLLAPSED_ROW_LIMIT = 3
-const TABLE_EXPAND_ANIMATION_DURATION = 160
-const TABLE_COLLAPSE_ANIMATION_DURATION = 100
+const TABLE_COLLAPSED_ROW_LIMIT = 8
+/* 与 style.css 中 .hm-table-wrap--height-animating 的 height 过渡时长
+   （0.2s）对齐，略加余量保证过渡完成后再摘除动画类 */
+const TABLE_EXPAND_ANIMATION_DURATION = 220
+const TABLE_COLLAPSE_ANIMATION_DURATION = 220
 
 export function useDocContentEnhancements({ docArticleRef, openLightbox, openInfoDialog, isMobileViewport }) {
   let imageRowProcessFrame = 0
@@ -203,6 +205,11 @@ export function useDocContentEnhancements({ docArticleRef, openLightbox, openInf
     rows.forEach((row, index) => {
       row.hidden = false
 
+      /* 溢出行/折叠边界行用类标记，CSS 不再硬编码 nth-child 行号，
+         行数阈值只需改 TABLE_COLLAPSED_ROW_LIMIT 一处 */
+      row.classList.toggle('hm-table-row--overflow', index >= TABLE_COLLAPSED_ROW_LIMIT)
+      row.classList.toggle('hm-table-row--collapse-edge', index === TABLE_COLLAPSED_ROW_LIMIT - 1)
+
       if (collapsed && index >= TABLE_COLLAPSED_ROW_LIMIT) {
         row.setAttribute('aria-hidden', 'true')
       } else {
@@ -218,11 +225,28 @@ export function useDocContentEnhancements({ docArticleRef, openLightbox, openInf
     wrap.classList.toggle('hm-table-wrap--collapsing', collapsing)
   }
 
+  /* 折叠/展开时对 wrap 高度做 FLIP 过渡：先量起点高度，套用终态后量
+     终点高度，再用一段短过渡从起点滑到终点——表格下方的内容随之
+     平滑移动，而不是在行显隐瞬间硬生生跳位 */
+  function animateTableWrapHeight(wrap, startHeight, endHeight) {
+    if (Math.round(startHeight) === Math.round(endHeight)) return
+    wrap.classList.add('hm-table-wrap--height-animating')
+    wrap.style.height = `${startHeight}px`
+    void wrap.offsetHeight
+    wrap.style.height = `${endHeight}px`
+  }
+
+  function clearTableWrapHeightAnimation(wrap) {
+    wrap.classList.remove('hm-table-wrap--height-animating')
+    wrap.style.removeProperty('height')
+  }
+
   function finishTableAnimation(wrap, rows, collapsed) {
     const expectedExpanded = collapsed ? 'false' : 'true'
     if (wrap.dataset.hmTableExpanded !== expectedExpanded) return
 
     setTableRowsCollapsedState(rows, collapsed)
+    clearTableWrapHeightAnimation(wrap)
     wrap.classList.remove('hm-table-wrap--animating', 'hm-table-wrap--collapsing')
     delete wrap.dataset.hmTableAnimationTimer
   }
@@ -242,20 +266,33 @@ export function useDocContentEnhancements({ docArticleRef, openLightbox, openInf
     if (!animate) {
       setTableExpandedClasses(wrap, rows, collapsed)
       setTableRowsCollapsedState(rows, collapsed)
+      clearTableWrapHeightAnimation(wrap)
       wrap.classList.remove('hm-table-wrap--animating', 'hm-table-wrap--collapsing')
       return
     }
 
-    wrap.classList.add('hm-table-wrap--animating')
+    /* 起点高度用 getBoundingClientRect 取当前视觉值：连点切换时
+       可能正处于上一段高度过渡中，从中断点继续而不是跳变 */
+    const startHeight = wrap.getBoundingClientRect().height
+    clearTableWrapHeightAnimation(wrap)
 
     if (collapsed) {
+      /* 先摘掉 --animating 套用折叠终态（溢出行高度归零）量出终点高度，
+         再加回 --animating 恢复行高，让行内容在高度过渡期间淡出 */
+      wrap.classList.remove('hm-table-wrap--animating')
       setTableRowsCollapsedState(rows, true)
       setTableExpandedClasses(wrap, rows, true, { collapsing: true })
+      const endHeight = wrap.getBoundingClientRect().height
+      wrap.classList.add('hm-table-wrap--animating')
+      animateTableWrapHeight(wrap, startHeight, endHeight)
       scheduleTableAnimationFinish(wrap, rows, true)
       return
     }
 
+    wrap.classList.add('hm-table-wrap--animating')
     setTableRowsCollapsedState(rows, false)
+    const endHeight = wrap.getBoundingClientRect().height
+    animateTableWrapHeight(wrap, startHeight, endHeight)
     window.requestAnimationFrame(() => {
       if (wrap.dataset.hmTableExpanded !== 'true') return
       setTableExpandedClasses(wrap, rows, false)
@@ -298,9 +335,11 @@ export function useDocContentEnhancements({ docArticleRef, openLightbox, openInf
 
       if (!table || rows.length <= TABLE_COLLAPSED_ROW_LIMIT) {
         clearTableAnimationTimer(wrap)
+        clearTableWrapHeightAnimation(wrap)
         rows.forEach(row => {
           row.hidden = false
           row.removeAttribute('aria-hidden')
+          row.classList.remove('hm-table-row--overflow', 'hm-table-row--collapse-edge')
         })
         wrap.classList.remove(
           'hm-table-wrap--collapsible',
@@ -380,6 +419,8 @@ export function useDocContentEnhancements({ docArticleRef, openLightbox, openInf
   }
 
   function imgHasExplicitDimension(img) {
+    /* 构建期自动注入的宽高（data-hm-auto-size）不算作者显式声明 */
+    if (img.dataset.hmAutoSize === '1') return false
     for (const attr of ['width', 'height']) {
       const raw = img.getAttribute(attr)
       if (raw == null || String(raw).trim() === '') continue

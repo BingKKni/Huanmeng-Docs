@@ -496,6 +496,8 @@ const MOBILE_NAV_PANEL_MS = 300
 const MOBILE_NAV_CLOSE_FALLBACK_MS = MOBILE_NAV_PANEL_MS + 100
 const MOBILE_HEADER_SCROLL_DELTA = 8
 const MOBILE_TOC_SHEET_TOP_GAP_PX = 24
+/** 略大于 style.css 中 .mobile-toc-sheet-slide 离场时长（0.24s）的兜底 */
+const MOBILE_TOC_SCROLL_FALLBACK_MS = 400
 const DOC_PAGE_TRANSITION_MS = 240
 const DOC_PAGE_FAST_SWITCH_WINDOW_MS = 180
 const DOC_PAGE_FAST_SWITCH_DISABLE_ANIM_MS = 420
@@ -592,6 +594,8 @@ let mobileTocSheetDragStartHeight = 0
 let mobileTocSheetDragStartY = 0
 let mobileTocSheetDragPointerId = null
 let mobileTocSheetDragHandle = null
+let pendingMobileTocScrollId = null
+let pendingMobileTocScrollTimer = null
 
 let routerProgressPrevBefore = undefined
 let routerProgressPrevAfter = undefined
@@ -977,12 +981,28 @@ function closeMobileToc() {
   stopMobileTocSheetDrag()
 }
 
+function clearPendingMobileTocScroll() {
+  if (pendingMobileTocScrollTimer != null) {
+    window.clearTimeout(pendingMobileTocScrollTimer)
+    pendingMobileTocScrollTimer = null
+  }
+  pendingMobileTocScrollId = null
+}
+
+function flushPendingMobileTocScroll() {
+  const id = pendingMobileTocScrollId
+  clearPendingMobileTocScroll()
+  if (id) scrollToToc(id)
+}
+
 function handleMobileTocSheetAfterLeave() {
   resetMobileTocSheetDragState()
+  flushPendingMobileTocScroll()
 }
 
 function openMobileToc() {
   if (!shouldShowFloatingTOC.value) return
+  clearPendingMobileTocScroll()
   resetMobileTocSheetDragState()
   closeMobileMenu()
   if (isMobileViewport()) closeSidebar()
@@ -993,15 +1013,17 @@ function openMobileToc() {
 }
 
 function handleMobileTocClick(id) {
-  closeMobileToc()
   if (typeof window === 'undefined') {
     scrollToToc(id)
     return
   }
 
-  window.requestAnimationFrame(() => {
-    scrollToToc(id)
-  })
+  /* 等抽屉离场动画结束（after-leave）再开始滚动，避免离场动画与
+     JS 逐帧滚动抢同一批主线程帧；计时器兜底防 after-leave 未触发 */
+  clearPendingMobileTocScroll()
+  pendingMobileTocScrollId = id
+  pendingMobileTocScrollTimer = window.setTimeout(flushPendingMobileTocScroll, MOBILE_TOC_SCROLL_FALLBACK_MS)
+  closeMobileToc()
 }
 
 function toggleMobileSidebar() {
@@ -1409,6 +1431,7 @@ onBeforeUnmount(() => {
     windowResizeDebounceTimer = null
   }
   cleanupDocContentEnhancements()
+  clearPendingMobileTocScroll()
   resetMobileTocSheetDragState()
   cleanupToc()
 

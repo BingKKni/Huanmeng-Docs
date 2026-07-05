@@ -22,11 +22,14 @@ async function collectImageCandidates() {
   const markdownFiles = await collectMarkdownFiles()
   const thumbnailCandidates = new Map()
   const responsiveCandidates = new Map()
+  const dimensionSourceSet = new Set()
 
   for (const filePath of markdownFiles) {
     const rawContent = await readFile(filePath, 'utf8')
 
     for (const usage of extractMarkdownImageUsages(rawContent, filePath)) {
+      dimensionSourceSet.add(usage.sourceSrc)
+
       if (usage.kind === 'thumbnail') {
         const existing = thumbnailCandidates.get(usage.key)
         if (existing) {
@@ -82,7 +85,8 @@ async function collectImageCandidates() {
 
   return {
     thumbnailCandidates: [...thumbnailCandidates.values()],
-    responsiveCandidates: [...responsiveCandidates.values()]
+    responsiveCandidates: [...responsiveCandidates.values()],
+    dimensionSources: [...dimensionSourceSet].sort()
   }
 }
 
@@ -102,7 +106,7 @@ function pickResponsiveFallbackSource(sources, fallbackWidth) {
 async function main() {
   const publicImages = await collectPublicImageFiles()
   const publicImageSet = new Set(publicImages.map(publicImagePathToUrl))
-  const { thumbnailCandidates, responsiveCandidates } = await collectImageCandidates()
+  const { thumbnailCandidates, responsiveCandidates, dimensionSources } = await collectImageCandidates()
   const thumbnails = {}
   const responsiveImages = {}
   const warnings = []
@@ -242,13 +246,43 @@ async function main() {
     }
   }
 
+  /* 记录每张被引用图片的原始尺寸（按 EXIF 方向换算成显示宽高），
+     供 markdown 插件在构建期给 <img> 注入 width/height 预留空间 */
+  const sourceDimensions = {}
+  for (const sourceSrc of dimensionSources) {
+    if (!publicImageSet.has(sourceSrc)) continue
+
+    const sourcePath = publicUrlToFilePath(sourceSrc)
+    if (!sourcePath) continue
+
+    let metadata = metadataCache.get(sourcePath)
+    if (!metadata) {
+      try {
+        metadata = await sharp(sourcePath, { animated: false }).rotate().metadata()
+        metadataCache.set(sourcePath, metadata)
+      } catch {
+        warnings.push(`无法读取图片尺寸：${sourceSrc}`)
+        continue
+      }
+    }
+
+    if (!metadata.width || !metadata.height) continue
+
+    const swapped = (metadata.orientation ?? 1) >= 5
+    sourceDimensions[sourceSrc] = {
+      width: swapped ? metadata.height : metadata.width,
+      height: swapped ? metadata.width : metadata.height
+    }
+  }
+
   await writeFile(
     manifestPath,
     JSON.stringify({
-      version: 2,
+      version: 3,
       generatedAt: new Date().toISOString(),
       thumbnails,
-      responsiveImages
+      responsiveImages,
+      sourceDimensions
     }, null, 2),
     'utf8'
   )
