@@ -1947,7 +1947,7 @@ div[class*='language-']>.copy[data-copy-state='error'] {
   border-bottom: 0;
 }
 
-.doc-article .hm-table-wrap.hm-table-wrap--collapsed>table tbody tr:nth-child(3)>td {
+.doc-article .hm-table-wrap.hm-table-wrap--collapsed:not(.hm-table-wrap--animating)>table tbody tr:nth-child(3)>td {
   border-bottom: 0;
 }
 
@@ -1973,6 +1973,37 @@ div[class*='language-']>.copy[data-copy-state='error'] {
 .doc-article .hm-table-wrap>table tbody td {
   color: var(--hm-text-1);
   font-size: 0.925rem;
+}
+
+.doc-article .hm-table-wrap.hm-table-wrap--collapsible>table tbody tr:nth-child(n + 4)>td {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity var(--hm-table-row-animation-duration, 0.16s) ease,
+    transform var(--hm-table-row-animation-duration, 0.16s) ease;
+  will-change: opacity, transform;
+}
+
+.doc-article .hm-table-wrap.hm-table-wrap--expanded>table tbody tr:nth-child(n + 4)>td {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.doc-article .hm-table-wrap.hm-table-wrap--collapsed:not(.hm-table-wrap--animating)>table tbody tr:nth-child(n + 4) {
+  height: 0;
+}
+
+.doc-article .hm-table-wrap.hm-table-wrap--collapsed:not(.hm-table-wrap--animating)>table tbody tr:nth-child(n + 4)>td {
+  border-bottom: 0;
+  height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 0;
+  overflow: hidden;
+}
+
+.doc-article .hm-table-wrap.hm-table-wrap--collapsing {
+  --hm-table-row-animation-duration: 0.1s;
 }
 
 .doc-article .hm-table-wrap.hm-table-wrap--collapsible {
@@ -5071,6 +5102,21 @@ html.dark .custom-block.details {
 .doc-article ol+ul,
 .doc-article ul+ol {
   margin-top: 0.35em;
+}
+
+/* 图片段落与列表相邻时不套用组内紧凑间距，避免图文块贴得过近。 */
+.doc-article p:has(img):has(+ ul),
+.doc-article p:has(img):has(+ ol),
+.doc-article ul:has(+ p:has(img)),
+.doc-article ol:has(+ p:has(img)) {
+  margin-bottom: var(--hm-doc-block-gap);
+}
+
+.doc-article p:has(img)+ul,
+.doc-article p:has(img)+ol,
+.doc-article ul+p:has(img),
+.doc-article ol+p:has(img) {
+  margin-top: var(--hm-doc-block-gap);
 }
 
 /* ── 应用卡片网格系统 ── */

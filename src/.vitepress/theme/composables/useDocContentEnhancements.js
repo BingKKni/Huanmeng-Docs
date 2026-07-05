@@ -2,6 +2,8 @@ import { nextTick } from 'vue'
 
 const COPY_BUTTON_RESET_DELAY = 4000
 const TABLE_COLLAPSED_ROW_LIMIT = 3
+const TABLE_EXPAND_ANIMATION_DURATION = 160
+const TABLE_COLLAPSE_ANIMATION_DURATION = 100
 
 export function useDocContentEnhancements({ docArticleRef, openLightbox, openInfoDialog, isMobileViewport }) {
   let imageRowProcessFrame = 0
@@ -191,15 +193,74 @@ export function useDocContentEnhancements({ docArticleRef, openLightbox, openInf
     if (next?.classList?.contains('hm-table-toggle')) next.remove()
   }
 
-  function applyTableCollapsedState(wrap, rows, collapsed) {
-    rows.forEach((row, index) => {
-      row.hidden = collapsed && index >= TABLE_COLLAPSED_ROW_LIMIT
-    })
+  function clearTableAnimationTimer(wrap) {
+    const timer = Number(wrap.dataset.hmTableAnimationTimer)
+    if (timer) window.clearTimeout(timer)
+    delete wrap.dataset.hmTableAnimationTimer
+  }
 
+  function setTableRowsCollapsedState(rows, collapsed) {
+    rows.forEach((row, index) => {
+      row.hidden = false
+
+      if (collapsed && index >= TABLE_COLLAPSED_ROW_LIMIT) {
+        row.setAttribute('aria-hidden', 'true')
+      } else {
+        row.removeAttribute('aria-hidden')
+      }
+    })
+  }
+
+  function setTableExpandedClasses(wrap, rows, collapsed, { collapsing = false } = {}) {
     wrap.classList.toggle('hm-table-wrap--collapsible', rows.length > TABLE_COLLAPSED_ROW_LIMIT)
     wrap.classList.toggle('hm-table-wrap--collapsed', collapsed)
     wrap.classList.toggle('hm-table-wrap--expanded', !collapsed)
+    wrap.classList.toggle('hm-table-wrap--collapsing', collapsing)
+  }
+
+  function finishTableAnimation(wrap, rows, collapsed) {
+    const expectedExpanded = collapsed ? 'false' : 'true'
+    if (wrap.dataset.hmTableExpanded !== expectedExpanded) return
+
+    setTableRowsCollapsedState(rows, collapsed)
+    wrap.classList.remove('hm-table-wrap--animating', 'hm-table-wrap--collapsing')
+    delete wrap.dataset.hmTableAnimationTimer
+  }
+
+  function scheduleTableAnimationFinish(wrap, rows, collapsed) {
+    const timer = window.setTimeout(() => {
+      finishTableAnimation(wrap, rows, collapsed)
+    }, collapsed ? TABLE_COLLAPSE_ANIMATION_DURATION : TABLE_EXPAND_ANIMATION_DURATION)
+
+    wrap.dataset.hmTableAnimationTimer = String(timer)
+  }
+
+  function applyTableCollapsedState(wrap, rows, collapsed, { animate = false } = {}) {
+    clearTableAnimationTimer(wrap)
     wrap.dataset.hmTableExpanded = collapsed ? 'false' : 'true'
+
+    if (!animate) {
+      setTableExpandedClasses(wrap, rows, collapsed)
+      setTableRowsCollapsedState(rows, collapsed)
+      wrap.classList.remove('hm-table-wrap--animating', 'hm-table-wrap--collapsing')
+      return
+    }
+
+    wrap.classList.add('hm-table-wrap--animating')
+
+    if (collapsed) {
+      setTableRowsCollapsedState(rows, true)
+      setTableExpandedClasses(wrap, rows, true, { collapsing: true })
+      scheduleTableAnimationFinish(wrap, rows, true)
+      return
+    }
+
+    setTableRowsCollapsedState(rows, false)
+    window.requestAnimationFrame(() => {
+      if (wrap.dataset.hmTableExpanded !== 'true') return
+      setTableExpandedClasses(wrap, rows, false)
+      scheduleTableAnimationFinish(wrap, rows, false)
+    })
   }
 
   function updateTableToggle(wrap, table, rows) {
@@ -222,7 +283,7 @@ export function useDocContentEnhancements({ docArticleRef, openLightbox, openInf
     button.dataset.hmTableToggleBound = '1'
     button.addEventListener('click', () => {
       const nextExpanded = wrap.dataset.hmTableExpanded !== 'true'
-      applyTableCollapsedState(wrap, rows, !nextExpanded)
+      applyTableCollapsedState(wrap, rows, !nextExpanded, { animate: true })
       updateTableToggle(wrap, table, rows)
     })
   }
@@ -236,10 +297,18 @@ export function useDocContentEnhancements({ docArticleRef, openLightbox, openInf
       const rows = Array.from(table?.querySelectorAll(':scope > tbody > tr') || [])
 
       if (!table || rows.length <= TABLE_COLLAPSED_ROW_LIMIT) {
+        clearTableAnimationTimer(wrap)
         rows.forEach(row => {
           row.hidden = false
+          row.removeAttribute('aria-hidden')
         })
-        wrap.classList.remove('hm-table-wrap--collapsible', 'hm-table-wrap--collapsed', 'hm-table-wrap--expanded')
+        wrap.classList.remove(
+          'hm-table-wrap--collapsible',
+          'hm-table-wrap--collapsed',
+          'hm-table-wrap--expanded',
+          'hm-table-wrap--animating',
+          'hm-table-wrap--collapsing'
+        )
         delete wrap.dataset.hmTableExpanded
         removeTableToggle(wrap)
         return
