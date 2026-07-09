@@ -11,6 +11,10 @@
 - 白色的图是拉 QQ 群
 - 黑色的图是拉 QQ 频道
 
+::: tip
+把幻梦邀请到新的群聊，还能参加 [🎁呼朋唤友活动](/docs/invite)，一路解锁额度奖励和专属称号哦！
+:::
+
 ![](/img/invite_to_group.png){.hm-right-img height="400"} ![](/img/invite_to_guild.png){.hm-left-img height="400"}
 
 
@@ -63,6 +67,17 @@
 点击下面的字就可以直达对应的帮助和攻略了哦。
 
 <div class="app-card-grid">
+    <!-- 邀请幻梦有礼 -->
+    <div class="app-card">
+        <div class="app-card-left">
+            <div class="app-card-avatar emoji-avatar">🎁</div>
+            <div class="app-card-info">
+                <div class="app-card-title">邀请幻梦有礼</div>
+                <div class="app-card-desc">把幻梦邀请到新群，一路解锁额度奖励和专属称号！</div>
+            </div>
+        </div>
+        <a href="/docs/invite?from=docs_index" class="app-action-btn">前往</a>
+    </div>
     <!-- 打卡 -->
     <div class="app-card">
         <div class="app-card-left">

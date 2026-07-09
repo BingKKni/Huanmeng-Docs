@@ -160,6 +160,11 @@ export const desktopSidebarLinks = [
     ]
   },
   {
+    href: '/docs/invite',
+    label: '🎁 邀请幻梦有礼',
+    isActive: relativePath => relativePath === 'docs/invite.md'
+  },
+  {
     href: '/docs/delta_force/',
     label: '🗺️ 三角洲行动攻略',
     isActive: relativePath => relativePath === 'docs/delta_force/index.md',
