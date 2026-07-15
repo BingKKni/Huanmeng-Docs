@@ -12,6 +12,7 @@
  *
  * 示例：
  *   {orange}5额度{}        → <span class="ct-orange">5额度</span>
+ *   {green}**成功**{}      → <span class="ct-green"><strong>成功</strong></span>
  *   {#e91e63}自定义色{}     → <span style="color:#e91e63">自定义色</span>
  *   {bg-yellow}S+{}        → <span class="cb cb-yellow">S+</span>
  *   {bg-#fff3c7}S+{}       → <span class="cb" style="background:#fff3c7">S+</span>
@@ -78,9 +79,13 @@ export default function colorTextPlugin(md) {
     }
     tokenOpen.markup = `{${isBadge ? 'bg-' : ''}${colorKey}}`
 
-    // 内部文本直接作为 text token 输出
-    const tokenText = state.push('text', '', 0)
-    tokenText.content = innerText
+    // 复用 Markdown-it 的内联解析，支持在颜色语法内使用加粗等标准 Markdown 语法。
+    const innerTokens = []
+    state.md.inline.parse(innerText, state.md, state.env, innerTokens)
+    for (const token of innerTokens) {
+      token.level += state.level
+      state.tokens.push(token)
+    }
 
     const tokenClose = state.push('color_text_close', 'span', -1)
     tokenClose.markup = '{}'

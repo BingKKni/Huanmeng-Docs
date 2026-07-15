@@ -53,6 +53,12 @@ function applyIntrinsicSize(token, authorWidth, authorHeight, dims) {
   token.attrSet('data-hm-auto-size', '1')
 }
 
+function patchSourceDimensions(token, dims) {
+  if (!dims?.width || !dims?.height) return
+  token.attrSet('data-hm-full-width', String(dims.width))
+  token.attrSet('data-hm-full-height', String(dims.height))
+}
+
 function patchExplicitImageToken(token, manifest) {
   const sourceSrc = normalizePublicImageUrl(token.attrGet('src'))
   if (!sourceSrc) return
@@ -61,6 +67,7 @@ function patchExplicitImageToken(token, manifest) {
   const thumbnail = manifest.thumbnails?.[buildThumbnailKey(sourceSrc, width, height)]
   const dims = manifest.sourceDimensions?.[sourceSrc]
     ?? (thumbnail ? { width: thumbnail.originalWidth, height: thumbnail.originalHeight } : null)
+  patchSourceDimensions(token, dims)
   applyIntrinsicSize(token, width, height, dims)
 
   if (!thumbnail) return
@@ -76,6 +83,7 @@ function patchResponsiveImageToken(token, manifest, responsivePresetId, rowRatio
   patchSharedAttrs(token, sourceSrc)
 
   const dims = manifest.sourceDimensions?.[sourceSrc]
+  patchSourceDimensions(token, dims)
 
   if (rowRatio) {
     /* 多图行：客户端 JS 会把整行统一到「最宽图片」决定的高度并 cover 裁切，

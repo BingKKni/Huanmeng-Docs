@@ -465,6 +465,9 @@ function openMobileInfoDialog(...args) {
 
 const {
   lightboxSrc,
+  lightboxFileSize,
+  lightboxIntrinsicWidth,
+  lightboxIntrinsicHeight,
   lightboxVisible,
   lightboxScale,
   lightboxOffsetX,
@@ -475,6 +478,7 @@ const {
   lightboxRootRef,
   lightboxFlipRef,
   lightboxImgRef,
+  formatFileSize,
   syncLightboxScale,
   openLightbox,
   forceCloseLightbox,
@@ -485,8 +489,12 @@ const {
   handleLightboxTouchStart,
   handleLightboxTouchMove,
   handleLightboxTouchEnd,
-  handleLightboxTouchCancel
+  handleLightboxTouchCancel,
+  zoomInLightbox,
+  zoomOutLightbox,
+  downloadLightboxImage
 } = useLightbox({ isMobileViewport })
+const lightboxFileSizeLabel = computed(() => formatFileSize(lightboxFileSize.value))
 const MOBILE_MEDIA_QUERY = '(max-width: 991.98px)'
 /** 与 style.css 中桌面侧栏媒体查询一致 */
 const DESKTOP_SIDEBAR_MEDIA_QUERY = '(min-width: 992px)'
@@ -2334,10 +2342,13 @@ watch(infoDialogVisible, async visible => {
       :phase="lightboxPhase"
       :backdrop-opacity="lightboxBackdropOpacity"
       :src="lightboxSrc"
+      :intrinsic-width="lightboxIntrinsicWidth"
+      :intrinsic-height="lightboxIntrinsicHeight"
       :offset-x="lightboxOffsetX"
       :offset-y="lightboxOffsetY"
       :scale="lightboxScale"
       :image-transition="lightboxImageTransition"
+      :file-size-label="lightboxFileSizeLabel"
       @click="handleLightboxClick"
       @wheel="handleDesktopLightboxWheel"
       @mousedown="handleDesktopLightboxMouseDown"
@@ -2345,6 +2356,9 @@ watch(infoDialogVisible, async visible => {
       @touchmove="handleLightboxTouchMove"
       @touchend="handleLightboxTouchEnd"
       @touchcancel="handleLightboxTouchCancel"
+      @zoom-in="zoomInLightbox"
+      @zoom-out="zoomOutLightbox"
+      @download="downloadLightboxImage"
     />
 
     <!-- 全局搜索弹窗 (Fallback / Mobile) -->

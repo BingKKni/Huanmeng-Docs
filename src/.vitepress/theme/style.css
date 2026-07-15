@@ -2171,6 +2171,7 @@ div[class*='language-']>.copy[data-copy-state='error'] {
   .doc-article .hm-img-row img.hm-left-img,
   .doc-article .hm-img-row img.hm-right-img {
     flex: 1 1 0% !important;
+    height: auto !important;
     margin: 0 !important;
   }
 }
@@ -2437,6 +2438,10 @@ html.dark .hm-dialog__title {
   background: transparent;
   cursor: pointer;
   overscroll-behavior: contain;
+  /* 图片显示尺寸约束集中在此，供组件内联计算宽度使用，
+     确保 <img> 盒子宽高比恒等于图片宽高比，从源头消除 object-fit 留白 */
+  --hm-lightbox-max-w: min(85vw, 1320px);
+  --hm-lightbox-max-h: 85vh;
 }
 
 .hm-lightbox--busy {
@@ -2482,11 +2487,14 @@ html.dark .hm-dialog__title {
 }
 
 /* 适配尺寸刻意不撑满视口：四周留白提示"还能继续放大"，
-   也给双指/滚轮操作留出可点击的背景区域 */
+   也给双指/滚轮操作留出可点击的背景区域。
+   宽高由组件按 max-w / max-h 算出显示尺寸后内联写入，盒子宽高比恒等于
+   图片宽高比，因此 <img> 元素不会出现 object-fit 造成的信箱留白——
+   鼠标移出图片可见范围即离开元素，光标与关闭判定都准确。 */
 .hm-lightbox img {
   display: block;
-  max-width: min(85vw, 1320px);
-  max-height: 85vh;
+  max-width: var(--hm-lightbox-max-w);
+  max-height: var(--hm-lightbox-max-h);
   object-fit: contain;
   transform-origin: center center;
   transition: transform 0.18s ease;
@@ -2524,10 +2532,14 @@ html.dark .hm-dialog__title {
   }
 
   .hm-lightbox img.hm-lightbox__image--zoomed {
-    cursor: grab;
+    cursor: zoom-in;
   }
 
-  .hm-lightbox img.hm-lightbox__image--zoomed:active {
+  .hm-lightbox img.hm-lightbox__image--zoom-out {
+    cursor: zoom-out;
+  }
+
+  .hm-lightbox img.hm-lightbox__image--zoomed:not(.hm-lightbox__image--zoom-out):active {
     cursor: grabbing;
   }
 }
@@ -2537,6 +2549,9 @@ html.dark .hm-dialog__title {
     padding: 16px;
     cursor: default;
     touch-action: none;
+    /* 手机端同样留边：不满宽打开，方便用户继续双指放大 */
+    --hm-lightbox-max-w: 86vw;
+    --hm-lightbox-max-h: 80vh;
   }
 
   .hm-lightbox__content {
@@ -2544,13 +2559,140 @@ html.dark .hm-dialog__title {
   }
 
   .hm-lightbox img {
-    /* 手机端同样留边：不满宽打开，方便用户继续双指放大 */
-    max-width: 86vw;
-    max-height: 80vh;
     cursor: default;
     /* 由灯箱自身接管双击 / 双指缩放，避免浏览器放大整页。 */
     touch-action: none;
     transition: transform 0.18s ease;
+  }
+}
+
+/* 灯箱工具栏：下载原图 + 缩放条。位于图片下方（.hm-lightbox__content 的
+   flex 列布局），不随 FLIP 飞入动画位移。 */
+.hm-lightbox__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  line-height: normal;
+  cursor: default;
+  /* 始终占位（保证图片一开始就按含工具栏的布局居中，避免飞入结束后被挤动），
+     仅通过淡入显隐；隐藏时不拦截交互 */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+
+.hm-lightbox__toolbar--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hm-lightbox__toolbar {
+    transition: none;
+  }
+}
+
+.hm-lightbox__tool-btn,
+.hm-lightbox__zoom {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 18px;
+  color: #fff;
+  background-color: rgba(20, 22, 28, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  user-select: none;
+}
+
+.hm-lightbox__tool-btn {
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* 图标与文字都以 flex 居中并统一 line-height，消除文本行盒基线导致的垂直错位 */
+.hm-lightbox__tool-btn > span {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.hm-lightbox__tool-icon {
+  display: block;
+  flex-shrink: 0;
+}
+
+@media (hover: hover) {
+  .hm-lightbox__tool-btn:hover {
+    background-color: rgba(0, 118, 255, 0.9);
+    border-color: rgba(0, 118, 255, 0.9);
+  }
+}
+
+.hm-lightbox__tool-btn:active {
+  background-color: rgba(0, 105, 217, 0.95);
+  border-color: rgba(0, 105, 217, 0.95);
+}
+
+.hm-lightbox__zoom {
+  gap: 4px;
+  padding: 0 8px;
+}
+
+.hm-lightbox__zoom-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: #fff;
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.hm-lightbox__zoom-btn > svg {
+  display: block;
+}
+
+@media (hover: hover) {
+  .hm-lightbox__zoom-btn:not(:disabled):hover {
+    background-color: rgba(255, 255, 255, 0.16);
+  }
+}
+
+.hm-lightbox__zoom-btn:not(:disabled):active {
+  background-color: rgba(255, 255, 255, 0.24);
+}
+
+.hm-lightbox__zoom-btn:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.hm-lightbox__zoom-value {
+  min-width: 52px;
+  font-size: 15px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hm-lightbox__tool-btn,
+  .hm-lightbox__zoom-btn {
+    transition: none;
   }
 }
 
@@ -2633,8 +2775,8 @@ html.dark .hm-dialog__title {
 /* Unify button corners across theme and VitePress components. */
 .home-btn,
 .VPButton,
-button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']),
-[type='button']:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']),
+button:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']):not([class*='hm-lightbox__']),
+[type='button']:not(.plugin-tabs--tab):not([class*='hm-dialog__']):not([class*='sidebar']):not([class*='hm-lightbox__']),
 [type='submit'],
 [type='reset'] {
   border-radius: 12px !important;

@@ -34,8 +34,9 @@ export function useDocContentEnhancements({ docArticleRef, openLightbox, openInf
     img.dataset.hmLightboxBound = '1'
     img.style.cursor = 'pointer'
     img.addEventListener('click', () => {
-      const lightboxSrc = img.dataset.hmFullSrc || img.currentSrc || img.src
-      openLightbox(lightboxSrc, img)
+      const previewSrc = img.currentSrc || img.dataset.hmThumbSrc || img.src
+      const fullSrc = img.dataset.hmFullSrc || previewSrc
+      openLightbox(fullSrc, img, previewSrc)
     })
   }
 
@@ -449,6 +450,15 @@ export function useDocContentEnhancements({ docArticleRef, openLightbox, openInf
     }
 
     p.classList.remove('hm-img-row--flush')
+
+    // 左右对齐图片按作者声明的尺寸布局，不应用多图行的等高裁切。
+    if (allExplicitDimension && hasAlignClass) {
+      imgs.forEach(img => {
+        img.style.removeProperty('height')
+        img.style.removeProperty('object-fit')
+      })
+      return
+    }
 
     const IMG_ROW_GAP_PX = 12
     const containerWidth = p.clientWidth
