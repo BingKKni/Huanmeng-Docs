@@ -160,9 +160,65 @@ export const desktopSidebarLinks = [
     ]
   },
   {
-    href: '/docs/invite',
-    label: '🎁 邀请幻梦有礼',
-    isActive: relativePath => relativePath === 'docs/invite.md'
+    href: '/docs/minecraft/',
+    label: '⛏️ 我的世界查榜',
+    isActive: relativePath => relativePath === 'docs/minecraft/index.md',
+    hasAnyActive: relativePath => relativePath === 'docs/minecraft/index.md' || relativePath.startsWith('docs/minecraft/'),
+    children: [
+      {
+        href: '/docs/minecraft/bjd/',
+        label: '布吉岛',
+        isActive: relativePath => relativePath === 'docs/minecraft/bjd/index.md',
+        hasAnyActive: relativePath => relativePath === 'docs/minecraft/bjd/index.md' || relativePath.startsWith('docs/minecraft/bjd/'),
+        children: [
+          {
+            href: '/docs/minecraft/bjd/intro',
+            label: '怎么使用',
+            isActive: relativePath => relativePath === 'docs/minecraft/bjd/intro.md'
+          },
+          {
+            href: '/docs/minecraft/bjd/commands',
+            label: '指令列表',
+            isActive: relativePath => relativePath === 'docs/minecraft/bjd/commands.md'
+          },
+          {
+            href: '/docs/minecraft/bjd/assess',
+            label: '快速评分',
+            isActive: relativePath => relativePath === 'docs/minecraft/bjd/assess.md'
+          },
+          {
+            href: '/docs/minecraft/bjd/whitelist',
+            label: 'ID白名单',
+            isActive: relativePath => relativePath === 'docs/minecraft/bjd/whitelist.md'
+          },
+          {
+            href: '/docs/minecraft/bjd/faq',
+            label: '常见问题',
+            isActive: relativePath => relativePath === 'docs/minecraft/bjd/faq.md'
+          }
+        ]
+      },
+      {
+        href: '/docs/minecraft/hyt',
+        label: '花雨庭',
+        isActive: relativePath => relativePath === 'docs/minecraft/hyt.md'
+      },
+      {
+        href: '/docs/minecraft/domcer',
+        label: 'DoMCer',
+        isActive: relativePath => relativePath === 'docs/minecraft/domcer.md'
+      },
+      {
+        href: '/docs/minecraft/hypixel',
+        label: 'Hypixel',
+        isActive: relativePath => relativePath === 'docs/minecraft/hypixel.md'
+      },
+      {
+        href: '/docs/minecraft/easecation',
+        label: 'EaseCation',
+        isActive: relativePath => relativePath === 'docs/minecraft/easecation.md'
+      }
+    ]
   },
   {
     href: '/docs/delta_force/',
@@ -172,6 +228,11 @@ export const desktopSidebarLinks = [
     children: [
       { href: '/docs/delta_force/password', label: '每日密码门位置', isActive: relativePath => relativePath === 'docs/delta_force/password.md' }
     ]
+  },
+  {
+    href: '/docs/invite',
+    label: '🎁 邀请幻梦有礼',
+    isActive: relativePath => relativePath === 'docs/invite.md'
   }
 ]
 
@@ -239,8 +300,7 @@ export const aboutSidebarLinks = [
     isActive: relativePath => relativePath === 'about/faq/index.md',
     hasAnyActive: relativePath => relativePath === 'about/faq/index.md' || relativePath.startsWith('about/faq/'),
     children: [
-      { href: '/about/faq/appeal', label: '封禁申诉', isActive: relativePath => relativePath === 'about/faq/appeal.md' },
-      { href: '/about/faq/bugland', label: '布吉岛查询', isActive: relativePath => relativePath === 'about/faq/bugland.md' }
+      { href: '/about/faq/appeal', label: '封禁申诉', isActive: relativePath => relativePath === 'about/faq/appeal.md' }
     ]
   },
   { href: '/about/support', label: '🧋 支持幻梦', isActive: relativePath => relativePath === 'about/support.md' }
