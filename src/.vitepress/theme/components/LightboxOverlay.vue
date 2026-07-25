@@ -50,7 +50,13 @@ const props = defineProps({
   fileSizeLabel: {
     type: String,
     default: ''
-  }
+  },
+  galleryLength: {
+    type: Number,
+    default: 0
+  },
+  hasPrevious: Boolean,
+  hasNext: Boolean
 })
 
 const emit = defineEmits([
@@ -63,6 +69,8 @@ const emit = defineEmits([
   'touchcancel',
   'zoom-in',
   'zoom-out',
+  'previous',
+  'next',
   'download'
 ])
 
@@ -138,6 +146,55 @@ const toolbarVisible = computed(() => props.phase === 'open')
         @touchmove.stop
         @touchend.stop
       >
+        <div v-if="galleryLength > 1" class="hm-lightbox__navigation" role="group" aria-label="切换图片">
+          <button
+            type="button"
+            class="hm-lightbox__navigation-btn"
+            :disabled="!hasPrevious"
+            aria-label="上一张"
+            title="上一张"
+            @click="emit('previous')"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="hm-lightbox__navigation-btn"
+            :disabled="!hasNext"
+            aria-label="下一张"
+            title="下一张"
+            @click="emit('next')"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </button>
+        </div>
+
         <button
           type="button"
           class="hm-lightbox__tool-btn hm-lightbox__download"

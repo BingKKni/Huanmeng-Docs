@@ -1,4 +1,4 @@
-import { nextTick, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 
 /* 最小缩放 0.5：允许把图片缩小到适配尺寸的一半查看全貌；
    FIT(=1) 是"刚好适配视口"的基准，平移/关闭等交互仍以它为界。 */
@@ -41,8 +41,15 @@ export function useLightbox({ isMobileViewport }) {
   const lightboxRootRef = ref(null)
   const lightboxFlipRef = ref(null)
   const lightboxImgRef = ref(null)
+  const lightboxGalleryIndex = ref(-1)
+  const lightboxGalleryLength = ref(0)
+  const lightboxHasPrevious = computed(() => lightboxGalleryIndex.value > 0)
+  const lightboxHasNext = computed(() => (
+    lightboxGalleryIndex.value >= 0 && lightboxGalleryIndex.value < lightboxGalleryLength.value - 1
+  ))
 
   let lightboxOriginImg = null
+  let lightboxGallery = []
   let lightboxRequestId = 0
   let thumbRectSnapshot = { left: 0, top: 0, width: 0, height: 0 }
   let lightboxPinching = false
@@ -372,10 +379,22 @@ export function useLightbox({ isMobileViewport }) {
     void fetchLightboxFileSize(src, requestId)
   }
 
+  function setLightboxGallery(originEl, gallery) {
+    const images = Array.isArray(gallery)
+      ? gallery.filter(item => item instanceof HTMLImageElement)
+      : []
+    lightboxGallery = images.includes(originEl) ? images : [originEl]
+    lightboxGalleryIndex.value = lightboxGallery.indexOf(originEl)
+    lightboxGalleryLength.value = lightboxGallery.length
+  }
+
   function openLightboxWithoutFlyAnimation(src) {
     if (!src) return
     lightboxRequestId += 1
     lightboxOriginImg = null
+    lightboxGallery = []
+    lightboxGalleryIndex.value = -1
+    lightboxGalleryLength.value = 0
     thumbRectSnapshot = { left: 0, top: 0, width: 0, height: 0 }
     lightboxSrc.value = src
     lightboxFullSrc.value = src
@@ -389,7 +408,7 @@ export function useLightbox({ isMobileViewport }) {
     lightboxVisible.value = true
   }
 
-  async function openLightbox(fullSrc, originEl, previewSrc = fullSrc) {
+  async function openLightbox(fullSrc, originEl, previewSrc = fullSrc, gallery = [originEl]) {
     if (!fullSrc) return
     if (!(originEl instanceof HTMLImageElement)) {
       openLightboxWithoutFlyAnimation(fullSrc)
@@ -398,6 +417,7 @@ export function useLightbox({ isMobileViewport }) {
 
     const requestId = ++lightboxRequestId
     lightboxOriginImg = originEl
+    setLightboxGallery(originEl, gallery)
     thumbRectSnapshot = snapshotRect(originEl.getBoundingClientRect())
 
     lightboxSrc.value = previewSrc || fullSrc
@@ -518,6 +538,9 @@ export function useLightbox({ isMobileViewport }) {
     lightboxPhase.value = 'closed'
     lightboxBackdropOpacity.value = 0
     lightboxOriginImg = null
+    lightboxGallery = []
+    lightboxGalleryIndex.value = -1
+    lightboxGalleryLength.value = 0
   }
 
   function forceCloseLightbox() {
@@ -931,6 +954,37 @@ export function useLightbox({ isMobileViewport }) {
     stepLightboxZoom(-1)
   }
 
+  function switchLightboxImage(direction) {
+    if (lightboxPhase.value !== 'open') return
+    const nextIndex = lightboxGalleryIndex.value + direction
+    if (nextIndex < 0 || nextIndex >= lightboxGallery.length) return
+
+    const nextOrigin = lightboxGallery[nextIndex]
+    const previewSrc = nextOrigin.currentSrc || nextOrigin.dataset.hmThumbSrc || nextOrigin.src
+    const fullSrc = nextOrigin.dataset.hmFullSrc || previewSrc
+    if (!fullSrc) return
+
+    const requestId = ++lightboxRequestId
+    lightboxGalleryIndex.value = nextIndex
+    lightboxOriginImg = nextOrigin
+    thumbRectSnapshot = snapshotRect(nextOrigin.getBoundingClientRect())
+    lightboxSrc.value = previewSrc || fullSrc
+    lightboxFullSrc.value = fullSrc
+    startLightboxFileSizeProbe(fullSrc)
+    setLightboxIntrinsicSize(nextOrigin)
+    lightboxScale.value = LIGHTBOX_FIT_SCALE
+    resetLightboxGestureState()
+    void replacePreviewWithFullImage(fullSrc, previewSrc, requestId)
+  }
+
+  function showPreviousLightboxImage() {
+    switchLightboxImage(-1)
+  }
+
+  function showNextLightboxImage() {
+    switchLightboxImage(1)
+  }
+
   /* 下载原图：优先用 fetch + blob 触发浏览器"另存为"，保证跨路径也能下到
      真正的原图而非当前显示的缩略图；失败（CORS 等）时退回 <a download> 直链。 */
   async function downloadLightboxImage() {
@@ -989,6 +1043,9 @@ export function useLightbox({ isMobileViewport }) {
     lightboxRootRef,
     lightboxFlipRef,
     lightboxImgRef,
+    lightboxGalleryLength,
+    lightboxHasPrevious,
+    lightboxHasNext,
     formatFileSize,
     syncLightboxScale,
     openLightbox,
@@ -1003,6 +1060,8 @@ export function useLightbox({ isMobileViewport }) {
     handleLightboxTouchCancel,
     zoomInLightbox,
     zoomOutLightbox,
+    showPreviousLightboxImage,
+    showNextLightboxImage,
     downloadLightboxImage
   }
 }

@@ -2595,6 +2595,7 @@ html.dark .hm-dialog__title {
 }
 
 .hm-lightbox__tool-btn,
+.hm-lightbox__navigation,
 .hm-lightbox__zoom {
   display: inline-flex;
   align-items: center;
@@ -2646,6 +2647,12 @@ html.dark .hm-dialog__title {
   padding: 0 8px;
 }
 
+.hm-lightbox__navigation {
+  gap: 4px;
+  padding: 0 8px;
+}
+
+.hm-lightbox__navigation-btn,
 .hm-lightbox__zoom-btn {
   display: inline-flex;
   align-items: center;
@@ -2661,20 +2668,24 @@ html.dark .hm-dialog__title {
   transition: background-color 0.2s ease, opacity 0.2s ease;
 }
 
+.hm-lightbox__navigation-btn > svg,
 .hm-lightbox__zoom-btn > svg {
   display: block;
 }
 
 @media (hover: hover) {
+  .hm-lightbox__navigation-btn:not(:disabled):hover,
   .hm-lightbox__zoom-btn:not(:disabled):hover {
     background-color: rgba(255, 255, 255, 0.16);
   }
 }
 
+.hm-lightbox__navigation-btn:not(:disabled):active,
 .hm-lightbox__zoom-btn:not(:disabled):active {
   background-color: rgba(255, 255, 255, 0.24);
 }
 
+.hm-lightbox__navigation-btn:disabled,
 .hm-lightbox__zoom-btn:disabled {
   opacity: 0.38;
   cursor: default;
@@ -2691,6 +2702,7 @@ html.dark .hm-dialog__title {
 
 @media (prefers-reduced-motion: reduce) {
   .hm-lightbox__tool-btn,
+  .hm-lightbox__navigation-btn,
   .hm-lightbox__zoom-btn {
     transition: none;
   }

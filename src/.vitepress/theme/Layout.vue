@@ -478,6 +478,9 @@ const {
   lightboxRootRef,
   lightboxFlipRef,
   lightboxImgRef,
+  lightboxGalleryLength,
+  lightboxHasPrevious,
+  lightboxHasNext,
   formatFileSize,
   syncLightboxScale,
   openLightbox,
@@ -492,6 +495,8 @@ const {
   handleLightboxTouchCancel,
   zoomInLightbox,
   zoomOutLightbox,
+  showPreviousLightboxImage,
+  showNextLightboxImage,
   downloadLightboxImage
 } = useLightbox({ isMobileViewport })
 const lightboxFileSizeLabel = computed(() => formatFileSize(lightboxFileSize.value))
@@ -1065,6 +1070,13 @@ function handleDocumentKeydown(e) {
       }
       focusDesktopSearch()
     }
+    return
+  }
+
+  if (lightboxVisible.value && lightboxPhase.value === 'open' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+    e.preventDefault()
+    if (e.key === 'ArrowLeft') showPreviousLightboxImage()
+    else showNextLightboxImage()
     return
   }
 
@@ -2349,6 +2361,9 @@ watch(infoDialogVisible, async visible => {
       :scale="lightboxScale"
       :image-transition="lightboxImageTransition"
       :file-size-label="lightboxFileSizeLabel"
+      :gallery-length="lightboxGalleryLength"
+      :has-previous="lightboxHasPrevious"
+      :has-next="lightboxHasNext"
       @click="handleLightboxClick"
       @wheel="handleDesktopLightboxWheel"
       @mousedown="handleDesktopLightboxMouseDown"
@@ -2358,6 +2373,8 @@ watch(infoDialogVisible, async visible => {
       @touchcancel="handleLightboxTouchCancel"
       @zoom-in="zoomInLightbox"
       @zoom-out="zoomOutLightbox"
+      @previous="showPreviousLightboxImage"
+      @next="showNextLightboxImage"
       @download="downloadLightboxImage"
     />
 

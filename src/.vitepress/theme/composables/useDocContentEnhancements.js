@@ -36,7 +36,11 @@ export function useDocContentEnhancements({ docArticleRef, openLightbox, openInf
     img.addEventListener('click', () => {
       const previewSrc = img.currentSrc || img.dataset.hmThumbSrc || img.src
       const fullSrc = img.dataset.hmFullSrc || previewSrc
-      openLightbox(fullSrc, img, previewSrc)
+      const row = img.closest('.hm-img-row')
+      const rowImages = row
+        ? Array.from(row.querySelectorAll('img')).filter(candidate => candidate.closest('.hm-img-row') === row)
+        : [img]
+      openLightbox(fullSrc, img, previewSrc, rowImages)
     })
   }
 
