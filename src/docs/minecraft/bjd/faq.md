@@ -30,7 +30,7 @@
 你也可以向我们提出这些建议，我们也会在评估后向布吉岛官方主动推进。
 
 ## 我还是有疑问，怎么联系你们？
-你可以 <a class="group-join-btn" href="https://qm.qq.com/q/6lmTZCS0SY" target="_blank" rel="noopener noreferrer" data-confirm-title="二次确认" data-confirm-message="即将跳转到QQ幻梦官方群，是否继续？" data-confirm-label="确认">点击这里</a> 加群反馈。
+你可以 <a class="group-join-btn" href="http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=d9UBh1JOT8EBSvIqUblHNGjFkbmyhq88&authKey=KPWG4Jno%2F76SFgloW2UEuwuYD0hXR9ntRUgi3F%2FQs%2F%2BeMSJWwpYMjRhu9u2nhRzN&noverify=0&group_code=499888970" target="_blank" rel="noopener noreferrer" data-confirm-title="二次确认" data-confirm-message="即将跳转到QQ幻梦官方群，是否继续？" data-confirm-label="确认">点击这里</a> 加群反馈。
 ::: info
 反馈时，请**务必一次性说清楚你的所有问题和诉求**，不要让开发者追问，这样会降低处理效率。
 :::

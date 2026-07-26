@@ -45,7 +45,7 @@ export const navLinks = [
     isActive: () => false,
     children: [
       {
-        href: 'https://qm.qq.com/q/6lmTZCS0SY',
+        href: 'http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=d9UBh1JOT8EBSvIqUblHNGjFkbmyhq88&authKey=KPWG4Jno%2F76SFgloW2UEuwuYD0hXR9ntRUgi3F%2FQs%2F%2BeMSJWwpYMjRhu9u2nhRzN&noverify=0&group_code=499888970',
         label: 'QQ群',
         isExternal: true,
         confirmTitle: '二次确认',

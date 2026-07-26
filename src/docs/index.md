@@ -307,5 +307,5 @@
             </div>
         </div>
     </div>
-    <a href="https://qm.qq.com/q/6lmTZCS0SY" target="_blank" rel="noopener noreferrer" class="app-action-btn">点击加群</a>
+    <a href="http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=d9UBh1JOT8EBSvIqUblHNGjFkbmyhq88&authKey=KPWG4Jno%2F76SFgloW2UEuwuYD0hXR9ntRUgi3F%2FQs%2F%2BeMSJWwpYMjRhu9u2nhRzN&noverify=0&group_code=499888970" target="_blank" rel="noopener noreferrer" class="app-action-btn">点击加群</a>
 </div> -->

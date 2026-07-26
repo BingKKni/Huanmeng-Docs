@@ -44,4 +44,4 @@
 - 算法如果公开，有心的玩家将可以通过查看算法来计算如何快速提分的方式，他们可能会为了提分而提分（如刷人头等），这样评分的意义反而就不存在了。
 
 
-若对评分算法有建议，小人类可 <a class="group-join-btn" href="https://qm.qq.com/q/6lmTZCS0SY" target="_blank" rel="noopener noreferrer" data-confirm-title="二次确认" data-confirm-message="即将跳转到QQ幻梦官方群，是否继续？" data-confirm-label="确认">点击这里</a> 添加幻梦官方群向开发者反馈你的意见。请注意，私下抱怨评分机制不会解决您的问题。幻梦是免费的QQ机器人，所有玩家都可以免费使用到幻梦的全部查榜功能，请体谅开发者开发每一个功能的良苦用心，有问题可积极反馈。私下辱骂幻梦的玩家经查证属实将被视为违反[用户守则](/about/rule/user?from=bjd)给予封禁。
+若对评分算法有建议，小人类可 <a class="group-join-btn" href="http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=d9UBh1JOT8EBSvIqUblHNGjFkbmyhq88&authKey=KPWG4Jno%2F76SFgloW2UEuwuYD0hXR9ntRUgi3F%2FQs%2F%2BeMSJWwpYMjRhu9u2nhRzN&noverify=0&group_code=499888970" target="_blank" rel="noopener noreferrer" data-confirm-title="二次确认" data-confirm-message="即将跳转到QQ幻梦官方群，是否继续？" data-confirm-label="确认">点击这里</a> 添加幻梦官方群向开发者反馈你的意见。请注意，私下抱怨评分机制不会解决您的问题。幻梦是免费的QQ机器人，所有玩家都可以免费使用到幻梦的全部查榜功能，请体谅开发者开发每一个功能的良苦用心，有问题可积极反馈。私下辱骂幻梦的玩家经查证属实将被视为违反[用户守则](/about/rule/user?from=bjd)给予封禁。

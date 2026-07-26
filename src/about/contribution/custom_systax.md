@@ -250,7 +250,7 @@ auto 为自动适应颜色，根据用户设置的主题颜色自动适应。
 文档里可以插入带二次确认弹窗的外链按钮，在移动端点击时会先弹出确认框，再跳转 QQ 群等外部链接：
 
 ```html
-<a class="group-join-btn" href="https://qm.qq.com/q/6lmTZCS0SY" target="_blank" rel="noopener noreferrer" data-confirm-title="二次确认" data-confirm-message="即将跳转到QQ幻梦官方群，是否继续？" data-confirm-label="确认">点击加群</a>
+<a class="group-join-btn" href="http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=d9UBh1JOT8EBSvIqUblHNGjFkbmyhq88&authKey=KPWG4Jno%2F76SFgloW2UEuwuYD0hXR9ntRUgi3F%2FQs%2F%2BeMSJWwpYMjRhu9u2nhRzN&noverify=0&group_code=499888970" target="_blank" rel="noopener noreferrer" data-confirm-title="二次确认" data-confirm-message="即将跳转到QQ幻梦官方群，是否继续？" data-confirm-label="确认">点击加群</a>
 ```
 
 可用属性：
