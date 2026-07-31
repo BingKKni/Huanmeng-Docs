@@ -148,7 +148,8 @@ export const desktopSidebarLinks = [
         ]
       },
       { href: '/docs/entertainment/random_image', label: '随机图', isActive: relativePath => relativePath === 'docs/entertainment/random_image.md' },
-      { href: '/docs/entertainment/flop', label: '翻牌', isActive: relativePath => relativePath === 'docs/entertainment/flop.md' },
+      // { href: '/docs/entertainment/flop', label: '翻牌', isActive: relativePath => relativePath === 'docs/entertainment/flop.md' },
+      { href: '/docs/entertainment/flopgold', label: '翻牌 - 摸金之旅', isActive: relativePath => relativePath === 'docs/entertainment/flopgold.md' },
       { href: '/docs/entertainment/fast_math', label: '速算', isActive: relativePath => relativePath === 'docs/entertainment/fast_math.md' },
       { href: '/docs/entertainment/minesweeper', label: '扫雷', isActive: relativePath => relativePath === 'docs/entertainment/minesweeper.md' },
       { href: '/docs/entertainment/password_cracker', label: '破译', isActive: relativePath => relativePath === 'docs/entertainment/password_cracker.md' },
