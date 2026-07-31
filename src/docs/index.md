@@ -219,7 +219,7 @@
                 <div class="app-card-desc">来看看你今天的运气有多好吧</div>
             </div>
         </div>
-        <a href="/docs/entertainment/flop?from=docs_index" class="app-action-btn">前往</a>
+        <a href="/docs/entertainment/flopgold?from=docs_index" class="app-action-btn">前往</a>
     </div>
     <!-- 破译 -->
     <div class="app-card">
