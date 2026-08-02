@@ -27,6 +27,16 @@
     </div>
     <div class="app-card">
         <div class="app-card-left">
+            <div class="app-card-avatar emoji-avatar">🎉</div>
+            <div class="app-card-info">
+                <div class="app-card-title">福利活动</div>
+                <div class="app-card-desc">面向主播 & 创作者的福利活动</div>
+            </div>
+        </div>
+        <a href="/docs/minecraft/bjd/creator?from=bjd" class="app-action-btn">前往</a>
+    </div>
+    <div class="app-card">
+        <div class="app-card-left">
             <div class="app-card-avatar emoji-avatar">⭐</div>
             <div class="app-card-info">
                 <div class="app-card-title">评分</div>

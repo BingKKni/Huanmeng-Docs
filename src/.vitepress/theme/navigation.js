@@ -196,6 +196,11 @@ export const desktopSidebarLinks = [
             href: '/docs/minecraft/bjd/faq',
             label: '常见问题',
             isActive: relativePath => relativePath === 'docs/minecraft/bjd/faq.md'
+          },
+          {
+            href: '/docs/minecraft/bjd/creator',
+            label: '福利活动',
+            isActive: relativePath => relativePath === 'docs/minecraft/bjd/creator.md'
           }
         ]
       },
