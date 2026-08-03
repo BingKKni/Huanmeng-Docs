@@ -4,6 +4,7 @@ const FROM_PAGE_MAP = {
   start: { label: '开始使用', url: '/start' },
   docs_index: { label: '使用主页', url: '/docs/' },
   bjd: { label: '布吉岛帮助', url: '/docs/minecraft/bjd/' },
+  bjd_creator: { label: '福利活动', url: '/docs/minecraft/bjd/creator' },
   ef_post_theme: { label: '投稿超能力主题', url: '/docs/entertainment/exceptional_function/post_theme' },
   stamina: { label: '体力', url: '/docs/entertainment/stamina' },
 }
