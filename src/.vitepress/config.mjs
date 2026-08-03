@@ -34,6 +34,31 @@ export default defineConfig({
     ['meta', { name: 'twitter:title', content: '幻梦Bot' }],
     ['meta', { name: 'twitter:description', content: 'QQ幻梦机器人的说明文档' }],
     ['meta', { name: 'twitter:image', content: 'https://xbdqwq.com/img/hm_icon.png' }],
+    ['link', { rel: 'alternate', type: 'text/plain', href: '/llms.txt', title: 'Huanmeng Bot AI Documentation Index' }],
+    ['link', { rel: 'alternate', type: 'text/plain', href: '/llms-full.txt', title: 'Huanmeng Bot Full Documentation Text' }],
+    ['script', { type: 'application/ld+json' }, JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: '幻梦Bot 文档',
+      alternateName: 'Huanmeng Bot Documentation',
+      url: 'https://xbdqwq.com/',
+      description: 'QQ 幻梦机器人的官方使用文档',
+      inLanguage: 'zh-CN',
+      hasPart: [
+        {
+          '@type': 'CreativeWork',
+          name: 'Huanmeng Bot AI Documentation Index',
+          url: 'https://xbdqwq.com/llms.txt',
+          encodingFormat: 'text/plain'
+        },
+        {
+          '@type': 'CreativeWork',
+          name: 'Huanmeng Bot Full Documentation Text',
+          url: 'https://xbdqwq.com/llms-full.txt',
+          encodingFormat: 'text/plain'
+        }
+      ]
+    })],
     // 明确告知爬虫与 AI Bot 允许索引本站内容
     ['meta', { name: 'robots', content: 'index, follow' }],
     ['meta', { name: 'googlebot', content: 'index, follow' }],
