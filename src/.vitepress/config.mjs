@@ -12,13 +12,18 @@ const imageThumbnailManifest = loadImageThumbnailManifest()
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: "幻梦Bot",
+  lang: 'zh-CN',
   cleanUrls: true,
+  sitemap: {
+    hostname: 'https://xbdqwq.com',
+    transformItems: items => items.filter(item => item.url !== 'search/')
+  },
   /** 首屏按系统偏好切换深色/浅色，并注入 check-dark-mode 避免闪烁；用户手动切换后会写入 localStorage 固定偏好。 */
   appearance: true,
   description: "QQ幻梦机器人的说明文档",
   head: [
     ['meta', { name: 'viewport', content: 'width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no' }],
-    ['link', { rel: 'icon', type: 'image/png', href: '/img/hm_icon.png' }],
+    ['link', { rel: 'icon', type: 'image/png', sizes: '96x96', href: '/favicon.png' }],
     // 为方便爬虫机器人能够爬取到网页信息，这里要设置一些属性
     ['meta', { property: 'og:title', content: '幻梦Bot' }],
     ['meta', { property: 'og:type', content: 'website' }],

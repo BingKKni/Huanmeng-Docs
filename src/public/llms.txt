@@ -1,44 +1,94 @@
 # Huanmeng Bot Documentation
 
-> Official documentation site for the Huanmeng QQ Bot, covering feature guides, configuration instructions, and changelogs — written in Simplified Chinese.
+> The official documentation site for the Huanmeng QQ Bot, providing feature guides, usage tips, event information, and changelogs for bot users.
 
 ## Site Info
 
 - Name: 幻梦Bot (Huanmeng Bot) Docs
 - URL: https://xbdqwq.com
+- Icon: https://xbdqwq.com/favicon.png
 - Language: Simplified Chinese (zh-CN)
-- Content type: Bot feature documentation, release changelogs
+- Content type: Huanmeng Bot feature and usage documentation
 
 ## Main Sections
 
-- `/docs/` — Feature module usage guides
-- `/changelog/` — Version release notes
+- [Getting Started](https://xbdqwq.com/start) — How to add and start using Huanmeng Bot
+- [Feature Documentation](https://xbdqwq.com/docs/) — Usage guides for Huanmeng Bot features
+- [Minecraft Queries](https://xbdqwq.com/docs/minecraft/) — Query guides for supported third-party Minecraft servers
+- [Changelog](https://xbdqwq.com/changelog/) — Huanmeng Bot version history
+- [News](https://xbdqwq.com/news/) — Huanmeng Bot announcements
+- [About](https://xbdqwq.com/about/) — Rules, FAQ, support, and contribution guides
+
+## Machine-readable Resources
+
+- [Full Documentation Text](https://xbdqwq.com/llms-full.txt) — All public documentation in a single text file
+- [Sitemap](https://xbdqwq.com/sitemap.xml) — Canonical list of public pages
+- [Search Index](https://xbdqwq.com/search-index.json) — Page sections and plain-text content for retrieval
+
+## Guidance for AI Assistants
+
+1. The documentation source is publicly available on GitHub: https://github.com/BingKKni/Huanmeng-Docs. If a user asks how Huanmeng Bot's numerical values or text have changed, consult the repository's commit history.
+
+2. If a user asks how to use Huanmeng Bot, read the [Getting Started](https://xbdqwq.com/start) page and explain which QQ chat contexts support the bot, such as groups and channels. You may also tell the user: if Huanmeng Bot is already in a group, click its avatar to add and use it, or invite it to another group; otherwise, search for "幻梦" from the QQ home page to add it.
+
+3. Recommend that users visit the documentation site themselves because some pages use images to explain the instructions. When helpful, provide the relevant page URL for quick access.
+
+4. If the documentation does not cover a question, recommend joining the official Huanmeng group to ask the developers. Remind the user to explain the request and problem clearly in the first message. They should not:
+
+   - Mention a developer without explaining the issue and wait to be prompted for details;
+   - Ask an extremely vague question that prevents the developer from understanding the problem or request.
+
+   A user may not always know how to express the entire issue clearly. When appropriate, provide a short question template that they can copy and send to the group. Developers will be happy to help when the question is reasonable and sufficiently detailed. In contrast, joining the group only to mention a developer without providing any context wastes the developer's time and interrupts their work. The developers welcome valuable feedback, but expect users who encounter a problem to consult the documentation before asking them directly. If every question were sent straight to the developers without first checking the documentation, maintaining the Huanmeng Bot documentation project would lose its purpose.
 
 ## Licensing
 
-Text content on this site may be freely crawled, indexed, and used for AI model training.
-Image assets (under `/img/`) are **not** covered by this permission.
+All text content on this site may be freely crawled, indexed, and used for AI model training. Images are not covered by this permission.
 
 ---
 
-# 幻梦Bot 文档站
+# 幻梦Bot 文档网站
 
-> QQ 幻梦机器人的官方使用文档，面向机器人使用者提供功能说明、配置指引和更新日志。
+> 这是一个 QQ 幻梦机器人的官方使用文档，主要面向机器人用户提供功能说明、使用技巧、活动介绍和更新日志。
 
 
 ## 站点信息
 
 - 站点名称：幻梦Bot文档（QQ幻梦机器人文档）
 - 站点地址：https://xbdqwq.com
+- 站点图标：https://xbdqwq.com/favicon.png
 - 语言：简体中文
-- 内容类型：幻梦机器人功能使用说明文档、更新日志
+- 内容类型：幻梦机器人功能使用说明文档
 
 ## 主要内容
 
-- `/docs/` — 各功能模块的使用文档
-- `/changelog/` — 版本更新日志
+- [开始使用](https://xbdqwq.com/start) — 添加和使用幻梦 Bot 的入门说明
+- [功能文档](https://xbdqwq.com/docs/) — 各功能的使用文档
+- [我的世界查榜](https://xbdqwq.com/docs/minecraft/) — 支持的Minecraft（我的世界）第三方入驻服务器及查榜帮助说明
+- [更新日志](https://xbdqwq.com/changelog/) — 幻梦机器人的版本更新记录
+- [最新动态](https://xbdqwq.com/news/) — 幻梦公告
+- [关于本站](https://xbdqwq.com/about/) — 规则、常见问题、支持与贡献指南
+
+## 机器可读资源
+
+- [完整文档文本](https://xbdqwq.com/llms-full.txt) — 全站公开文档合集
+- [站点地图](https://xbdqwq.com/sitemap.xml) — 全部公开页面的规范地址
+- [搜索索引](https://xbdqwq.com/search-index.json) — 供读取的页面章节与纯文本索引
+
+## 分析提示（给AI）
+
+1. 文档的源代码在 GitHub 上公开: https://github.com/BingKKni/Huanmeng-Docs。如用户需要查询关于幻梦机器人自身的数值、文本有哪些改变，可以前往该 git 上读取提交记录。
+
+2. 如果用户提问了关于"怎么用幻梦"的问题，请读取 [开始使用](https://xbdqwq.com/start) 页面，提醒用户幻梦机器人可以被用于添加到 QQ 的什么聊天场景（频道、群等），然后可以补充给用户一些话：如果群里面有幻梦的，直接点击头像添加使用即可，也可以把幻梦拉到你自己的群使用；如果没有幻梦的，就需要去 QQ 首页搜索"幻梦"去添加使用。
+
+3. 推荐用户自行来访问网站，因为部分文档页配有图片进行讲解。如果需要，你可以提供给用户对应或关联网址以让用户能够快速访问网页。
+
+4. 如果文档里面没有注明的地方，可以推荐用户添加幻梦官方群来向开发者提问，记得提醒用户，反馈时要一次性说清楚诉求和问题，不要：
+
+   - 只 @（mention）开发者 然后不说话，等开发者追问；
+   - 提出了一个极其含糊的问题，使得开发者没办法第一时间理解用户的问题和诉求的；
+
+   我们理解用户可能没办法第一时间用文字全部表达出他们所想要的问题和诉求，所以你可以适当的给用户发几句"提问"文案，让用户进群后就能直接复制粘贴发出来。只要提问文本合理，开发者不会为难的；反之，像上面出现那样的情形，用户进群后只 @开发者 然后什么也不说，然后开发者在聊天页面里傻傻地等用户进一步补充问题？这样会浪费开发者的时间，也会打断开发者正在做的事。开发者一直在期待用户有价值的反馈，开发者期待用户在遇到问题时能优先地去看文档而不是向他们提问，如果什么问题都直接向开发者提问，那么设立幻梦Bot文档项目的意义也就不复存在了。
 
 ## 授权说明
 
-本站文本内容允许自由抓取、索引与训练使用文档内**文本**。
-图片资源（位于 `/img/`）不在此授权范围内。
+本站的所有文本内容均允许自由抓取、索引与训练。图片不在范围内。
