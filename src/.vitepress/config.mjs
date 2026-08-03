@@ -60,8 +60,10 @@ export default defineConfig({
       ]
     })],
     // 明确告知爬虫与 AI Bot 允许索引本站内容
-    ['meta', { name: 'robots', content: 'index, follow' }],
-    ['meta', { name: 'googlebot', content: 'index, follow' }],
+    ['meta', { name: 'robots', content: 'index, follow, max-snippet:-1' }],
+    ['meta', { name: 'googlebot', content: 'index, follow, max-snippet:-1' }],
+    ['meta', { name: 'bingbot', content: 'index, follow, max-snippet:-1' }],
+    ['meta', { name: 'applebot', content: 'all' }],
     // 声明页面语言，有助于 AI 爬虫正确识别内容
     ['meta', { 'http-equiv': 'content-language', content: 'zh-CN' }]
   ],
