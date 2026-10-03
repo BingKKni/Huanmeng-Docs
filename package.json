@@ -18,6 +18,7 @@
     "@fontsource-variable/noto-sans-sc": "^5.2.10",
     "markdown-it-attrs": "^4.3.1",
     "markdown-it-mathjax3": "^4.3.2",
+    "three": "0.186.1",
     "vitepress-plugin-tabs": "^0.8.0"
   }
 }

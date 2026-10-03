@@ -309,6 +309,7 @@ export const aboutSidebarLinks = [
       { href: '/about/faq/appeal', label: '封禁申诉', isActive: relativePath => relativePath === 'about/faq/appeal.md' }
     ]
   },
+  { href: '/about/mcskin', label: '👕 Minecraft 皮肤', isActive: relativePath => relativePath === 'about/mcskin.md' },
   { href: '/about/support', label: '🧋 支持幻梦', isActive: relativePath => relativePath === 'about/support.md' }
 ]
 
