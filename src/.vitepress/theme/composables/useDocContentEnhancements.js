@@ -78,40 +78,44 @@ export function useDocContentEnhancements({ docArticleRef, openLightbox, openInf
     copyButtonResetTimers.set(button, resetTimer)
   }
 
-  async function ensureClipboardWritable() {
-    if (!navigator.clipboard?.writeText) {
-      throw new Error('clipboard-unavailable')
-    }
-
-    if (!navigator.permissions?.query) return
-
-    try {
-      const permissionStatus = await navigator.permissions.query({ name: 'clipboard-write' })
-      if (permissionStatus.state === 'denied') {
-        throw new Error('clipboard-denied')
-      }
-    } catch (error) {
-      if (error?.message === 'clipboard-denied') throw error
-    }
-  }
-
   function getCodeBlockText(block) {
     const code = block.querySelector('pre code')
     return code?.textContent?.replace(/\n$/, '') || ''
   }
 
-  async function handleCopyButtonClick(block, button) {
-    const code = getCodeBlockText(block)
-
+  async function copyCodeText(text, button = null) {
     try {
-      await ensureClipboardWritable()
-      await navigator.clipboard.writeText(code)
-      setCopyButtonState(button, 'success')
-      openInfoDialog('复制成功!')
+      // 在用户操作中直接写入，避免权限查询消耗移动浏览器的用户激活状态。
+      await navigator.clipboard.writeText(text)
+      if (button) setCopyButtonState(button, 'success')
+      openInfoDialog('复制成功!', '信息', null, false, '确认')
     } catch {
-      setCopyButtonState(button, 'error')
-      openInfoDialog('复制失败，请授予剪贴板写入权限!', '提示')
+      if (button) setCopyButtonState(button, 'error')
+      openInfoDialog('复制失败，请检查是否给予剪贴板权限!', '信息', null, false, '确定')
     }
+  }
+
+  function handleCopyButtonClick(block, button) {
+    return copyCodeText(getCodeBlockText(block), button)
+  }
+
+  function bindInlineCodeCopy(code) {
+    // 保留多行代码块及链接、按钮自身的交互行为。
+    if (code.closest('pre, a, button') || code.dataset.hmInlineCopyBound === '1') return
+    code.dataset.hmInlineCopyBound = '1'
+    code.setAttribute('role', 'button')
+    code.setAttribute('tabindex', '0')
+    code.setAttribute('title', '点击复制')
+    code.setAttribute('aria-label', `复制代码：${code.textContent}`)
+
+    code.addEventListener('click', () => {
+      void copyCodeText(code.textContent ?? '')
+    })
+    code.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' && event.key !== ' ') return
+      event.preventDefault()
+      code.click()
+    })
   }
 
   function bindCodeBlockCopy(block) {
@@ -142,6 +146,7 @@ export function useDocContentEnhancements({ docArticleRef, openLightbox, openInf
     const container = root ?? docArticleRef.value
     if (!container) return
     container.querySelectorAll("div[class*='language-']").forEach(bindCodeBlockCopy)
+    container.querySelectorAll('code').forEach(bindInlineCodeCopy)
   }
 
   function bindJoinGroupButtons(root = null) {

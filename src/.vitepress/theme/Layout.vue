@@ -458,11 +458,6 @@ function isMobileViewport() {
   return isMobileView.value
 }
 
-function openMobileInfoDialog(...args) {
-  if (!isMobileViewport()) return
-  openInfoDialog(...args)
-}
-
 const {
   lightboxSrc,
   lightboxFileSize,
@@ -548,7 +543,7 @@ const {
 } = useDocContentEnhancements({
   docArticleRef,
   openLightbox,
-  openInfoDialog: openMobileInfoDialog,
+  openInfoDialog,
   isMobileViewport
 })
 

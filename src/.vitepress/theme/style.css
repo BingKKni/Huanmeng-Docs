@@ -1694,6 +1694,10 @@ a:hover {
   border-radius: 6px;
 }
 
+.doc-article code[data-hm-inline-copy-bound='1'] {
+  cursor: pointer;
+}
+
 .doc-article pre code {
   padding: 0;
   color: inherit;
